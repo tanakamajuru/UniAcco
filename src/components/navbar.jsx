@@ -8,6 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { useNavigation } from '../App';
+import { LogIn } from 'lucide-react';
 import '../styles/brand-colors.css';
 
 export default function Navbar() {
@@ -19,17 +20,18 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6">
-      <div className="flex items-center gap-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 p-6">
+      <div className="flex items-center justify-center gap-4 w-full">
+        <div className="flex items-center gap-4 max-w-7xl w-full justify-between">
         {/* Logo */}
         <img 
-          src="/src/assets/logo.jpg" 
-          alt="BlueStrike Logo" 
+          src="/src/assets/logo.png" 
+          alt="UniAcco Logo" 
           className="h-12 w-12 rounded-full cursor-pointer hover:scale-105 transition-transform duration-200 shadow-xl border-2 border-white/20 dark:border-[#4A90E2]/30"
           onClick={() => navigate('home')}
         />
         
-        <NavigationMenu className="text-[#2E4057] dark:text-[#E8EEF4]">
+        <NavigationMenu className="text-[#2E4057] dark:text-[#E8EEF4] flex-1">
           <NavigationMenuList className="bg-[#E8EEF4] dark:bg-[#2E4057] backdrop-blur-sm rounded-full shadow-xl border border-[#D1DDE8] dark:border-[#4A5568] px-2">
             <NavigationMenuItem>
               <NavigationMenuLink 
@@ -46,6 +48,35 @@ export default function Navbar() {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink 
+                href="/listings" 
+                onClick={(e) => handleNavigation(e, 'listings')}
+                className={cn(
+                  navigationMenuTriggerStyle(), 
+                  "bg-transparent hover:bg-[#D1DDE8] hover:text-[#1A1F2E] dark:hover:bg-[#3D5270] dark:hover:text-[#F5F7FA] cursor-pointer text-[#2E4057] dark:text-[#E8EEF4] transition-all duration-200 font-medium",
+                  currentPage === 'listings' && "border-b-2 border-[#4A90E2] dark:border-[#64B5F6] text-[#4A90E2] dark:text-[#64B5F6] font-semibold"
+                )}
+              >
+                Browse Listings
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+               <NavigationMenuItem>
+              <NavigationMenuLink 
+                href="/abouts" 
+                onClick={(e) => handleNavigation(e, 'abouts')}
+                className={cn(
+                  navigationMenuTriggerStyle(), 
+                  "bg-transparent hover:bg-[#D1DDE8] hover:text-[#1A1F2E] dark:hover:bg-[#3D5270] dark:hover:text-[#F5F7FA] cursor-pointer text-[#2E4057] dark:text-[#E8EEF4] transition-all duration-200 font-medium",
+                  currentPage === 'abouts' && "border-b-2 border-[#4A90E2] dark:border-[#64B5F6] text-[#4A90E2] dark:text-[#64B5F6] font-semibold"
+                )}
+              >
+                List Your Property
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+
+
+            <NavigationMenuItem>
+              <NavigationMenuLink 
                 href="/about" 
                 onClick={(e) => handleNavigation(e, 'about')}
                 className={cn(
@@ -57,38 +88,30 @@ export default function Navbar() {
                 About Us
               </NavigationMenuLink>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink 
-                href="/portfolio" 
-                onClick={(e) => handleNavigation(e, 'portfolio')}
-                className={cn(
-                  navigationMenuTriggerStyle(), 
-                  "bg-transparent hover:bg-[#D1DDE8] hover:text-[#1A1F2E] dark:hover:bg-[#3D5270] dark:hover:text-[#F5F7FA] cursor-pointer text-[#2E4057] dark:text-[#E8EEF4] transition-all duration-200 font-medium",
-                  currentPage === 'portfolio' && "border-b-2 border-[#4A90E2] dark:border-[#64B5F6] text-[#4A90E2] dark:text-[#64B5F6] font-semibold"
-                )}
-              >
-                Portfolio
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink 
-                href="/contacts" 
-                onClick={(e) => handleNavigation(e, 'contacts')}
-                className={cn(
-                  navigationMenuTriggerStyle(), 
-                  "bg-transparent hover:bg-[#D1DDE8] hover:text-[#1A1F2E] dark:hover:bg-[#3D5270] dark:hover:text-[#F5F7FA] cursor-pointer text-[#2E4057] dark:text-[#E8EEF4] transition-all duration-200 font-medium",
-                  currentPage === 'contacts' && "border-b-2 border-[#4A90E2] dark:border-[#64B5F6] text-[#4A90E2] dark:text-[#64B5F6] font-semibold"
-                )}
-              >
-                Contacts
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+
           </NavigationMenuList>
         </NavigationMenu>
-        <div className="bg-[#E8EEF4] dark:bg-[#2E4057] hover:bg-[#D1DDE8] dark:hover:bg-[#3D5270] backdrop-blur-sm rounded-full shadow-xl border border-[#D1DDE8] dark:border-[#4A5568] p-1 transition-all duration-200">
-          <ThemeToggle />
+
+        <div className="flex items-center gap-2">
+          {/* Sign In Button */}
+          <button
+            onClick={(e) => handleNavigation(e, 'auth')}
+            className={cn(
+              "px-4 py-2 rounded-full bg-transparent hover:bg-[#D1DDE8] dark:hover:bg-[#3D5270] text-[#2E4057] dark:text-[#E8EEF4] font-medium flex items-center gap-2 transition-all duration-200",
+              currentPage === 'auth' && "border-b-2 border-[#4A90E2] dark:border-[#64B5F6] text-[#4A90E2] dark:text-[#64B5F6] font-semibold"
+            )}
+          >
+            <LogIn className="w-4 h-4" />
+            Sign In
+          </button>
+
+          {/* Theme Toggle */}
+          <div className="bg-[#E8EEF4] dark:bg-[#2E4057] hover:bg-[#D1DDE8] dark:hover:bg-[#3D5270] backdrop-blur-sm rounded-full shadow-xl border border-[#D1DDE8] dark:border-[#4A5568] p-1 transition-all duration-200">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
+    </div>
     </nav>
   );
 }

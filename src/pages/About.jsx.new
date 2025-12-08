@@ -98,7 +98,7 @@ export default function About() {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-[#0F1419] dark:via-[#1A1F2E] dark:to-[#2E4057]"></div>
           <div className="absolute inset-0 bg-white/40 dark:bg-black/20"></div>
           
-          <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-7xl mx-auto relative z-10">
             <motion.div 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -117,7 +117,7 @@ export default function About() {
             </motion.div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
               {stats.map((stat, index) => (
                 <motion.div
                   key={index}
@@ -136,52 +136,9 @@ export default function About() {
           </div>
         </section>
 
-        {/* Mission & Vision */}
-        <section className="py-16 bg-gray-50 dark:bg-[#1A1F2E] px-4 sm:px-6 lg:px-8">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-              >
-                <div className="bg-white dark:bg-[#1A1F2E] p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300 border border-gray-100 dark:border-gray-800">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                    <Target className="h-8 w-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Our Mission</h2>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    To simplify the student housing search by providing a trusted platform that connects students with safe, 
-                    affordable, and convenient accommodation options near their universities across Zimbabwe.
-                  </p>
-                </div>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <div className="bg-white dark:bg-[#1A1F2E] p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300 border border-gray-100 dark:border-gray-800">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                    <Award className="h-8 w-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Our Vision</h2>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    To become the leading student accommodation platform in Zimbabwe, known for reliability, 
-                    transparency, and exceptional service in helping students find their perfect home away from home.
-                  </p>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
+        {/* Features Section */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0F1419]">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Why Choose UniAcco?</h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
@@ -212,7 +169,7 @@ export default function About() {
 
         {/* How It Works */}
         <section className="py-16 bg-gray-50 dark:bg-[#1A1F2E] px-4 sm:px-6 lg:px-8">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">How It Works</h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
@@ -259,7 +216,7 @@ export default function About() {
 
         {/* Testimonials */}
         <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0F1419]">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">What Our Users Say</h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
@@ -293,8 +250,71 @@ export default function About() {
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-purple-600">
+        {/* Core Values */}
+        <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-white mb-4">Our Core Values</h2>
+              <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+                The principles that guide everything we do at UniAcco
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {values.map((value, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                  className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:shadow-xl transition-shadow"
+                >
+                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    {value.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-3">{value.title}</h3>
+                  <p className="text-blue-50">{value.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Team Section */}
+        <section className="py-16 bg-white dark:bg-[#0F1419] px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Our Team</h2>
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Meet the dedicated team behind UniAcco
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {teamMembers.map((member, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="bg-white dark:bg-[#1A1F2E] p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-800 text-center"
+                >
+                  <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
+                    {member.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">{member.name}</h3>
+                  <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">{member.role}</p>
+                  <p className="text-gray-600 dark:text-gray-400">{member.bio}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-white mb-6">Ready to Find Your Perfect Student Home?</h2>
             <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
@@ -310,196 +330,7 @@ export default function About() {
             </div>
           </div>
         </section>
-
-      {/* Core Values Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-white mb-4">Our Core Values</h2>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-              The principles that guide everything we do at UniAcco
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <Award className="w-10 h-10 text-white" />,
-                title: 'Excellence',
-                description: 'We strive for excellence in everything we do, ensuring quality service and satisfaction.'
-              },
-              {
-                icon: <Users className="w-10 h-10 text-white" />,
-                title: 'Integrity',
-                description: 'We conduct business with honesty, transparency, and respect for all our users.'
-              },
-              {
-                icon: <Target className="w-10 h-10 text-white" />,
-                title: 'Innovation',
-                description: 'We embrace innovation to provide the best student accommodation experience.'
-              }
-            ].map((value, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-                className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:shadow-xl transition-shadow"
-              >
-                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  {value.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-3">{value.title}</h3>
-                <p className="text-blue-50">{value.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="py-16 bg-white dark:bg-[#0F1419] px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Our Team</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Meet the dedicated team behind UniAcco
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'Tendai Moyo',
-                role: 'CEO & Founder',
-                bio: 'Passionate about solving student housing challenges with technology.'
-              },
-              {
-                name: 'Nomsa Ndlovu',
-                role: 'Head of Operations',
-                bio: 'Ensuring smooth operations and excellent user experiences.'
-              },
-              {
-                name: 'Blessing Kambasha',
-                role: 'Customer Support',
-                bio: 'Dedicated to helping students find their perfect accommodation.'
-              }
-            ].map((member, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white dark:bg-[#1A1F2E] p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-800"
-              >
-                <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
-                  {member.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <h3 className="text-xl font-semibold text-center text-gray-900 dark:text-white mb-1">{member.name}</h3>
-                <p className="text-center text-blue-600 dark:text-blue-400 font-medium mb-3">{member.role}</p>
-                <p className="text-gray-600 dark:text-gray-300 text-center">{member.bio}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Expertise Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-              Our Expertise
-            </h2>
-            <p className="text-xl text-white/90 mb-12 max-w-4xl mx-auto leading-relaxed">
-              With years of experience in student accommodation, our team brings 
-              unparalleled expertise and innovation to every student's housing needs.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8 w-full mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <div className="text-6xl font-bold text-white mb-4">10+</div>
-              <p className="text-xl text-white/90">Years of Experience</p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <div className="text-6xl font-bold text-white mb-4">850+</div>
-              <p className="text-xl text-white/90">Projects Completed</p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <div className="text-6xl font-bold text-white mb-4">98%</div>
-              <p className="text-xl text-white/90">Client Satisfaction</p>
-            </motion.div>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <button 
-              className="!inline-flex !items-center !justify-center !gap-2 !bg-transparent !text-[#4A90E2] !border-2 !border-[#4A90E2] hover:!bg-[#F5F7FA] hover:!text-[#1E88E5] hover:!border-[#1E88E5] dark:!bg-transparent dark:!text-[#64B5F6] dark:!border-[#64B5F6] dark:hover:!bg-[rgba(74,144,226,0.15)] dark:hover:!text-[#90CAF9] dark:hover:!border-[#90CAF9] !px-6 !py-3 !text-base !font-semibold hover:!scale-105 !transition-all !duration-200 !rounded-lg !cursor-pointer"
-              style={{
-                backgroundColor: 'transparent',
-                color: '#4A90E2',
-                border: '2px solid #4A90E2',
-                padding: '12px 24px',
-                fontSize: '16px',
-                fontWeight: '600',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#F5F7FA';
-                e.target.style.color = '#1E88E5';
-                e.target.style.borderColor = '#1E88E5';
-                e.target.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = '#4A90E2';
-                e.target.style.borderColor = '#4A90E2';
-                e.target.style.transform = 'scale(1)';
-              }}
-            >
-              Join Our Team
-            </button>
-          </motion.div>
-        </div>
-      </section>
-    </div>
-  </AnimatedBackground>
+      </div>
+    </AnimatedBackground>
   );
 }
