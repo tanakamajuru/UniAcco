@@ -56,17 +56,17 @@ export default function About() {
 
   const teamMembers = [
     {
-      name: 'Tendai Moyo',
+      name: 'Tanaka Majuru',
       role: 'CEO & Founder',
       bio: 'Passionate about solving student housing challenges with technology.'
     },
     {
-      name: 'Nomsa Ndlovu',
+      name: 'Hazel Makwinjah',
       role: 'Head of Operations',
       bio: 'Ensuring smooth operations and excellent user experiences.'
     },
     {
-      name: 'Blessing Kambasha',
+      name: 'Kai Majuru',
       role: 'Customer Support',
       bio: 'Dedicated to helping students find their perfect accommodation.'
     }
@@ -371,17 +371,17 @@ export default function About() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: 'Tendai Moyo',
+                name: 'Tanaka Majuru',
                 role: 'CEO & Founder',
                 bio: 'Passionate about solving student housing challenges with technology.'
               },
               {
-                name: 'Nomsa Ndlovu',
+                name: 'Hazel Makwinjah',
                 role: 'Head of Operations',
                 bio: 'Ensuring smooth operations and excellent user experiences.'
               },
               {
-                name: 'Blessing Kambasha',
+                name: 'Kai Majuru',
                 role: 'Customer Support',
                 bio: 'Dedicated to helping students find their perfect accommodation.'
               }

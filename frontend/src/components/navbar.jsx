@@ -11,8 +11,30 @@ import { useNavigation } from '../App';
 import { LogIn } from 'lucide-react';
 import '../styles/brand-colors.css';
 
+const parseJwt = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
+
 export default function Navbar() {
   const { currentPage, navigate } = useNavigation();
+
+  const token = localStorage.getItem('token');
+  const role = token ? parseJwt(token)?.role : null;
+  const isLandlord = role === 'landlord';
+  const isAuthenticated = Boolean(token);
 
   const handleNavigation = (e, page) => {
     e.preventDefault();
@@ -60,19 +82,21 @@ export default function Navbar() {
               </NavigationMenuLink>
             </NavigationMenuItem>
 
-               <NavigationMenuItem>
-              <NavigationMenuLink 
-                href="/abouts" 
-                onClick={(e) => handleNavigation(e, 'abouts')}
-                className={cn(
-                  navigationMenuTriggerStyle(), 
-                  "bg-transparent hover:bg-[#D1DDE8] hover:text-[#1A1F2E] dark:hover:bg-[#3D5270] dark:hover:text-[#F5F7FA] cursor-pointer text-[#2E4057] dark:text-[#E8EEF4] transition-all duration-200 font-medium",
-                  currentPage === 'abouts' && "border-b-2 border-[#4A90E2] dark:border-[#64B5F6] text-[#4A90E2] dark:text-[#64B5F6] font-semibold"
-                )}
-              >
-                List Your Property
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+            {isLandlord && (
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  href="/list-your-property"
+                  onClick={(e) => handleNavigation(e, 'list-your-property')}
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    "bg-transparent hover:bg-[#D1DDE8] hover:text-[#1A1F2E] dark:hover:bg-[#3D5270] dark:hover:text-[#F5F7FA] cursor-pointer text-[#2E4057] dark:text-[#E8EEF4] transition-all duration-200 font-medium",
+                    currentPage === 'list-your-property' && "border-b-2 border-[#4A90E2] dark:border-[#64B5F6] text-[#4A90E2] dark:text-[#64B5F6] font-semibold"
+                  )}
+                >
+                  List Your Property
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            )}
 
 
             <NavigationMenuItem>
@@ -95,14 +119,22 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           {/* Sign In Button */}
           <button
-            onClick={(e) => handleNavigation(e, 'auth')}
+            onClick={(e) => {
+              e.preventDefault();
+              if (isAuthenticated) {
+                localStorage.removeItem('token');
+                navigate('home');
+                return;
+              }
+              navigate('auth');
+            }}
             className={cn(
               "px-4 py-2 rounded-full bg-transparent hover:bg-[#D1DDE8] dark:hover:bg-[#3D5270] text-[#2E4057] dark:text-[#E8EEF4] font-medium flex items-center gap-2 transition-all duration-200",
               currentPage === 'auth' && "border-b-2 border-[#4A90E2] dark:border-[#64B5F6] text-[#4A90E2] dark:text-[#64B5F6] font-semibold"
             )}
           >
             <LogIn className="w-4 h-4" />
-            Sign In
+            {isAuthenticated ? 'Sign Out' : 'Sign In'}
           </button>
 
           {/* Theme Toggle */}

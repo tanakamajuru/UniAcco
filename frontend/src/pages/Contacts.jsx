@@ -14,8 +14,8 @@ export default function Contacts() {
     
     // Get form data
     const formData = new FormData(e.target);
-    const firstName = formData.get('firstName');
-    const lastName = formData.get('lastName');
+    const first_name = formData.get('first_name');
+    const last_name = formData.get('last_name');
     const email = formData.get('email');
     const phone = formData.get('phone');
     const subject = formData.get('subject');
@@ -23,7 +23,7 @@ export default function Contacts() {
     
     // Compile message for WhatsApp
     const whatsappMessage = `*New Contact Form Submission*%0A%0A` +
-      `*Name:* ${firstName} ${lastName}%0A` +
+      `*Name:* ${first_name} ${last_name}%0A` +
       `*Email:* ${email}%0A` +
       `*Phone:* ${phone || 'Not provided'}%0A` +
       `*Subject:* ${subject}%0A%0A` +
@@ -157,20 +157,20 @@ export default function Contacts() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-[#1A1F2E] dark:text-[#F5F7FA] font-medium">First Name *</Label>
+                    <Label htmlFor="first_name" className="text-[#1A1F2E] dark:text-[#F5F7FA] font-medium">First Name *</Label>
                     <Input 
-                      id="firstName" 
-                      name="firstName"
+                      id="first_name" 
+                      name="first_name"
                       placeholder="John" 
                       required 
                       className="bg-white dark:bg-[#2E4057] text-[#1A1F2E] dark:text-[#F5F7FA] border-[#D1DDE8] dark:border-[#4A5568] focus:border-[#4A90E2] dark:focus:border-[#64B5F6]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-[#1A1F2E] dark:text-[#F5F7FA] font-medium">Last Name *</Label>
+                    <Label htmlFor="last_name" className="text-[#1A1F2E] dark:text-[#F5F7FA] font-medium">Last Name *</Label>
                     <Input 
-                      id="lastName" 
-                      name="lastName"
+                      id="last_name" 
+                      name="last_name"
                       placeholder="Doe" 
                       required 
                       className="bg-white dark:bg-[#2E4057] text-[#1A1F2E] dark:text-[#F5F7FA] border-[#D1DDE8] dark:border-[#4A5568] focus:border-[#4A90E2] dark:focus:border-[#64B5F6]"

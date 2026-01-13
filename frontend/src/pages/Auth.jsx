@@ -4,14 +4,22 @@ import { Mail, Lock, User, LogIn, ArrowLeft } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { motion } from 'framer-motion';
 
+import { authApi } from '../services/api';
+import { useNavigation } from '../App';
+
 const Auth = () => {
+  const { navigate } = useNavigation();
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'student'
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,10 +29,56 @@ const Auth = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Handle authentication logic here
+    setError('');
+
+    if (isSignUp) {
+      if (!formData.name.trim()) {
+        setError('Full Name is required');
+        return;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+    }
+
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        const parts = formData.name.trim().split(/\s+/);
+        const first_name = parts[0] || '';
+        const last_name = parts.slice(1).join(' ') || 'User';
+
+        const res = await authApi.register({
+          email: formData.email,
+          password: formData.password,
+          first_name,
+          last_name,
+          role: formData.role,
+        });
+
+        if (res?.token) {
+          localStorage.setItem('token', res.token);
+        }
+
+        navigate('home');
+        return;
+      }
+
+      const res = await authApi.login(formData.email, formData.password);
+      if (res?.token) {
+        localStorage.setItem('token', res.token);
+      }
+
+      navigate('home');
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Failed to authenticate');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,6 +108,12 @@ const Auth = () => {
                 </p>
               </div>
 
+              {error && (
+                <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
               <form className="space-y-6" onSubmit={handleSubmit}>
                 {isSignUp && (
                   <div>
@@ -76,6 +136,24 @@ const Auth = () => {
                         placeholder="John Doe"
                       />
                     </div>
+                  </div>
+                )}
+
+                {isSignUp && (
+                  <div>
+                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Account Type
+                    </label>
+                    <select
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-[#2E4057] dark:text-white"
+                    >
+                      <option value="student">Student</option>
+                      <option value="landlord">Landlord</option>
+                    </select>
                   </div>
                 )}
 
@@ -172,9 +250,10 @@ const Auth = () => {
                 <div>
                   <button
                     type="submit"
+                    disabled={loading}
                     className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    {isSignUp ? 'Sign up' : 'Sign in'}
+                    {loading ? 'Please wait...' : (isSignUp ? 'Sign up' : 'Sign in')}
                   </button>
                 </div>
               </form>

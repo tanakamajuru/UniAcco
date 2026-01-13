@@ -1,36 +1,34 @@
 // src/utils/api.js
-import { supabase } from './supabase';
+import { accommodationApi } from '../services/api';
 
+/**
+ * Fetch accommodations with optional filters
+ * @param {Object} filters - Filter criteria
+ * @returns {Promise<Array>} List of accommodations
+ */
 export async function fetchAccommodations(filters = {}) {
-  let query = supabase
-    .from('accommodations')
-    .select(`
-      *,
-      accommodation_amenities (*),
-      accommodation_images (id, image_url, is_primary)
-    `)
-    .eq('is_available', true);
-
-  // Apply filters if provided
-  if (filters.university) {
-    query = query.eq('university', filters.university);
-  }
-  if (filters.campus) {
-    query = query.eq('campus', filters.campus);
-  }
-  if (filters.minPrice) {
-    query = query.gte('price_per_month', filters.minPrice);
-  }
-  if (filters.maxPrice) {
-    query = query.lte('price_per_month', filters.maxPrice);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
+  try {
+    // Map filter names to match the backend API
+    const apiFilters = {
+      is_available: true,
+      ...filters,
+      // Map filter names if they're different
+      min_price: filters.minPrice,
+      max_price: filters.maxPrice,
+    };
+    
+    // Remove undefined values
+    Object.keys(apiFilters).forEach(key => 
+      apiFilters[key] === undefined && delete apiFilters[key]
+    );
+    
+    const data = await accommodationApi.getAll(apiFilters);
+    return data || [];
+  } catch (error) {
     console.error('Error fetching accommodations:', error);
     throw error;
   }
-
-  return data || [];
 }
+
+// Re-export all API methods for convenience
+export * from '../services/api';

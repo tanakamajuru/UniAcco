@@ -4,7 +4,7 @@ import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
 import Listings from './pages/Listings.jsx';
 import Auth from './pages/Auth.jsx';
-import Abouts from './pages/Abouts.jsx';
+import ListYourProperty from './pages/ListYourProperty.jsx';
 
 
 // Create Navigation Context
@@ -36,8 +36,8 @@ function App() {
         return <About />;
       case 'auth':
         return <Auth />;
-      case 'abouts':
-        return <Abouts />;
+      case 'list-your-property':
+        return <ListYourProperty />;
       default:
         return <Home />;
     }

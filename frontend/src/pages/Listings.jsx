@@ -25,6 +25,7 @@ import {
   Cigarette,
 } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import ImageSlider from '@/components/ImageSlider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchAccommodations } from '../utils/api';
 
@@ -92,12 +93,26 @@ const Listings = () => {
           minPrice: priceRange[0],
           maxPrice: priceRange[1],
         });
-        
-        const normalized = data.map((p) => ({
-          ...p,
-          accommodation_amenities: p.accommodation_amenities?.[0] ?? {},
-        }));
-        
+
+        const normalized = (data || []).map((p) => {
+          const normalizedAmenities =
+            p.amenities ??
+            p.accommodation_amenities?.[0] ??
+            p.accommodation_amenities ??
+            {};
+
+          const normalizedImages =
+            (p.images ?? p.accommodation_images?.map((img) => img.image_url) ?? [])
+              .map(url => url?.trim())
+              .filter(url => url && url.length > 0);
+
+          return {
+            ...p,
+            accommodation_amenities: normalizedAmenities,
+            images: normalizedImages,
+          };
+        });
+
         setAccommodations(normalized);
       } catch (err) {
         console.error('Error loading accommodations:', err);
@@ -241,19 +256,11 @@ const Listings = () => {
               className="bg-white dark:bg-[#1A1F2E] rounded-xl shadow-lg overflow-hidden"
             >
               <div className="h-48 w-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                {p.accommodation_images?.length > 0 ? (
-                  <img 
-                    src={p.accommodation_images[0].image_url} 
-                    alt={p.title}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
-                    }}
-                  />
-                ) : (
-                  <div className="text-gray-500">No image available</div>
-                )}
+                <ImageSlider 
+                  images={p.images} 
+                  autoplay={false}
+                  autoplayDelay={0}
+                />
               </div>
               <div className="p-5">
                 <h3 className="text-xl font-bold">{p.title}</h3>

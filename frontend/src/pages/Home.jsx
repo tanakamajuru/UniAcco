@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, MapPin, Star } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import ImageSlider from '@/components/ImageSlider';
 import { motion } from 'framer-motion';
+import { fetchAccommodations } from '../utils/api';
 import '../styles/brand-colors.css';
 
 export default function Home() {
@@ -9,6 +11,52 @@ export default function Home() {
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedCampus, setSelectedCampus] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [featuredListings, setFeaturedListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch properties from API
+  useEffect(() => {
+    const loadProperties = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchAccommodations();
+        
+        // Normalize the data and take first 3 as featured
+        const normalized = (data || []).map((p) => {
+          const normalizedAmenities =
+            p.amenities ??
+            p.accommodation_amenities?.[0] ??
+            p.accommodation_amenities ??
+            {};
+
+          const normalizedImages =
+            (p.images ?? p.accommodation_images?.map((img) => img.image_url) ?? [])
+              .map(url => url?.trim())
+              .filter(url => url && url.length > 0);
+
+          return {
+            id: p.id,
+            name: p.title,
+            campus: p.city || 'Unknown',
+            distance: 'N/A',
+            price: p.price_per_month,
+            rating: 4.5, // Default rating
+            images: normalizedImages,
+            amenities: Object.keys(normalizedAmenities).filter(key => normalizedAmenities[key]).slice(0, 3),
+            available: p.people_per_room || 1
+          };
+        }).slice(0, 3); // Take first 3 properties as featured
+
+        setFeaturedListings(normalized);
+      } catch (err) {
+        console.error('Error loading properties:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProperties();
+  }, []);
 
   const universities = [
     'University of Zimbabwe',
@@ -24,42 +72,6 @@ export default function Home() {
     'Engineering Campus',
     'Business School',
     'Arts Campus'
-  ];
-
-  const featuredListings = [
-    {
-      id: 1,
-      name: 'Sunrise Student Residences',
-      campus: 'Main Campus',
-      distance: '0.5 km',
-      price: 350,
-      rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&h=500&fit=crop',
-      amenities: ['WiFi', 'Meals', 'Study Room'],
-      available: 5
-    },
-    {
-      id: 2,
-      name: 'Campus View Lodge',
-      campus: 'Engineering Campus',
-      distance: '0.3 km',
-      price: 420,
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=500&fit=crop',
-      amenities: ['WiFi', 'Gym', 'Parking'],
-      available: 3
-    },
-    {
-      id: 3,
-      name: "Scholar's Haven",
-      campus: 'Main Campus',
-      distance: '1.2 km',
-      price: 290,
-      rating: 4.6,
-      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=500&fit=crop',
-      amenities: ['WiFi', 'Meals', 'Laundry'],
-      available: 8
-    }
   ];
 
   const stats = [
@@ -205,16 +217,16 @@ export default function Home() {
                 {featuredListings.map((listing) => (
                   <div key={listing.id} className="w-full flex-shrink-0 px-4">
                     <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                      <div className="relative">
-                        <img
-                          src={listing.image}
-                          alt={listing.name}
-                          className="w-full h-48 object-cover"
+                      <div className="relative h-48">
+                        <ImageSlider 
+                          images={listing.images} 
+                          autoplay={true}
+                          autoplayDelay={3000}
                         />
-                        <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold text-gray-900 shadow-lg">
+                        <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold text-gray-900 shadow-lg z-10">
                           ${listing.price}/mo
                         </div>
-                        <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                        <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold z-10">
                           {listing.available} Available
                         </div>
                       </div>
@@ -305,7 +317,7 @@ export default function Home() {
         </div>
       </footer>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
           33% { transform: translate(30px, -50px) scale(1.1); }
