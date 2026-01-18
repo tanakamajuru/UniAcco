@@ -1,6 +1,50 @@
 const pool = require('../config/database');
 const upload = require('../middleware/upload');
 
+const parseOptionalId = (value) => {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value === 'number') return Number.isNaN(value) ? null : Math.trunc(value);
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return null;
+    // If it looks like a UUID, return as-is
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed)) {
+      return trimmed;
+    }
+    // Otherwise try to parse as integer
+    const parsed = Number(trimmed);
+    if (Number.isNaN(parsed)) return null;
+    return Math.trunc(parsed);
+  }
+  return null;
+};
+
+const validateUniversityCampus = async (client, universityId, campusId) => {
+  if (universityId === null || universityId === undefined) {
+    return { ok: false, error: 'university_id is required' };
+  }
+  if (campusId === null || campusId === undefined) {
+    return { ok: false, error: 'campus_id is required' };
+  }
+
+  const universityResult = await client.query('SELECT id FROM universities WHERE id = $1', [universityId]);
+  if (universityResult.rows.length === 0) {
+    return { ok: false, error: 'Invalid university_id' };
+  }
+
+  const campusResult = await client.query('SELECT id, university_id FROM campuses WHERE id = $1', [campusId]);
+  if (campusResult.rows.length === 0) {
+    return { ok: false, error: 'Invalid campus_id' };
+  }
+
+  if (campusResult.rows[0].university_id !== universityId) {
+    return { ok: false, error: 'campus_id does not belong to the selected university_id' };
+  }
+
+  return { ok: true };
+};
+
 const normalizeAmenityFlag = (value) => {
   if (value === undefined) return undefined;
   if (value === null) return null;
@@ -53,6 +97,17 @@ const getAccommodations = async (req, res) => {
         u.last_name as landlord_last_name,
         u.email as landlord_email,
         u.phone as landlord_phone,
+        json_build_object(
+          'id', uni.id,
+          'name', uni.name
+        ) as university,
+        json_build_object(
+          'id', c.id,
+          'university_id', c.university_id,
+          'name', c.name,
+          'address', c.address,
+          'city', c.city
+        ) as campus,
         COALESCE(
           json_build_object(
             'wifi', COALESCE(aa.wifi, false),
@@ -76,6 +131,8 @@ const getAccommodations = async (req, res) => {
         ) as images
       FROM accommodations a
       JOIN users u ON a.landlord_id = u.id
+      LEFT JOIN universities uni ON a.university_id = uni.id
+      LEFT JOIN campuses c ON a.campus_id = c.id
       LEFT JOIN accommodation_amenities aa ON a.id = aa.accommodation_id
       WHERE a.is_available = true
     `;
@@ -109,7 +166,7 @@ const getAccommodations = async (req, res) => {
 
     // Add ORDER BY
     query += `
-      GROUP BY a.id, u.id, aa.id
+      GROUP BY a.id, u.id, aa.id, uni.id, c.id
       ORDER BY a.created_at DESC
     `;
 
@@ -134,6 +191,17 @@ const getAccommodationById = async (req, res) => {
         u.last_name as landlord_last_name,
         u.email as landlord_email,
         u.phone as landlord_phone,
+        json_build_object(
+          'id', uni.id,
+          'name', uni.name
+        ) as university,
+        json_build_object(
+          'id', c.id,
+          'university_id', c.university_id,
+          'name', c.name,
+          'address', c.address,
+          'city', c.city
+        ) as campus,
         COALESCE(
           json_build_object(
             'wifi', COALESCE(aa.wifi, false),
@@ -156,9 +224,11 @@ const getAccommodationById = async (req, res) => {
         ) as images
       FROM accommodations a
       JOIN users u ON a.landlord_id = u.id
+      LEFT JOIN universities uni ON a.university_id = uni.id
+      LEFT JOIN campuses c ON a.campus_id = c.id
       LEFT JOIN accommodation_amenities aa ON a.id = aa.accommodation_id
       WHERE a.id = $1
-      GROUP BY a.id, u.id, aa.id
+      GROUP BY a.id, u.id, aa.id, uni.id, c.id
     `;
     
     const result = await pool.query(query, [id]);
@@ -210,6 +280,8 @@ const createAccommodation = async (req, res) => {
       available_from, 
       available_to, 
       people_per_room,
+      university_id,
+      campus_id,
       amenities,
       images: existingImages
     } = req.body;
@@ -220,13 +292,11 @@ const createAccommodation = async (req, res) => {
     const effectivePricePerMonth = price_per_month ?? req.body.pricePerMonth;
     const effectiveDepositAmount = deposit_amount ?? req.body.depositAmount;
 
-    if (effectivePricePerMonth === undefined || effectivePricePerMonth === null || effectivePricePerMonth === '') {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'price_per_month is required' });
-    }
+    const normalizedPricePerMonth = effectivePricePerMonth === undefined || effectivePricePerMonth === null || effectivePricePerMonth === ''
+      ? null
+      : Number(effectivePricePerMonth);
 
-    const normalizedPricePerMonth = Number(effectivePricePerMonth);
-    if (Number.isNaN(normalizedPricePerMonth)) {
+    if (normalizedPricePerMonth !== null && Number.isNaN(normalizedPricePerMonth)) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'price_per_month must be a number' });
     }
@@ -240,13 +310,34 @@ const createAccommodation = async (req, res) => {
       return res.status(400).json({ error: 'deposit_amount must be a number' });
     }
 
+    const effectiveUniversityIdRaw = university_id ?? req.body.universityId;
+    const effectiveCampusIdRaw = campus_id ?? req.body.campusId;
+    const normalizedUniversityId = parseOptionalId(effectiveUniversityIdRaw);
+    const normalizedCampusId = parseOptionalId(effectiveCampusIdRaw);
+
+    if (normalizedUniversityId === null) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'university_id must be a valid integer or UUID' });
+    }
+
+    if (normalizedCampusId === null) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'campus_id must be a valid integer or UUID' });
+    }
+
+    const validation = await validateUniversityCampus(client, normalizedUniversityId, normalizedCampusId);
+    if (!validation.ok) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: validation.error });
+    }
+
     // Insert accommodation
     const accommodationQuery = `
       INSERT INTO accommodations (
         landlord_id, title, description, address, city, postal_code, 
         latitude, longitude, price_per_month, deposit_amount, 
-        available_from, available_to, people_per_room
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        available_from, available_to, people_per_room, university_id, campus_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
     `;
     
@@ -263,7 +354,9 @@ const createAccommodation = async (req, res) => {
       normalizedDepositAmount,
       available_from,
       available_to,
-      people_per_room || 1
+      people_per_room || 1,
+      normalizedUniversityId,
+      normalizedCampusId
     ];
 
     const accommodationResult = await client.query(accommodationQuery, accommodationValues);
@@ -323,6 +416,17 @@ const createAccommodation = async (req, res) => {
       SELECT 
         a.*, 
         json_build_object(
+          'id', uni.id,
+          'name', uni.name
+        ) as university,
+        json_build_object(
+          'id', c.id,
+          'university_id', c.university_id,
+          'name', c.name,
+          'address', c.address,
+          'city', c.city
+        ) as campus,
+        json_build_object(
           'wifi', COALESCE(aa.wifi, false),
           'furnished', COALESCE(aa.furnished, false),
           'parking', COALESCE(aa.parking, false),
@@ -338,6 +442,8 @@ const createAccommodation = async (req, res) => {
          WHERE ai.accommodation_id = $1
          GROUP BY ai.accommodation_id) as images
       FROM accommodations a
+      LEFT JOIN universities uni ON a.university_id = uni.id
+      LEFT JOIN campuses c ON a.campus_id = c.id
       LEFT JOIN accommodation_amenities aa ON a.id = aa.accommodation_id
       WHERE a.id = $1
     `, [accommodationId]);
@@ -363,18 +469,32 @@ const updateAccommodation = async (req, res) => {
     const { id } = req.params;
 
     // Check if accommodation exists and belongs to the landlord
-    const checkQuery = 'SELECT id FROM accommodations WHERE id = $1 AND landlord_id = $2';
+    const checkQuery = 'SELECT id, university_id, campus_id FROM accommodations WHERE id = $1 AND landlord_id = $2';
     const checkResult = await client.query(checkQuery, [id, req.user.id]);
-    
+
     if (checkResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Accommodation not found or access denied' });
     }
 
-    const { 
-      title, description, address, city, postal_code, 
-      latitude, longitude, price_per_month, deposit_amount, 
-      available_from, available_to, is_available, people_per_room,
-      amenities, images
+    const {
+      title,
+      description,
+      address,
+      city,
+      postal_code,
+      latitude,
+      longitude,
+      price_per_month,
+      deposit_amount,
+      available_from,
+      available_to,
+      is_available,
+      people_per_room,
+      university_id,
+      campus_id,
+      amenities,
+      images
     } = req.body;
 
     const effectivePricePerMonth = price_per_month ?? req.body.pricePerMonth;
@@ -398,10 +518,49 @@ const updateAccommodation = async (req, res) => {
       return res.status(400).json({ error: 'deposit_amount must be a number' });
     }
 
-    // Update accommodation
+    const existingUniversityId = checkResult.rows[0].university_id;
+
+const effectiveUniversityIdRaw = university_id ?? req.body.universityId;
+const effectiveCampusIdRaw = campus_id ?? req.body.campusId;
+
+const normalizedUniversityId = effectiveUniversityIdRaw === undefined
+? undefined
+: parseOptionalId(effectiveUniversityIdRaw);
+const normalizedCampusId = effectiveCampusIdRaw === undefined
+? undefined
+: parseOptionalId(effectiveCampusIdRaw);
+
+if (normalizedUniversityId === null) {
+await client.query('ROLLBACK');
+return res.status(400).json({ error: 'university_id must be a valid integer or UUID' });
+}
+
+if (normalizedCampusId === null) {
+await client.query('ROLLBACK');
+return res.status(400).json({ error: 'campus_id must be a valid integer or UUID' });
+}
+
+const nextUniversityId = normalizedUniversityId !== undefined ? normalizedUniversityId : existingUniversityId;
+const nextCampusId = normalizedCampusId !== undefined ? normalizedCampusId : existingCampusId;
+
+if (normalizedUniversityId !== undefined || normalizedCampusId !== undefined) {
+const validation = await validateUniversityCampus(client, nextUniversityId, nextCampusId);
+if (!validation.ok) {
+await client.query('ROLLBACK');
+return res.status(400).json({ error: validation.error });
+}
+}
+    if (normalizedUniversityId !== undefined || normalizedCampusId !== undefined) {
+      const validation = await validateUniversityCampus(client, nextUniversityId, nextCampusId);
+      if (!validation.ok) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: validation.error });
+      }
+    }
+
     const updateQuery = `
-      UPDATE accommodations 
-      SET 
+      UPDATE accommodations
+      SET
         title = COALESCE($1, title),
         description = COALESCE($2, description),
         address = COALESCE($3, address),
@@ -415,21 +574,35 @@ const updateAccommodation = async (req, res) => {
         available_to = COALESCE($11, available_to),
         is_available = COALESCE($12, is_available),
         people_per_room = COALESCE($13, people_per_room),
+        university_id = COALESCE($14, university_id),
+        campus_id = COALESCE($15, campus_id),
         updated_at = NOW()
-      WHERE id = $14
-      RETURNING *
+      WHERE id = $16
+      RETURNING id
     `;
 
     const updateValues = [
-      title, description, address, city, postal_code, 
-      latitude, longitude, normalizedPricePerMonth, normalizedDepositAmount, 
-      available_from, available_to, is_available, people_per_room,
+      title,
+      description,
+      address,
+      city,
+      postal_code,
+      latitude,
+      longitude,
+      normalizedPricePerMonth,
+      normalizedDepositAmount,
+      available_from,
+      available_to,
+      is_available,
+      people_per_room,
+      normalizedUniversityId === undefined ? null : normalizedUniversityId,
+      normalizedCampusId === undefined ? null : normalizedCampusId,
       id
     ];
 
-    const result = await client.query(updateQuery, updateValues);
+    const updateResult = await client.query(updateQuery, updateValues);
+    const updatedAccommodationId = updateResult.rows[0].id;
 
-    // Update amenities if provided
     if (amenities) {
       const amenitiesObj = parseAmenitiesInput(amenities);
       if (!amenitiesObj) {
@@ -461,7 +634,7 @@ const updateAccommodation = async (req, res) => {
           smoking_allowed = COALESCE($9, smoking_allowed)
         WHERE accommodation_id = $10
       `;
-      
+
       await client.query(updateAmenitiesQuery, [
         wifiPick.exists ? wifiPick.value : null,
         furnishedPick.exists ? furnishedPick.value : null,
@@ -472,26 +645,66 @@ const updateAccommodation = async (req, res) => {
         tvPick.exists ? tvPick.value : null,
         petsAllowedPick.exists ? petsAllowedPick.value : null,
         smokingAllowedPick.exists ? smokingAllowedPick.value : null,
-        id
+        updatedAccommodationId
       ]);
     }
 
-    // Handle images if provided
     if (images && images.length > 0) {
-      // Delete existing images
-      await client.query('DELETE FROM accommodation_images WHERE accommodation_id = $1', [id]);
-      
-      // Insert new images
+      await client.query('DELETE FROM accommodation_images WHERE accommodation_id = $1', [updatedAccommodationId]);
+
       for (let i = 0; i < images.length; i++) {
         await client.query(
           'INSERT INTO accommodation_images (accommodation_id, image_url, is_primary) VALUES ($1, $2, $3)',
-          [id, images[i], i === 0] // First image is primary
+          [updatedAccommodationId, images[i], i === 0]
         );
       }
     }
 
+    const fetchResult = await client.query(`
+      SELECT
+        a.*,
+        json_build_object(
+          'id', uni.id,
+          'name', uni.name
+        ) as university,
+        json_build_object(
+          'id', c.id,
+          'university_id', c.university_id,
+          'name', c.name,
+          'address', c.address,
+          'city', c.city
+        ) as campus,
+        COALESCE(
+          json_build_object(
+            'wifi', COALESCE(aa.wifi, false),
+            'furnished', COALESCE(aa.furnished, false),
+            'parking', COALESCE(aa.parking, false),
+            'laundry', COALESCE(aa.laundry, false),
+            'kitchen', COALESCE(aa.kitchen, false),
+            'heating', COALESCE(aa.heating, false),
+            'tv', COALESCE(aa.tv, false),
+            'pets_allowed', COALESCE(aa.pets_allowed, false),
+            'smoking_allowed', COALESCE(aa.smoking_allowed, false)
+          )::jsonb,
+          '{"wifi":false,"furnished":false,"parking":false,"laundry":false,"kitchen":false,"heating":false,"tv":false,"pets_allowed":false,"smoking_allowed":false}'::jsonb
+        ) as amenities,
+        COALESCE(
+          (SELECT json_agg(ai.image_url)
+           FROM accommodation_images ai
+           WHERE ai.accommodation_id = a.id
+           GROUP BY ai.accommodation_id),
+          '[]'::json
+        ) as images
+      FROM accommodations a
+      LEFT JOIN universities uni ON a.university_id = uni.id
+      LEFT JOIN campuses c ON a.campus_id = c.id
+      LEFT JOIN accommodation_amenities aa ON a.id = aa.accommodation_id
+      WHERE a.id = $1
+      GROUP BY a.id, uni.id, c.id, aa.id
+    `, [updatedAccommodationId]);
+
     await client.query('COMMIT');
-    res.json(result.rows[0]);
+    res.json(fetchResult.rows[0]);
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error updating accommodation:', error);
@@ -526,7 +739,7 @@ const deleteAccommodation = async (req, res) => {
     await client.query('DELETE FROM reviews WHERE accommodation_id = $1', [id]);
 
     // Finally delete the accommodation
-    const result = await client.query('DELETE FROM accommodations WHERE id = $1 RETURNING *', [id]);
+    await client.query('DELETE FROM accommodations WHERE id = $1', [id]);
     
     await client.query('COMMIT');
     res.json({ message: 'Accommodation deleted successfully' });

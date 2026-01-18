@@ -11,4 +11,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Configure server for client-side routing
+  server: {
+    historyApiFallback: true,
+  },
+  // Configure preview for client-side routing
+  preview: {
+    historyApiFallback: true,
+  },
 })

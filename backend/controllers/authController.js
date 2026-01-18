@@ -127,14 +127,17 @@ exports.login = async (req, res) => {
 // Get current user profile
 exports.getProfile = async (req, res) => {
   try {
+    console.log('Fetching profile for user ID:', req.user.id);
+    
     const result = await pool.query(
       `SELECT id, email, "first_name", "last_name", phone, role, 
-              bio, "dateOfBirth", gender, course, "yearOfStudy", 
-              "isEmailVerified", "isPhoneVerified", "createdAt", "updatedAt"
+              "created_at" as "createdAt", "updated_at" as "updatedAt"
        FROM users 
        WHERE id = $1`,
       [req.user.id]
     );
+
+    console.log('Query result:', result.rows);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -143,6 +146,12 @@ exports.getProfile = async (req, res) => {
     res.json({ user: result.rows[0] });
   } catch (error) {
     console.error('Get profile error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint
+    });
     res.status(500).json({ error: 'Error fetching profile' });
   }
 };
@@ -161,7 +170,7 @@ exports.updateProfile = async (req, res) => {
   let paramCount = 1;
 
   // Build the dynamic update query based on provided fields
-  const allowedFields = ['first_name', 'last_name', 'phone', 'bio', 'dateOfBirth', 'gender', 'course', 'yearOfStudy'];
+  const allowedFields = ['first_name', 'last_name', 'phone'];
   
   for (const [key, value] of Object.entries(updates)) {
     if (allowedFields.includes(key)) {
@@ -179,11 +188,10 @@ exports.updateProfile = async (req, res) => {
     // Update the user's profile
     const query = `
       UPDATE users 
-      SET ${updateFields.join(', ')}, "updatedAt" = NOW()
+      SET ${updateFields.join(', ')}, "updated_at" = NOW()
       WHERE id = $${paramCount}
       RETURNING id, email, "first_name", "last_name", phone, role, 
-                bio, "dateOfBirth", gender, course, "yearOfStudy", 
-                "isEmailVerified", "isPhoneVerified", "createdAt", "updatedAt"
+                "created_at" as "createdAt", "updated_at" as "updatedAt"
     `;
     
     queryParams.push(userId);

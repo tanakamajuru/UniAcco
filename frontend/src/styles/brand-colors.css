@@ -1,3 +1,24 @@
+/* Button CSS Variables */
+:root {
+  --btn-primary: var(--brand-royal);
+  --btn-primary-hover: var(--brand-vibrant);
+  --btn-secondary: var(--light-bg-tertiary);
+  --btn-secondary-hover: var(--light-border-subtle);
+  --btn-secondary-text: var(--brand-navy);
+  --btn-danger: #EF4444;
+  --btn-danger-hover: #DC2626;
+}
+
+.dark {
+  --btn-primary: var(--brand-royal);
+  --btn-primary-hover: var(--brand-vibrant);
+  --btn-secondary: var(--brand-navy);
+  --btn-secondary-hover: #3D5270;
+  --btn-secondary-text: white;
+  --btn-danger: #EF4444;
+  --btn-danger-hover: #DC2626;
+}
+
 /* BlueStrike Brand Colors */
 :root {
   /* Primary Brand Blues */
@@ -129,7 +150,7 @@
 
 .dark .btn-secondary {
   background-color: var(--brand-navy);
-  color: var(--light-bg-tertiary);
+  color: white;
 }
 
 .btn-secondary:hover {
@@ -160,11 +181,70 @@
   box-shadow: 0 8px 32px var(--shadow-elevated);
 }
 
-/* Glow Effects for Dark Theme */
-.dark .brand-glow {
-  box-shadow: 0 0 20px var(--dark-glow);
+/* Dark theme button fixes */
+.dark button {
+  color: white !important;
 }
 
-.dark .brand-glow-subtle {
-  box-shadow: 0 0 10px rgba(100, 181, 246, 0.1);
+.dark .btn-primary {
+  background-color: var(--brand-royal);
+  color: white;
+}
+
+.dark .btn-secondary {
+  background-color: var(--brand-navy);
+  color: white;
+}
+
+.dark .btn-secondary:hover {
+  background-color: #3D5270;
+  color: white;
+}
+
+/* Ensure all buttons with common classes have white text in dark theme */
+.dark .bg-blue-600,
+.dark .bg-blue-700,
+.dark .bg-brand-primary,
+.dark .bg-gradient-to-r,
+.dark [class*="bg-btn-"],
+.dark [class*="text-btn-"],
+.dark .text-text-inverse {
+  color: white !important;
+}
+
+.dark button[class*="bg-"] {
+  color: white !important;
+}
+
+/* Specific fixes for common button patterns */
+.dark .bg-btn-primary,
+.dark .bg-btn-secondary {
+  color: white !important;
+}
+
+/* Additional fixes for inline styles and specific components */
+.dark button[style*="color"],
+.dark button[style*="background"] {
+  color: white !important;
+}
+
+/* Fix for specific button classes found in components */
+.dark .text-white,
+.dark button.text-white {
+  color: white !important;
+}
+
+/* Ensure all interactive elements have proper contrast */
+.dark .btn,
+.dark [role="button"],
+.dark button[type="button"],
+.dark button[type="submit"] {
+  color: white !important;
+}
+
+/* Fix for navigation and dropdown buttons */
+.dark .navigation button,
+.dark .dropdown button,
+.dark .profile button {
+  color: white !important;
 }

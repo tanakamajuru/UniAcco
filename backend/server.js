@@ -23,6 +23,9 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const imageRoutes = require('./routes/imageRoutes');
+const universityRoutes = require('./routes/universityRoutes');
+const campusRoutes = require('./routes/campusRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
@@ -229,6 +232,9 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/universities', universityRoutes);
+app.use('/api/campuses', campusRoutes);
+app.use('/api/payments', paymentRoutes);
 
 /**
  * =====================================================

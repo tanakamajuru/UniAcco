@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Theme Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    colors: {
+                        'btn-primary': 'var(--brand-primary)',
+                        'btn-primary-hover': 'var(--brand-primary-dark)',
+                        'btn-secondary': 'var(--bg-surface-alt)',
+                        'btn-secondary-hover': 'var(--border-default)',
+                        'btn-secondary-text': 'var(--text-primary)',
+                        'btn-danger': 'var(--color-error)',
+                        'text-inverse': 'var(--text-inverse)',
+                        'text-link': 'var(--text-link)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --brand-primary: #4DB6E2;
+            --brand-primary-dark: #2F8FB8;
+            --bg-page: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --bg-surface-alt: #F1F5F9;
+            --text-primary: #0F172A;
+            --text-inverse: #FFFFFF;
+            --text-link: #2F8FB8;
+            --border-default: #E2E8F0;
+            --color-error: #EF4444;
+        }
+        
+        [data-theme="dark"], .dark {
+            --bg-page: #0B1220;
+            --bg-surface: #111827;
+            --bg-surface-alt: #1F2933;
+            --text-primary: #F8FAFC;
+            --text-inverse: #0B1220;
+            --text-link: #8FD3EE;
+            --border-default: #243044;
+        }
+        
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <h1 class="text-3xl font-bold mb-8">Button Theme Test</h1>
+        
+        <div class="flex gap-4 mb-8">
+            <button onclick="setTheme('light')" class="px-4 py-2 bg-btn-secondary text-btn-secondary-text rounded-lg hover:bg-btn-secondary-hover">
+                Light Mode
+            </button>
+            <button onclick="setTheme('dark')" class="px-4 py-2 bg-btn-secondary text-btn-secondary-text rounded-lg hover:bg-btn-secondary-hover">
+                Dark Mode
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold">Primary Buttons</h2>
+            <button class="bg-btn-primary text-text-inverse px-6 py-3 rounded-lg hover:bg-btn-primary-hover">
+                Primary Button
+            </button>
+            
+            <h2 class="text-xl font-semibold">Secondary Buttons</h2>
+            <button class="bg-btn-secondary text-btn-secondary-text px-6 py-3 rounded-lg hover:bg-btn-secondary-hover">
+                Secondary Button
+            </button>
+            
+            <h2 class="text-xl font-semibold">Link Buttons</h2>
+            <button class="text-text-link hover:text-text-link font-medium">
+                Link Button
+            </button>
+            
+            <h2 class="text-xl font-semibold">Danger Buttons</h2>
+            <button class="bg-btn-danger text-text-inverse px-6 py-3 rounded-lg hover:bg-red-600">
+                Danger Button
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        function setTheme(theme) {
+            document.documentElement.dataset.theme = theme;
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+        
+        // Set initial theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+    </script>
+</body>
+</html>

@@ -23,13 +23,137 @@ import {
   Sofa,
   PawPrint,
   Cigarette,
+  CreditCard,
+  Lock,
+  Unlock,
+  Eye,
+  ArrowRight,
 } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import ImageSlider from '@/components/ImageSlider';
+import PaymentForm from '@/components/PaymentForm';
+import { usePaymentVerification, PaymentRequired } from '../hooks/usePaymentVerification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchAccommodations } from '../utils/api';
+import { useNavigation } from '../App';
+
+// Separate component for property cards to avoid hooks in loops
+const PropertyCard = ({ property, amenities, onPropertyClick, onViewDetails }) => {
+  const { hasPaid: hasPaidForAccommodation, isLoading: paymentLoading } = usePaymentVerification('accommodation_details', property.id);
+  
+  return (
+    <motion.div
+      key={property.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-bg-surface rounded-xl shadow-lg overflow-hidden"
+    >
+      <div className="h-48 w-full bg-bg-surface-alt flex items-center justify-center overflow-hidden">
+        <ImageSlider 
+          images={property.images} 
+          autoplay={false}
+          autoplayDelay={0}
+        />
+      </div>
+      <div className="p-5">
+        <h3 className="text-xl font-bold">{property.title}</h3>
+        <p className="text-sm text-text-muted">
+          {property.university?.name || 'University'} — {property.campus?.name || 'Campus'}
+        </p>
+        <div className="flex items-center gap-4 mt-2">
+          <p className="font-semibold">${property.price_per_month}/month</p>
+          <p className="text-sm text-text-muted">• {property.people_per_room ? `${property.people_per_room} ${property.people_per_room === 1 ? 'Person' : 'People'}/room` : 'N/A'}</p>
+        </div>
+
+        {/* Payment Status Indicator */}
+        <div className="mt-2 mb-3">
+          {paymentLoading ? (
+            <div className="flex items-center text-sm text-text-secondary">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-primary mr-2"></div>
+              Checking access...
+            </div>
+          ) : hasPaidForAccommodation ? (
+            <div className="flex items-center text-sm text-success">
+              <Unlock className="w-4 h-4 mr-1" />
+              Full Access Unlocked
+            </div>
+          ) : (
+            <div className="flex items-center text-sm text-warning">
+              <Lock className="w-4 h-4 mr-1" />
+              Limited Access - Payment Required
+            </div>
+          )}
+        </div>
+
+        {/* Amenities */}
+        <div className="mt-3">
+          <h4 className="text-sm font-medium mb-2">Amenities:</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {amenities.map((amenity) => {
+              const isAvailable = property.accommodation_amenities?.[amenity.id] === true;
+              
+              return (
+                <label 
+                  key={amenity.id} 
+                  className={`flex items-center space-x-2 text-sm ${isAvailable ? 'text-text-primary dark:text-text-primary' : 'text-text-muted dark:text-text-muted'}`}
+                >
+                  <div className={`flex items-center justify-center w-5 h-5 border rounded ${isAvailable ? 'border-brand-primary bg-brand-primary/10 dark:bg-brand-primary/20' : 'border-border dark:border-border'}`}>
+                    {isAvailable && (
+                      <svg className="w-3 h-3 text-brand-primary" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-1">{amenity.icon}</span>
+                    <span>{amenity.label}</span>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Contact Information - Only show if paid */}
+        {hasPaidForAccommodation ? (
+          <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+            <h5 className="font-semibold text-green-800 mb-2">Contact Information</h5>
+            <div className="text-sm text-green-700 space-y-1">
+              <p><strong>Landlord:</strong> {property.landlord_name || 'Available after payment'}</p>
+              <p><strong>Phone:</strong> {property.landlord_phone || 'Available after payment'}</p>
+              <p><strong>Email:</strong> {property.landlord_email || 'Available after payment'}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+            <p className="text-sm text-orange-700">
+              <strong>Contact information</strong> and full details are available after payment
+            </p>
+          </div>
+        )}
+
+        <button
+          onClick={() => onPropertyClick(property, hasPaidForAccommodation)}
+          className="mt-4 w-full bg-brand-primary text-text-inverse rounded-lg hover:bg-brand-primary-dark transition-colors"
+        >
+          {hasPaidForAccommodation ? 'Apply Now' : 'Pay to Unlock & Apply'}
+        </button>
+        
+        {/* View Details Button */}
+        <button
+          onClick={() => onViewDetails(property.id)}
+          className="mt-2 w-full bg-bg-surface-alt text-text-primary rounded-lg hover:bg-bg-surface transition-colors flex items-center justify-center"
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          View Details
+        </button>
+      </div>
+    </motion.div>
+  );
+};
 
 const Listings = () => {
+  const { currentPage, navigate } = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedCampus, setSelectedCampus] = useState('');
@@ -38,6 +162,8 @@ const Listings = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [applicationData, setApplicationData] = useState(null);
 
   const [accommodations, setAccommodations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -154,10 +280,47 @@ const Listings = () => {
     setApplicationForm((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Application:', { ...applicationForm, propertyId: selectedProperty.id });
+    // Store application data and show payment form
+    setApplicationData(applicationForm);
     setShowApplicationForm(false);
+    setShowPaymentForm(true);
+  };
+
+  const handlePaymentSuccess = (paymentData) => {
+    // Payment successful - reset forms and show success
+    setShowPaymentForm(false);
+    setApplicationData(null);
+    setApplicationForm({
+      fullName: '',
+      email: '',
+      phone: '',
+      moveInDate: '',
+      message: ''
+    });
+    // You could show a success message or redirect
+    alert('Payment successful! Your booking has been confirmed.');
+  };
+
+  const handleCancelPayment = () => {
+    setShowPaymentForm(false);
+    setApplicationData(null);
+  };
+
+  const handlePropertyClick = (property, hasPaidForAccommodation) => {
+    setSelectedProperty(property);
+    if (hasPaidForAccommodation) {
+      // If already paid, show application form directly
+      setShowApplicationForm(true);
+    } else {
+      // If not paid, show payment form
+      setShowPaymentForm(true);
+    }
+  };
+
+  const handleViewDetails = (propertyId) => {
+    navigate(`property-details/${propertyId}`);
   };
 
   /* =======================
@@ -183,14 +346,14 @@ const Listings = () => {
       <div className="min-h-screen pt-24 pb-16 px-6">
 
         {/* Header / Filters */}
-        <div className="bg-white dark:bg-[#1A1F2E] rounded-2xl shadow-xl p-6 mb-10">
+        <div className="bg-bg-surface rounded-2xl shadow-card p-6 mb-10">
           <h1 className="text-3xl font-bold mb-6">Find Your Perfect Student Accommodation</h1>
 
           {/* Search */}
           <div className="relative mb-6">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-3 top-3 h-5 w-5 text-text-muted" />
             <input
-              className="w-full pl-10 py-3 rounded-lg border dark:bg-[#2E4057]"
+              className="w-full pl-10 py-3 rounded-lg border bg-input dark:bg-input"
               placeholder="Search by property name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -219,7 +382,7 @@ const Listings = () => {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2"
+              className="bg-brand-primary text-text-inverse rounded-lg flex items-center justify-center gap-2 hover:bg-brand-primary-dark transition-colors"
             >
               <Filter className="w-4 h-4" />
               More Filters
@@ -248,73 +411,19 @@ const Listings = () => {
 
         {/* Results */}
         <div className="grid md:grid-cols-3 gap-8">
-          {filteredProperties.map((p) => (
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-[#1A1F2E] rounded-xl shadow-lg overflow-hidden"
-            >
-              <div className="h-48 w-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                <ImageSlider 
-                  images={p.images} 
-                  autoplay={false}
-                  autoplayDelay={0}
-                />
-              </div>
-              <div className="p-5">
-                <h3 className="text-xl font-bold">{p.title}</h3>
-                <p className="text-sm text-gray-500">{p.campus}</p>
-                <div className="flex items-center gap-4 mt-2">
-                  <p className="font-semibold">${p.price_per_month}/month</p>
-                  <p className="text-sm text-gray-500">• {p.people_per_room ? `${p.people_per_room} ${p.people_per_room === 1 ? 'Person' : 'People'}/room` : 'N/A'}</p>
-                </div>
-
-                {/* Amenities */}
-                <div className="mt-3">
-                  <h4 className="text-sm font-medium mb-2">Amenities:</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {amenities.map((amenity) => {
-                      const isAvailable = p.accommodation_amenities?.[amenity.id] === true;
-                      
-                      return (
-                        <label 
-                          key={amenity.id} 
-                          className={`flex items-center space-x-2 text-sm ${isAvailable ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'}`}
-                        >
-                          <div className={`flex items-center justify-center w-5 h-5 border rounded ${isAvailable ? 'border-blue-500 bg-blue-100 dark:bg-blue-900' : 'border-gray-300 dark:border-gray-600'}`}>
-                            {isAvailable && (
-                              <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex items-center">
-                            <span className="mr-1">{amenity.icon}</span>
-                            <span>{amenity.label}</span>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setSelectedProperty(p);
-                    setShowApplicationForm(true);
-                  }}
-                  className="mt-4 w-full bg-blue-600 text-black rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Apply Now
-                </button>
-              </div>
-            </motion.div>
+          {filteredProperties.map((property) => (
+            <PropertyCard
+              key={property.id}
+              property={property}
+              amenities={amenities}
+              onPropertyClick={handlePropertyClick}
+              onViewDetails={handleViewDetails}
+            />
           ))}
         </div>
       </div>
 
-      {/* APPLICATION MODAL (UI preserved) */}
+      {/* APPLICATION MODAL */}
       <AnimatePresence>
         {showApplicationForm && selectedProperty && (
           <motion.div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -322,10 +431,13 @@ const Listings = () => {
               onSubmit={handleSubmit}
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
-              className="bg-white dark:bg-[#1A1F2E] p-6 rounded-xl max-w-xl w-full"
+              className="bg-bg-surface p-6 rounded-xl max-w-xl w-full"
             >
               <h2 className="text-2xl font-bold mb-4">
                 Apply for {selectedProperty.title}
+                <div className="text-sm text-text-muted mt-1">
+                  {selectedProperty.university?.name || 'University'} — {selectedProperty.campus?.name || 'Campus'}
+                </div>
               </h2>
 
               <input name="fullName" placeholder="Full Name" onChange={handleInputChange} className="w-full mb-2 p-2" required />
@@ -335,10 +447,29 @@ const Listings = () => {
 
               <textarea name="message" placeholder="Additional notes" className="w-full mb-3 p-2" />
 
-              <button className="w-full bg-blue-600 text-white py-2 rounded-lg">
+              <button className="w-full bg-brand-primary text-text-inverse py-2 rounded-lg">
                 Submit Application
               </button>
             </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* PAYMENT MODAL */}
+      <AnimatePresence>
+        {showPaymentForm && applicationData && selectedProperty && (
+          <motion.div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="bg-bg-surface p-6 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <PaymentForm
+                accommodation={selectedProperty}
+                onPaymentSuccess={handlePaymentSuccess}
+                onCancel={handleCancelPayment}
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigation } from '../App';
 //// Supabase client import removed as it's not needed without JWT
 
@@ -21,9 +21,22 @@ const parseJwt = (token) => {
 
 export default function ListPropertyPage() {
   const { navigate } = useNavigation();
+  
+  // Override body flex layout for this page
+  useEffect(() => {
+    document.body.style.display = 'block';
+    document.body.style.placeItems = 'unset';
+    
+    return () => {
+      // Reset when component unmounts
+      document.body.style.display = '';
+      document.body.style.placeItems = '';
+    };
+  }, []);
+  
   const [form, setForm] = useState({
-    university: "",
-    campus: "",
+    university_id: "",
+    campus_id: "",
     title: "",
     description: "",
     address: "",
@@ -55,6 +68,9 @@ export default function ListPropertyPage() {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
+  const [universities, setUniversities] = useState([]);
+  const [campuses, setCampuses] = useState([]);
+
   const token = localStorage.getItem('token');
   const role = token ? parseJwt(token)?.role : null;
   const isLandlord = role === 'landlord';
@@ -62,9 +78,57 @@ export default function ListPropertyPage() {
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const API_POST_URL = `${API_BASE_URL}/api/accommodations`;
 
+  useEffect(() => {
+    const loadUniversities = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/universities`);
+        const payload = await res.json().catch(() => null);
+        if (!res.ok) {
+          console.error('Failed to load universities', payload);
+          return;
+        }
+        setUniversities(Array.isArray(payload) ? payload : []);
+      } catch (err) {
+        console.error('Failed to load universities', err);
+      }
+    };
+
+    loadUniversities();
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    const loadCampuses = async () => {
+      if (!form.university_id) {
+        setCampuses([]);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/campuses?university_id=${encodeURIComponent(form.university_id)}`);
+        const payload = await res.json().catch(() => null);
+        if (!res.ok) {
+          console.error('Failed to load campuses', payload);
+          setCampuses([]);
+          return;
+        }
+        setCampuses(Array.isArray(payload) ? payload : []);
+      } catch (err) {
+        console.error('Failed to load campuses', err);
+        setCampuses([]);
+      }
+    };
+
+    loadCampuses();
+  }, [API_BASE_URL, form.university_id]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((s) => ({ ...s, [name]: value }));
+    setForm((s) => {
+      if (name === 'university_id') {
+        return { ...s, university_id: value, campus_id: '' };
+      }
+      return { ...s, [name]: value };
+    });
   };
 
   const handleAmenityToggle = (name) => {
@@ -94,8 +158,8 @@ export default function ListPropertyPage() {
       navigate('auth');
       return;
     }
-    if (!form.title || !form.address || !form.city || !form.pricePerMonth) {
-      alert("Please fill required fields: title, address, city, price");
+    if (!form.title || !form.address || !form.city || !form.pricePerMonth || !form.university_id || !form.campus_id) {
+      alert("Please fill required fields: title, address, city, price, university, campus");
       return;
     }
 
@@ -133,6 +197,8 @@ export default function ListPropertyPage() {
       } else {
         alert("Property listed successfully");
         setForm({
+          university_id: "",
+          campus_id: "",
           title: "",
           description: "",
           address: "",
@@ -258,27 +324,40 @@ export default function ListPropertyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Campus *</label>
-                <input
-                  name="campus"
-                  value={form.campus}
+                <label className="block text-sm font-medium text-gray-700 mb-1">University *</label>
+                <select
+                  name="university_id"
+                  value={form.university_id}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Campus"
-                />
+                >
+                  <option value="">Select University</option>
+                  {universities.map((u) => (
+                    <option key={u.id} value={String(u.id)}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
               </div> 
 
-               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">University *</label>
-                <input
-                  name="university"
-                  value={form.university}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Campus *</label>
+                <select
+                  name="campus_id"
+                  value={form.campus_id}
                   onChange={handleChange}
                   required
+                  disabled={!form.university_id}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  placeholder="University"
-                />
+                >
+                  <option value="">Select Campus</option>
+                  {campuses.map((c) => (
+                    <option key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
 
@@ -472,6 +551,18 @@ export default function ListPropertyPage() {
                   <p className="font-medium">{form.city || '-'}</p>
                 </div>
                 <div>
+                  <p className="text-sm text-gray-500">University</p>
+                  <p className="font-medium">
+                    {universities.find(u => String(u.id) === form.university_id)?.name || '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Campus</p>
+                  <p className="font-medium">
+                    {campuses.find(c => String(c.id) === form.campus_id)?.name || '-'}
+                  </p>
+                </div>
+                <div>
                   <p className="text-sm text-gray-500">Price per month</p>
                   <p className="font-medium">{form.pricePerMonth ? `$${form.pricePerMonth}` : '-'}</p>
                 </div>
@@ -541,67 +632,79 @@ export default function ListPropertyPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-16 w-full bg-gray-50">
-      <div className="w-full px-4 sm:px-6 lg:px-8 mb-8">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl text-white py-12 px-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">List Your Property</h1>
-          <p className="text-xl md:text-2xl text-blue-100 text-center">
-            Reach thousands of students looking for accommodation
-          </p>
+    <div 
+      className="min-h-screen pt-24 pb-16 bg-bg-page overflow-x-hidden" 
+      style={{ width: '100vw', maxWidth: '100vw', margin: 0, padding: 0, left: 0, right: 0 }}
+    >
+      {/* Full-width header */}
+      <div style={{ width: '100vw', maxWidth: '100vw', margin: 0, padding: 0, left: 0, right: 0 }}>
+        <div 
+          className="bg-gradient-to-r from-brand-primary to-brand-primary-dark text-text-inverse py-12 px-8 w-full" 
+          style={{ width: '100vw', maxWidth: '100vw', margin: 0, padding: '3rem 2rem', left: 0, right: 0 }}
+        >
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center">List Your Property</h1>
+            <p className="text-xl md:text-2xl text-brand-accent-soft text-center">
+              Reach thousands of students looking for accommodation
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-xl p-6">
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / 5) * 100}%` }}
-              />
+      {/* Full-width content area */}
+      <div style={{ width: '100vw', maxWidth: '100vw', margin: 0, padding: 0, left: 0, right: 0 }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-bg-surface border border-border rounded-2xl shadow-card p-6">
+            {/* Progress Bar */}
+            <div className="mb-8">
+              <div className="w-full bg-bg-surface-alt rounded-full h-2.5">
+                <div
+                  className="bg-brand-primary h-2.5 rounded-full transition-all duration-300"
+                  style={{ width: `${(currentStep / 5) * 100}%` }}
+                />
+              </div>
+              <p className="text-sm text-text-muted mt-2 text-right">Step {currentStep} of 5</p>
             </div>
-            <p className="text-sm text-gray-500 mt-2 text-right">Step {currentStep} of 5</p>
+
+            {/* Form Content */}
+            <form onSubmit={currentStep === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+              {renderStep()}
+
+              {/* Navigation Buttons */}
+              <div className="mt-8 flex justify-between border-t border-border pt-6">
+                {currentStep > 1 ? (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    className="px-6 py-2 border border-border text-text-secondary bg-bg-surface hover:bg-bg-surface-alt transition rounded-xl"
+                    disabled={loading}
+                  >
+                    Back
+                  </button>
+                ) : (
+                  <div></div>
+                )}
+
+                {currentStep < 5 ? (
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-brand-primary hover:bg-brand-primary-dark text-text-inverse transition rounded-xl"
+                    disabled={loading}
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-success hover:bg-green-600 text-text-inverse transition rounded-xl"
+                    disabled={loading}
+                  >
+                    {loading ? 'Submitting...' : 'Submit Property'}
+                  </button>
+                )}
+              </div>
+            </form>
           </div>
-
-          {/* Form Content */}
-          <form onSubmit={currentStep === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
-            {renderStep()}
-
-            {/* Navigation Buttons */}
-            <div className="mt-8 flex justify-between border-t border-gray-200 pt-6">
-              {currentStep > 1 ? (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-                  disabled={loading}
-                >
-                  Back
-                </button>
-              ) : (
-                <div></div>
-              )}
-
-              {currentStep < 5 ? (
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                  disabled={loading}
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                  disabled={loading}
-                >
-                  {loading ? 'Submitting...' : 'Submit Property'}
-                </button>
-              )}
-            </div>
-          </form>
         </div>
       </div>
     </div>
