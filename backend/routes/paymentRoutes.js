@@ -1,114 +1,128 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const PayNowService = require('../services/paynowService');
+const PesepayService = require('../services/pesepayService');
 const { authenticateToken } = require('../middleware/auth');
 
-const paynowService = new PayNowService();
+const pesepay = new PesepayService();
 
-// @desc    Initiate payment for accommodation booking
-// @route   POST /api/payments/initiate
-// @access  Private
+const ACCESS_DAYS = 30;
+const SIMULATED = 'SIMULATED'; // sentinel poll_url used when Pesepay isn't configured
+
+// TEMP: access fee stubbed to 1 cent for live testing. Revert to 2.00 for launch.
+const ACCESS_FEE_AMOUNT = 0.01;
+
+// Mobile-money / card provider -> Pesepay payment method code (USD).
+const METHOD_CODES = {
+  ecocash: 'PZW211',
+  innbucks: 'PZW212',
+  card: 'PZW204',
+};
+
+const validUntil = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + ACCESS_DAYS);
+  return d;
+};
+
+// A Pesepay transaction is settled when paid===true or status is SUCCESS.
+const isPaid = (tx) =>
+  Boolean(tx && (tx.paid === true || tx.transactionStatus === 'SUCCESS'));
+
+// POST /api/payments/initiate
 router.post('/initiate', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
-    const { 
-      accommodationId, 
-      amount, 
-      paymentMethod = 'web', // 'web' or 'mobile'
-      phone,
+    const {
+      accommodationId,
+      feature = 'accommodation_details',
       email,
-      method // 'ecocash' or 'onemoney' for mobile payments
+      paymentMethod = 'web', // 'web' (hosted redirect / card) | 'mobile'
+      phone,
+      method, // 'ecocash' | 'innbucks' for mobile
     } = req.body;
 
-    // Validate required fields
-    if (!accommodationId || !amount || !email) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: accommodationId, amount, email' 
-      });
+    if (!accommodationId || !email) {
+      return res.status(400).json({ error: 'accommodationId and email are required' });
+    }
+    // Amount is enforced server-side (ignore any client value).
+    const paymentAmount = ACCESS_FEE_AMOUNT;
+
+    const accRes = await client.query('SELECT title FROM accommodations WHERE id = $1', [
+      accommodationId,
+    ]);
+    if (accRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Accommodation not found' });
     }
 
-    // Validate amount
-    const paymentAmount = parseFloat(amount);
-    if (isNaN(paymentAmount) || paymentAmount <= 0) {
-      return res.status(400).json({ 
-        error: 'Invalid amount' 
-      });
-    }
+    const merchantReference = `UNIACCO-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    const reasonForPayment = `UniAcco access fee — ${accRes.rows[0].title}`;
 
-    // Get accommodation details
-    const accommodationResult = await client.query(
-      'SELECT title FROM accommodations WHERE id = $1',
-      [accommodationId]
-    );
+    let reference; // Pesepay reference we poll on
+    let pollUrl = null;
+    let redirectUrl = null;
+    let instructions = null;
 
-    if (accommodationResult.rows.length === 0) {
-      return res.status(404).json({ 
-        error: 'Accommodation not found' 
-      });
-    }
-
-    // Generate unique payment reference
-    const reference = `UNIACCO-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-    const bookingDetails = {
-      reference,
-      email,
-      amount: paymentAmount,
-      description: `Payment for accommodation booking`,
-      accommodationTitle: accommodationResult.rows[0].title
-    };
-
-    let paymentResponse;
-    
-    if (paymentMethod === 'mobile' && phone && method) {
-      // Mobile payment
-      paymentResponse = await paynowService.createMobilePayment({
-        ...bookingDetails,
-        phone,
-        method
-      });
+    if (!pesepay.isConfigured()) {
+      // Simulated — instant success path for local development.
+      reference = merchantReference;
+      pollUrl = SIMULATED;
+      redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-return?referenceNumber=${reference}`;
+      instructions = 'Simulated payment — approve to continue (dev mode).';
     } else {
-      // Web payment
-      paymentResponse = await paynowService.createPayment(bookingDetails);
+      const base = {
+        amountDetails: { amount: paymentAmount, currencyCode: 'USD' },
+        reasonForPayment,
+        merchantReference,
+        resultUrl: `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/payments/webhook`,
+        returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-return`,
+      };
+
+      let result;
+      if (paymentMethod === 'mobile') {
+        const code = METHOD_CODES[method] || METHOD_CODES.ecocash;
+        const mobilePayload = {
+          ...base,
+          paymentMethodCode: code,
+          customer: { email, phoneNumber: phone, name: email },
+          paymentMethodRequiredFields: { customerPhoneNumber: phone },
+        };
+        console.log('[Pesepay] makePayment payload:', JSON.stringify(mobilePayload, null, 2));
+        result = await pesepay.makePayment(mobilePayload);
+      } else {
+        // hosted redirect (card / bank)
+        console.log('[Pesepay] initiate payload:', JSON.stringify(base, null, 2));
+        result = await pesepay.initiate(base);
+      }
+
+      if (!result.success) {
+        return res.status(502).json({ error: result.error || 'Pesepay request failed' });
+      }
+      const tx = result.data || {};
+      reference = tx.referenceNumber || merchantReference;
+      pollUrl = tx.pollUrl || null;
+      redirectUrl = tx.redirectUrl || null;
     }
 
-    if (!paymentResponse.success) {
-      return res.status(400).json({
-        error: paymentResponse.error
-      });
-    }
-
-    // Save payment to database
     await client.query(
-      `INSERT INTO payments (
-        accommodation_id, user_id, paynow_reference, poll_url, 
-        amount, status, payment_method, customer_email, 
-        customer_phone, description
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      `INSERT INTO payments
+        (user_id, accommodation_id, feature, amount, method, mobile_provider, email, phone, gateway_reference, poll_url, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending')`,
       [
-        accommodationId,
         req.user.id,
-        reference,
-        paymentResponse.pollUrl,
+        accommodationId,
+        feature,
         paymentAmount,
-        'pending',
         paymentMethod,
+        paymentMethod === 'mobile' ? method || null : null,
         email,
         phone || null,
-        `Payment for ${accommodationResult.rows[0].title}`
+        reference,
+        pollUrl,
       ]
     );
 
-    res.json({
-      success: true,
-      reference,
-      redirectUrl: paymentResponse.redirectUrl,
-      pollUrl: paymentResponse.pollUrl,
-      instructions: paymentResponse.instructions,
-      paymentMethod
-    });
-
+    res.json({ success: true, reference, redirectUrl, pollUrl, instructions, paymentMethod });
   } catch (error) {
     console.error('Payment initiation error:', error);
     res.status(500).json({ error: 'Payment initiation failed' });
@@ -117,60 +131,43 @@ router.post('/initiate', authenticateToken, async (req, res) => {
   }
 });
 
-// @desc    Check payment status
-// @route   GET /api/payments/status/:reference
-// @access  Private
+// GET /api/payments/status/:reference  (reference = Pesepay reference number)
 router.get('/status/:reference', authenticateToken, async (req, res) => {
   const client = await pool.connect();
   try {
     const { reference } = req.params;
-
-    // Get payment from database
-    const paymentResult = await client.query(
-      'SELECT * FROM payments WHERE paynow_reference = $1 AND user_id = $2',
+    const payRes = await client.query(
+      'SELECT * FROM payments WHERE gateway_reference = $1 AND user_id = $2',
       [reference, req.user.id]
     );
+    if (payRes.rows.length === 0) return res.status(404).json({ error: 'Payment not found' });
 
-    if (paymentResult.rows.length === 0) {
-      return res.status(404).json({ 
-        error: 'Payment not found' 
-      });
-    }
-
-    const payment = paymentResult.rows[0];
-
-    // If payment is already marked as paid, return current status
+    const payment = payRes.rows[0];
     if (payment.status === 'paid') {
-      return res.json({
-        success: true,
-        status: 'paid',
-        paidAt: payment.paid_at
-      });
+      return res.json({ success: true, status: 'paid', accommodationId: payment.accommodation_id });
     }
 
-    // Check status with PayNow
-    const statusResponse = await paynowService.checkPaymentStatus(payment.poll_url);
-
-    if (statusResponse.error) {
-      return res.status(500).json({ 
-        error: 'Status check failed' 
-      });
+    let paid = false;
+    if (payment.poll_url === SIMULATED) {
+      paid = true; // dev mode: confirm immediately on first poll
+    } else {
+      const result = await pesepay.checkStatus(reference);
+      if (!result.success) return res.status(502).json({ error: 'Status check failed' });
+      paid = isPaid(result.data);
     }
 
-    // Update payment status in database
-    if (statusResponse.paid) {
+    if (paid) {
       await client.query(
-        'UPDATE payments SET status = $1, paid_at = $2 WHERE id = $3',
-        ['paid', statusResponse.paidAt || new Date(), payment.id]
+        'UPDATE payments SET status = $1, paid_at = now(), valid_until = $2 WHERE id = $3',
+        ['paid', validUntil(), payment.id]
       );
     }
 
     res.json({
       success: true,
-      status: statusResponse.paid ? 'paid' : 'pending',
-      paidAt: statusResponse.paidAt
+      status: paid ? 'paid' : 'pending',
+      accommodationId: payment.accommodation_id,
     });
-
   } catch (error) {
     console.error('Payment status check error:', error);
     res.status(500).json({ error: 'Status check failed' });
@@ -179,40 +176,36 @@ router.get('/status/:reference', authenticateToken, async (req, res) => {
   }
 });
 
-// @desc    Handle PayNow webhook
-// @route   POST /api/payments/webhook
-// @access  Public
+// POST /api/payments/webhook (Pesepay result callback -> resultUrl)
 router.post('/webhook', async (req, res) => {
   const client = await pool.connect();
   try {
-    const webhookData = req.body;
-    
-    // Process webhook
-    const paymentInfo = paynowService.processWebhook(webhookData);
-    
-    if (!paymentInfo) {
-      return res.status(400).json({ error: 'Invalid webhook data' });
+    // Pesepay posts the reference; re-verify with the API before trusting it.
+    let reference = req.body && (req.body.referenceNumber || req.body.reference);
+    if (!reference && req.body && req.body.payload) {
+      try {
+        reference = pesepay.decrypt(req.body.payload).referenceNumber;
+      } catch {
+        /* ignore */
+      }
+    }
+    if (!reference) return res.status(400).json({ error: 'No reference in webhook' });
+
+    let paid = false;
+    if (pesepay.isConfigured()) {
+      const result = await pesepay.checkStatus(reference);
+      paid = result.success && isPaid(result.data);
     }
 
-    // Update payment status in database
-    await client.query(
-      'UPDATE payments SET status = $1, paid_at = $2 WHERE paynow_reference = $3',
-      [
-        paymentInfo.status,
-        paymentInfo.paid ? new Date() : null,
-        paymentInfo.reference
-      ]
-    );
-
-    // If payment is paid, you might want to trigger booking confirmation
-    if (paymentInfo.paid) {
-      // TODO: Send booking confirmation email
-      // TODO: Update booking status to confirmed
-      console.log(`Payment ${paymentInfo.reference} has been paid!`);
+    if (paid) {
+      await client.query(
+        `UPDATE payments SET status='paid', paid_at=now(), valid_until=$1
+          WHERE gateway_reference=$2 AND status<>'paid'`,
+        [validUntil(), reference]
+      );
     }
 
     res.status(200).send('OK');
-
   } catch (error) {
     console.error('Webhook processing error:', error);
     res.status(500).json({ error: 'Webhook processing failed' });
@@ -221,48 +214,29 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
-// @desc    Get user payment history
-// @route   GET /api/payments/history
-// @access  Private
+// GET /api/payments/history — used by usePaymentVerification on the client
 router.get('/history', authenticateToken, async (req, res) => {
-  const client = await pool.connect();
   try {
-    const { page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
-
-    const paymentsResult = await client.query(
-      `SELECT 
-        p.*,
-        a.title as accommodation_title,
-        a.city as accommodation_city
-      FROM payments p
-      JOIN accommodations a ON p.accommodation_id = a.id
-      WHERE p.user_id = $1
-      ORDER BY p.created_at DESC
-      LIMIT $2 OFFSET $3`,
-      [req.user.id, limit, offset]
-    );
-
-    const countResult = await client.query(
-      'SELECT COUNT(*) FROM payments WHERE user_id = $1',
+    const { rows } = await pool.query(
+      `SELECT p.id, p.accommodation_id, p.feature, p.amount, p.status, p.method,
+              p.valid_until, p.paid_at, p.created_at, a.title AS accommodation_title
+         FROM payments p
+         LEFT JOIN accommodations a ON a.id = p.accommodation_id
+        WHERE p.user_id = $1
+        ORDER BY p.created_at DESC`,
       [req.user.id]
     );
-
-    res.json({
-      payments: paymentsResult.rows,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: parseInt(countResult.rows[0].count),
-        pages: Math.ceil(countResult.rows[0].count / limit)
-      }
-    });
-
+    const payments = rows.map((p) => ({
+      ...p,
+      status:
+        p.status === 'paid' && p.valid_until && new Date(p.valid_until) < new Date()
+          ? 'expired'
+          : p.status,
+    }));
+    res.json({ payments });
   } catch (error) {
     console.error('Payment history error:', error);
     res.status(500).json({ error: 'Failed to fetch payment history' });
-  } finally {
-    client.release();
   }
 });
 

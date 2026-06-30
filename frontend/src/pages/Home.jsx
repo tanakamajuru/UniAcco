@@ -4,10 +4,29 @@ import AnimatedBackground from '@/components/AnimatedBackground';
 import ImageSlider from '@/components/ImageSlider';
 import { motion } from 'framer-motion';
 import { fetchAccommodations } from '../utils/api';
-import { universityApi, campusApi } from '../services/api';
+import { universityApi, campusApi, imageUrl } from '../services/api';
+import { LABELS } from '../lib/amenityIcons';
+import { useNavigation } from '../App';
 import '../styles/brand-colors.css';
 
+// Map an API accommodation into the shape the featured slider renders.
+const toFeatured = (p) => ({
+  id: p.id,
+  name: p.title || p.name || 'Property',
+  campus: p.suburb || p.city || 'Unknown',
+  distance: p.walk_minutes ? `${p.walk_minutes} min walk` : p.university?.short || '',
+  price: p.price_per_month ?? p.price ?? 0,
+  rating: p.rating || 4.5,
+  images: (p.images ?? []).map(imageUrl).filter(Boolean),
+  amenities: (Array.isArray(p.amenities) ? p.amenities : []).slice(0, 3).map((a) => LABELS[a] || a),
+  available: p.people_per_room || 1,
+  description: p.description || '',
+  location: p.city || 'Unknown',
+  landlord: p.landlord?.name || 'Property Owner',
+});
+
 export default function Home() {
+  const { navigate } = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('');
   const [selectedCampus, setSelectedCampus] = useState('');
@@ -68,39 +87,7 @@ export default function Home() {
         };
         
         const data = await fetchAccommodations(filters);
-        
-        // Normalize the data and take first 3 as featured
-        const normalized = (data || []).map((p) => {
-          const normalizedAmenities =
-            p.amenities ??
-            p.accommodation_amenities?.[0] ??
-            p.accommodation_amenities ??
-            {};
-
-          const normalizedImages =
-            (p.images ?? p.accommodation_images?.map((img) => img.image_url) ?? [])
-              .map(url => url?.trim())
-              .filter(url => url && url.length > 0);
-
-          return {
-            id: p.id,
-            name: p.title || p.name || 'Property',
-            campus: p.campus?.name || p.city || 'Unknown',
-            distance: 'N/A',
-            price: p.price_per_month || p.price || 0,
-            rating: p.rating || 4.5,
-            images: normalizedImages,
-            amenities: Array.isArray(normalizedAmenities) 
-              ? normalizedAmenities.slice(0, 3)
-              : Object.keys(normalizedAmenities).filter(key => normalizedAmenities[key]).slice(0, 3),
-            available: p.people_per_room || p.capacity || 1,
-            description: p.description || '',
-            location: p.city || 'Unknown',
-            landlord: p.landlord?.name || 'Property Owner'
-          };
-        }).slice(0, 3); // Take first 3 properties as featured
-
-        setFeaturedListings(normalized);
+        setFeaturedListings((data || []).slice(0, 6).map(toFeatured));
       } catch (err) {
         console.error('Error loading properties:', err);
         setError('Failed to load properties. Please try again later.');
@@ -140,24 +127,7 @@ export default function Home() {
         };
         
         const data = await fetchAccommodations(filters);
-        const normalized = (data || []).map((p) => ({
-          id: p.id,
-          name: p.title || p.name || 'Property',
-          campus: p.campus?.name || p.city || 'Unknown',
-          distance: 'N/A',
-          price: p.price_per_month || p.price || 0,
-          rating: p.rating || 4.5,
-          images: (p.images ?? p.accommodation_images?.map((img) => img.image_url) ?? [])
-            .map(url => url?.trim())
-            .filter(url => url && url.length > 0),
-          amenities: Array.isArray(p.amenities) ? p.amenities.slice(0, 3) : [],
-          available: p.people_per_room || p.capacity || 1,
-          description: p.description || '',
-          location: p.city || 'Unknown',
-          landlord: p.landlord?.name || 'Property Owner'
-        })).slice(0, 3);
-
-        setFeaturedListings(normalized);
+        setFeaturedListings((data || []).slice(0, 6).map(toFeatured));
       } catch (err) {
         console.error('Error searching properties:', err);
         setError('Search failed. Please try again.');
@@ -213,7 +183,7 @@ export default function Home() {
                     >
                       <option value="">All Universities</option>
                       {universities.map((uni) => (
-                        <option key={uni.id || uni} value={uni.name || uni}>
+                        <option key={uni.id || uni} value={uni.short || uni.name || uni}>
                           {uni.name || uni}
                         </option>
                       ))}
@@ -297,7 +267,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold text-text-primary">Featured Properties</h2>
               <p className="text-text-secondary mt-2">Handpicked accommodations for you</p>
             </div>
-            <button className="text-brand-primary font-semibold hover:text-brand-primary-dark">View All →</button>
+            <button onClick={() => navigate('listings')} className="text-brand-primary font-semibold hover:text-brand-primary-dark">View All →</button>
           </div>
 
           {/* Loading State */}
@@ -385,7 +355,10 @@ export default function Home() {
                             ))}
                           </div>
 
-                          <button className="w-full bg-gradient-to-r from-brand-primary to-brand-accent text-text-inverse py-3 rounded-lg font-semibold hover:shadow-lg transition">
+                          <button
+                            onClick={() => navigate('property-details', { id: listing.id })}
+                            className="w-full bg-gradient-to-r from-brand-primary to-brand-accent text-text-inverse py-3 rounded-lg font-semibold hover:shadow-lg transition"
+                          >
                             View Details
                           </button>
                         </div>
@@ -437,7 +410,7 @@ export default function Home() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-text-inverse mb-4">Own a Property Near Campus?</h2>
           <p className="text-xl text-brand-accent-soft mb-8 max-w-2xl mx-auto">List your accommodation and connect with students looking for their perfect home</p>
-          <button className="bg-bg-surface text-brand-primary px-8 py-4 rounded-full font-bold text-lg hover:shadow-2xl transition">List Your Property</button>
+          <button onClick={() => navigate('list-your-property')} className="bg-bg-surface text-brand-primary px-8 py-4 rounded-full font-bold text-lg hover:shadow-2xl transition">List Your Property</button>
         </div>
       </section>
 

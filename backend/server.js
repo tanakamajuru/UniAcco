@@ -18,13 +18,14 @@ const pool = require('./config/database');
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const accommodationRoutes = require('./routes/accommodationRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-const favoriteRoutes = require('./routes/favoriteRoutes');
-const reviewRoutes = require('./routes/reviewRoutes');
-const imageRoutes = require('./routes/imageRoutes');
+const favouriteRoutes = require('./routes/favouriteRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
+const threadRoutes = require('./routes/threadRoutes');
+const hostRoutes = require('./routes/hostRoutes');
 const universityRoutes = require('./routes/universityRoutes');
-const campusRoutes = require('./routes/campusRoutes');
+const amenityRoutes = require('./routes/amenityRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
@@ -227,13 +228,14 @@ app.get('/api/health', async (_req, res) => {
  * =====================================================
  */
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/accommodations', accommodationRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/favorites', favoriteRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/images', imageRoutes);
+app.use('/api/favourites', favouriteRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/threads', threadRoutes);
+app.use('/api/host', hostRoutes);
 app.use('/api/universities', universityRoutes);
-app.use('/api/campuses', campusRoutes);
+app.use('/api/amenities', amenityRoutes);
 app.use('/api/payments', paymentRoutes);
 
 /**

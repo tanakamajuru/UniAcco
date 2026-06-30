@@ -1,425 +1,384 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigation } from '../App';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  MapPin,
+  ChevronLeft,
+  Heart,
   Star,
-  Wifi,
-  Utensils,
-  BookOpen,
-  Droplets,
-  Dumbbell,
-  WashingMachine,
-  Snowflake,
-  Tv2,
-  Sun,
-  Car,
-  Sofa,
-  PawPrint,
-  Cigarette,
-  Phone,
-  Mail,
-  Calendar,
+  Check,
   Lock,
   Unlock,
-  ArrowLeft,
-  Heart,
-  Share2,
+  Loader2,
   BedDouble,
+  Bath,
   Users,
-  Home,
-  CreditCard,
 } from 'lucide-react';
-import { usePaymentVerification, PaymentRequired } from '../hooks/usePaymentVerification';
-import { motion, AnimatePresence } from 'framer-motion';
-import ImageSlider from '../components/ImageSlider';
-import PaymentForm from '../components/PaymentForm';
+import { useNavigation } from '../App';
+import {
+  accommodationApi,
+  favouriteApi,
+  threadApi,
+  imageUrl,
+  currentRole,
+} from '../services/api';
+import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
+import { gradientFor, formatAvailable } from '../components/listings/ListingCard';
+import ApplyModal from '../components/ApplyModal';
+import { ACCESS_FEE_LABEL } from '../lib/fees';
 
-const PropertyDetails = () => {
-  const { currentPage, navigate } = useNavigation();
-  
-  // Extract property ID from current page URL
-  const id = currentPage === 'property-details' 
-    ? window.location.pathname.split('/').pop() 
-    : null;
-    
-  const [property, setProperty] = useState(null);
+const GALLERY_GRADIENTS = [
+  'linear-gradient(135deg,#cfe0ec,#a8c4d8)',
+  'linear-gradient(135deg,#d8e3ee,#b3cbdd)',
+  'linear-gradient(135deg,#d2dce8,#aec3d6)',
+  'linear-gradient(135deg,#cdd9e6,#a6bdd2)',
+];
+
+const initialsOf = (name) =>
+  (name || '?')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join('');
+
+export default function PropertyDetails() {
+  const { navigate, selectedId } = useNavigation();
+  const id = selectedId || localStorage.getItem('selectedAccommodationId');
+  const isStudent = currentRole() !== 'landlord';
+
+  const [acc, setAcc] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [error, setError] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(false);
 
-  // Check if user has paid for this accommodation
-  const { hasPaid: hasPaidForAccommodation, isLoading: paymentLoading } = usePaymentVerification('accommodation_details', id);
-
-  useEffect(() => {
-    const fetchProperty = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-        const response = await fetch(`${API_BASE_URL}/api/accommodations/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch property details');
-        }
-
-        const data = await response.json();
-        setProperty(data);
-      } catch (err) {
-        console.error('Error fetching property:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProperty();
+  const load = useCallback(() => {
+    if (!id) {
+      setError('No property selected');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    accommodationApi
+      .getById(id)
+      .then(setAcc)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  const handlePaymentSuccess = () => {
-    setShowPaymentForm(false);
-    // Refresh property data to show unlocked features
-    window.location.reload();
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const handleCancelPayment = () => {
-    setShowPaymentForm(false);
-  };
+  useEffect(() => {
+    if (!isStudent || !id || !localStorage.getItem('token')) return;
+    favouriteApi
+      .list()
+      .then((items) => setSaved(items.some((a) => a.id === id)))
+      .catch(() => {});
+  }, [isStudent, id]);
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    // TODO: Implement favorite toggle API call
-  };
-
-  const handleShareProperty = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: property?.title,
-        text: `Check out this property: ${property?.title} - $${property?.price_per_month}/month`,
-        url: window.location.href
-      });
-    } else {
-      // Fallback: Copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-      alert('Property link copied to clipboard!');
+  const toggleSave = async () => {
+    if (!localStorage.getItem('token')) return navigate('auth');
+    setSaved((s) => !s);
+    try {
+      saved ? await favouriteApi.remove(id) : await favouriteApi.add(id);
+    } catch {
+      setSaved((s) => !s);
     }
+  };
+
+  const messageHost = async () => {
+    if (!localStorage.getItem('token')) return navigate('auth');
+    try {
+      await threadApi.start(id);
+    } catch {
+      /* thread may already exist */
+    }
+    navigate('messages');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center pt-40 text-text-secondary">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  if (!property) {
+  if (error || !acc) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Property Not Found</h2>
-          <p className="text-gray-600 mb-6">The property you're looking for doesn't exist or has been removed.</p>
-          <button
-            onClick={() => navigate('/listings')}
-            className="bg-btn-primary text-text-inverse px-6 py-3 rounded-lg hover:bg-btn-primary-hover"
-          >
-            Back to Listings
-          </button>
-        </div>
+      <div className="mx-auto max-w-[1080px] px-6 pt-32 text-center">
+        <p className="font-bold text-text-primary">{error || 'Property not found'}</p>
+        <button
+          onClick={() => navigate('listings')}
+          className="mx-auto mt-4 rounded-xl bg-brand-primaryDark px-5 py-2.5 text-sm font-semibold text-white"
+        >
+          Back to search
+        </button>
       </div>
     );
   }
 
-  const amenities = [
-    { id: 'tv', label: 'TV', icon: <Tv2 className="w-5 h-5" /> },
-    { id: 'wifi', label: 'WiFi', icon: <Wifi className="w-5 h-5" /> },
-    { id: 'heating', label: 'Heating', icon: <Sun className="w-5 h-5" /> },
-    { id: 'kitchen', label: 'Kitchen', icon: <Utensils className="w-5 h-5" /> },
-    { id: 'laundry', label: 'Laundry', icon: <WashingMachine className="w-5 h-5" /> },
-    { id: 'parking', label: 'Parking', icon: <Car className="w-5 h-5" /> },
-    { id: 'furnished', label: 'Furnished', icon: <Sofa className="w-5 h-5" /> },
-    { id: 'pets_allowed', label: 'Pets Allowed', icon: <PawPrint className="w-5 h-5" /> },
-    { id: 'smoking_allowed', label: 'Smoking Allowed', icon: <Cigarette className="w-5 h-5" /> },
+  const unlocked = acc.access?.unlocked;
+  const photos = (acc.images || []).map(imageUrl);
+  const specs = [
+    { k: 'Bedrooms', v: acc.bedrooms, Icon: BedDouble },
+    { k: 'Bathrooms', v: acc.bathrooms, Icon: Bath },
+    { k: 'Per room', v: acc.people_per_room, Icon: Users },
+    { k: 'Rating', v: acc.rating ? acc.rating.toFixed(1) : 'New', Icon: Star },
   ];
+  const leaseShort = (acc.lease_terms || '').toLowerCase().includes('semester')
+    ? 'Per semester'
+    : acc.lease_terms || '12 months';
+
+  const applyLabel = unlocked ? 'Apply now' : `Pay ${ACCESS_FEE_LABEL} to unlock & apply`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Premium Banner - Only show if not paid */}
-      {!hasPaidForAccommodation && (
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center">
-              <Lock className="w-5 h-5 mr-2" />
-              <span className="font-semibold">Premium Features Locked</span>
-            </div>
-            <button
-              onClick={() => setShowPaymentForm(true)}
-              className="bg-btn-secondary text-btn-primary px-4 py-2 rounded-lg font-medium hover:bg-btn-secondary-hover transition-colors flex items-center"
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Pay to Unlock Full Access
-            </button>
+    <div className="ua-fade mx-auto max-w-[1080px] px-6 pb-20 pt-[92px]">
+      <button
+        onClick={() => navigate('listings')}
+        className="mb-3 flex items-center gap-1.5 py-1.5 text-sm font-semibold text-text-secondary"
+      >
+        <ChevronLeft className="h-4 w-4" /> Back to search
+      </button>
+
+      <div className="mb-3.5 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display mb-1.5 text-[28px] font-extrabold tracking-tight text-text-primary">
+            {acc.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-2.5 text-sm font-semibold text-text-secondary">
+            <span className="flex items-center gap-1">
+              <Star className="h-3.5 w-3.5 fill-brand-accent text-brand-accent" />
+              {acc.rating ? acc.rating.toFixed(1) : 'New'} · {acc.reviews_count} reviews
+            </span>
+            <span className="text-border-strong">·</span>
+            <span>{acc.suburb}</span>
+            <span className="text-border-strong">·</span>
+            <span className="text-brand-primaryDark">
+              {acc.walk_minutes} min walk to {acc.university?.short}
+            </span>
           </div>
         </div>
-      )}
-
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/listings')}
-          className="mb-6 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Listings
-        </button>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Property Images */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="h-96">
-                <ImageSlider 
-                  images={property.images} 
-                  autoplay={true}
-                  autoplayDelay={4000}
-                />
-              </div>
-            </div>
-
-            {/* Property Information */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
-                  <div className="flex items-center text-gray-600 mb-4">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    <span>{property.address}, {property.city}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={toggleFavorite}
-                  className={`p-3 rounded-full transition-colors ${
-                    isFavorite 
-                      ? 'bg-btn-danger/10 text-btn-danger hover:bg-btn-danger/20' 
-                      : 'bg-btn-secondary text-btn-secondary-text hover:bg-btn-secondary-hover'
-                  }`}
-                >
-                  <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
-                </button>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Property Details</h3>
-                  <div className="space-y-2 text-gray-600">
-                    <div className="flex items-center">
-                      <BedDouble className="w-4 h-4 mr-2" />
-                      <span>{property.people_per_room || 'N/A'} {property.people_per_room === 1 ? 'Person' : 'People'}/Room</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Home className="w-4 h-4 mr-2" />
-                      <span>{property.property_type || 'Apartment'}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      <span>Available {property.available_from || 'Immediately'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Pricing</h3>
-                  <div className="space-y-2">
-                    <div className="text-3xl font-bold text-blue-600">
-                      ${property.price_per_month}
-                      <span className="text-lg font-normal text-gray-600">/month</span>
-                    </div>
-                    {property.deposit && (
-                      <div className="text-sm text-gray-600">
-                        Deposit: ${property.deposit}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Amenities */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Amenities</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {amenities.map((amenity) => {
-                    const isAvailable = property.accommodation_amenities?.[amenity.id] === true;
-                    
-                    return (
-                      <div
-                        key={amenity.id}
-                        className={`flex items-center p-3 rounded-lg border ${
-                          isAvailable
-                            ? 'border-green-200 bg-green-50'
-                            : 'border-gray-200 bg-gray-50'
-                        }`}
-                      >
-                        <div className={`w-5 h-5 mr-2 ${
-                          isAvailable ? 'text-green-600' : 'text-gray-400'
-                        }`}>
-                          {amenity.icon}
-                        </div>
-                        <span className={`text-sm ${
-                          isAvailable ? 'text-green-800' : 'text-gray-600'
-                        }`}>
-                          {amenity.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Description */}
-              {property.description && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3">Description</h3>
-                  <p className="text-gray-600 leading-relaxed">{property.description}</p>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-4">
-                <button
-                  onClick={handleShareProperty}
-                  className="flex-1 bg-btn-secondary text-btn-secondary-text py-3 px-4 rounded-lg hover:bg-btn-secondary-hover transition-colors flex items-center justify-center"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
-                </button>
-                <button
-                  onClick={() => {
-                    if (hasPaidForAccommodation) {
-                      // Show application form if already paid
-                      navigate(`/bookings/new?accommodation=${id}`);
-                    } else {
-                      // Show payment form if not paid
-                      setShowPaymentForm(true);
-                    }
-                  }}
-                  className="flex-1 bg-btn-primary text-text-inverse py-3 px-4 rounded-lg hover:bg-btn-primary-hover transition-colors flex items-center justify-center"
-                >
-                  {hasPaidForAccommodation ? 'Book Now' : 'Pay to Book'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Contact Information - Premium Feature */}
-            <div className={`bg-white rounded-xl shadow-lg p-6 ${
-              !hasPaidForAccommodation ? 'opacity-75' : ''
-            }`}>
-              <div className="flex items-center mb-4">
-                {hasPaidForAccommodation ? (
-                  <Unlock className="w-5 h-5 mr-2 text-green-600" />
-                ) : (
-                  <Lock className="w-5 h-5 mr-2 text-gray-400" />
-                )}
-                <h3 className="text-lg font-semibold">Contact Information</h3>
-              </div>
-
-              {hasPaidForAccommodation ? (
-                <div className="space-y-3">
-                  <div className="flex items-center text-gray-600">
-                    <Users className="w-4 h-4 mr-2" />
-                    <span className="font-medium">{property.landlord_name || 'Property Manager'}</span>
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <Phone className="w-4 h-4 mr-2" />
-                    <span>{property.landlord_phone || 'Available after payment'}</span>
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <Mail className="w-4 h-4 mr-2" />
-                    <span>{property.landlord_email || 'Available after payment'}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Lock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">Contact information is locked</p>
-                  <p className="text-sm text-gray-500 mb-4">Make a payment to unlock landlord details and start booking process</p>
-                  <button
-                    onClick={() => setShowPaymentForm(true)}
-                    className="w-full bg-btn-primary text-text-inverse py-3 px-4 rounded-lg hover:bg-btn-primary-hover transition-colors"
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Unlock Contact Details
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Location Map */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Location</h3>
-              <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
-                <MapPin className="w-8 h-8 text-gray-400" />
-              </div>
-              <p className="text-sm text-gray-600 mt-3 text-center">
-                {property.address}, {property.city}
-              </p>
-            </div>
-
-            {/* University Info */}
-            {property.university && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">Campus Information</h3>
-                <div className="space-y-2 text-gray-600">
-                  <div>
-                    <span className="font-medium">University:</span> {property.university?.name || 'N/A'}
-                  </div>
-                  <div>
-                    <span className="font-medium">Campus:</span> {property.campus?.name || 'N/A'}
-                  </div>
-                  <div>
-                    <span className="font-medium">Distance:</span> {property.distance_to_campus || 'N/A'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {isStudent && (
+          <button
+            onClick={toggleSave}
+            className="flex items-center gap-2 rounded-xl border border-border bg-bg-surface px-4 py-2.5 text-sm font-bold text-text-primary"
+          >
+            <Heart
+              className="h-[17px] w-[17px]"
+              style={{ fill: saved ? '#2F8FB8' : 'none', color: saved ? '#2F8FB8' : '#475569' }}
+            />
+            {saved ? 'Saved' : 'Save'}
+          </button>
+        )}
       </div>
 
-      {/* Payment Form Modal */}
-      <AnimatePresence>
-        {showPaymentForm && (
-          <motion.div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">Unlock Premium Features</h3>
-                <button
-                  onClick={handleCancelPayment}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
+      {/* gallery */}
+      <div
+        className="grid h-[274px] gap-2.5 overflow-hidden rounded-[20px]"
+        style={{ gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: '132px 132px' }}
+      >
+        <div className="row-span-2" style={{ background: gradientFor(acc.id) }}>
+          {photos[0] && <img src={photos[0]} alt="" className="h-full w-full object-cover" />}
+        </div>
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="relative" style={{ background: GALLERY_GRADIENTS[i - 1] }}>
+            {photos[i] && <img src={photos[i]} alt="" className="h-full w-full object-cover" />}
+            {i === 4 && (
+              <span className="absolute inset-0 flex items-center justify-center bg-[rgba(15,23,42,0.42)] text-sm font-bold text-white">
+                +{Math.max(photos.length - 5, 9)} photos
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="mt-7 grid items-start gap-9"
+        style={{ gridTemplateColumns: 'minmax(0,1fr) 350px' }}
+      >
+        <div>
+          {/* specs */}
+          <div className="flex gap-6 border-b border-border pb-5">
+            {specs.map((s) => (
+              <div key={s.k}>
+                <div className="font-display text-[21px] font-extrabold text-text-primary">{s.v}</div>
+                <div className="text-[13px] font-semibold text-text-secondary">{s.k}</div>
               </div>
-              <PaymentForm
-                accommodation={property}
-                onPaymentSuccess={handlePaymentSuccess}
-                onCancel={handleCancelPayment}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            ))}
+          </div>
+
+          {/* host */}
+          <div className="flex items-center gap-3.5 border-b border-border py-5">
+            <div
+              className="flex h-[52px] w-[52px] items-center justify-center rounded-full text-[18px] font-extrabold text-[#4A3A00]"
+              style={{ background: 'linear-gradient(135deg,#F4C430,#E0A800)' }}
+            >
+              {initialsOf(acc.landlord?.name || 'Host')}
+            </div>
+            <div className="flex-1">
+              <div className="text-[15px] font-bold text-text-primary">
+                Hosted by {unlocked ? acc.landlord?.name : 'a verified host'}
+              </div>
+              <div className="text-[13px] text-text-secondary">Replies quickly · UniAcco verified</div>
+            </div>
+            <span className="flex items-center gap-1 rounded-full bg-[#E8F7EE] px-3 py-1.5 text-xs font-bold text-[#16A34A]">
+              <Check className="h-3 w-3" /> Verified host
+            </span>
+          </div>
+
+          {/* about */}
+          <div className="border-b border-border py-5">
+            <h3 className="font-display mb-2.5 text-[18px] font-bold text-text-primary">About this place</h3>
+            <p className="text-[15px] leading-relaxed text-text-secondary" style={{ textWrap: 'pretty' }}>
+              {acc.description}
+            </p>
+          </div>
+
+          {/* amenities */}
+          <div className="border-b border-border py-5">
+            <h3 className="font-display mb-3.5 text-[18px] font-bold text-text-primary">
+              What this place offers
+            </h3>
+            <div className="grid grid-cols-2 gap-3.5">
+              {ALL_AMENITIES.filter((a) => a !== 'water').map((aid) => {
+                const has = acc.amenities?.includes(aid);
+                return (
+                  <div
+                    key={aid}
+                    className="flex items-center gap-2.5 text-sm font-medium"
+                    style={{ color: has ? '#1E293B' : '#94A3B8' }}
+                  >
+                    <span
+                      className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px]"
+                      style={{ background: has ? '#EAF6FB' : '#F1F5F9' }}
+                    >
+                      <AmenityIcon id={aid} className="h-4 w-4" />
+                    </span>
+                    <span style={{ textDecoration: has ? 'none' : 'line-through' }}>{LABELS[aid]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* reviews */}
+          {acc.reviews?.length > 0 && (
+            <div className="py-5">
+              <h3 className="font-display mb-3.5 text-[18px] font-bold text-text-primary">Recent reviews</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {acc.reviews.map((r, i) => (
+                  <div key={i} className="rounded-[14px] border border-border bg-bg-surface p-4">
+                    <div className="mb-2 flex items-center gap-2.5">
+                      <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#DBEAFE] text-[13px] font-bold text-brand-primaryDark">
+                        {r.initials}
+                      </div>
+                      <div>
+                        <div className="text-[13px] font-bold text-text-primary">{r.author}</div>
+                        <div className="text-xs text-text-muted">{r.when}</div>
+                      </div>
+                    </div>
+                    <p className="text-[13px] leading-relaxed text-text-secondary">{r.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* apply card */}
+        <aside className="sticky top-[100px] rounded-[20px] border border-border bg-bg-surface p-[22px] shadow-card">
+          <div className="mb-1 flex items-baseline gap-1.5">
+            <span className="font-display text-[27px] font-extrabold text-text-primary">
+              ${acc.price_per_month}
+            </span>
+            <span className="font-semibold text-text-secondary">/month</span>
+          </div>
+          <p className="mb-4 text-[13px] text-text-secondary">
+            {formatAvailable(acc.available_from)} · {acc.lease_terms}
+          </p>
+
+          {unlocked ? (
+            <div className="mb-3.5 rounded-[13px] border border-[#86E0AB] bg-[#E8F7EE] p-3.5">
+              <div className="mb-2 flex items-center gap-2 text-[13px] font-bold text-[#15803D]">
+                <Unlock className="h-3.5 w-3.5" /> Full access unlocked
+              </div>
+              <div className="text-[13px] leading-relaxed text-[#166534]">
+                <strong>{acc.landlord?.name}</strong>
+                <br />
+                {acc.landlord?.phone}
+                <br />
+                {acc.landlord?.email}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-3.5 rounded-[13px] border border-brand-accent bg-[#FFF7E6] p-3.5">
+              <div className="mb-1.5 flex items-center gap-2 text-[13px] font-bold text-[#92660B]">
+                <Lock className="h-3.5 w-3.5" /> Contact locked
+              </div>
+              <p className="text-[12.5px] leading-relaxed text-[#92660B]">
+                Unlock the landlord's phone, email &amp; full address with a one-time {ACCESS_FEE_LABEL} access fee via Pesepay.
+              </p>
+            </div>
+          )}
+
+          <div className="mb-3.5 overflow-hidden rounded-[13px] border border-border">
+            <div className="flex">
+              <div className="flex-1 border-r border-border px-3.5 py-2.5">
+                <div className="text-[11px] font-bold uppercase text-text-muted">Move in</div>
+                <div className="text-sm font-semibold text-text-primary">
+                  {formatAvailable(acc.available_from)}
+                </div>
+              </div>
+              <div className="flex-1 px-3.5 py-2.5">
+                <div className="text-[11px] font-bold uppercase text-text-muted">Lease</div>
+                <div className="text-sm font-semibold text-text-primary">{leaseShort}</div>
+              </div>
+            </div>
+            <div className="border-t border-border px-3.5 py-2.5">
+              <div className="text-[11px] font-bold uppercase text-text-muted">Sharing</div>
+              <div className="text-sm font-semibold text-text-primary">
+                {acc.people_per_room} per room
+              </div>
+            </div>
+          </div>
+
+          {isStudent ? (
+            <>
+              <button
+                onClick={() => (localStorage.getItem('token') ? setApplyOpen(true) : navigate('auth'))}
+                className="w-full rounded-[13px] bg-brand-primaryDark py-3.5 text-base font-bold text-white shadow-md transition-opacity hover:opacity-90"
+              >
+                {applyLabel}
+              </button>
+              <button
+                onClick={messageHost}
+                className="mt-2.5 w-full rounded-[13px] border border-border bg-bg-surface py-3 text-[15px] font-bold text-text-primary"
+              >
+                Message host
+              </button>
+            </>
+          ) : (
+            <p className="rounded-[13px] bg-bg-surface-alt px-3.5 py-3 text-center text-[13px] text-text-secondary">
+              Switch to a student account to apply.
+            </p>
+          )}
+          <p className="mt-3.5 text-center text-xs text-text-muted">You won't be charged rent yet</p>
+        </aside>
+      </div>
+
+      {applyOpen && (
+        <ApplyModal
+          accommodation={acc}
+          unlocked={unlocked}
+          onClose={() => setApplyOpen(false)}
+          onUnlocked={load}
+          onDone={() => {
+            setApplyOpen(false);
+            navigate('messages');
+          }}
+        />
+      )}
     </div>
   );
-};
-
-export default PropertyDetails;
+}

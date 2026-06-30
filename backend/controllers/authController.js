@@ -2,257 +2,163 @@
 const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { validationResult } = require('express-validator');
 
-// Generate JWT token
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '30d' }
-  );
-};
+const generateToken = (user) =>
+  jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
-// Register a new user
+// Map a users row to the public user object returned by the API.
+const serializeUser = (u) => ({
+  id: u.id,
+  fullName: u.full_name,
+  email: u.email,
+  phone: u.phone,
+  role: u.role,
+  universityId: u.university_id || null,
+  year: u.year_of_study || null,
+  course: u.course || null,
+  budget: u.budget || null,
+  moveIn: u.move_in || null,
+  isVerified: u.is_verified,
+  avatarUrl: u.avatar_url || null,
+  createdAt: u.created_at,
+});
+
+// POST /api/auth/register
 exports.register = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+  const { fullName, email, phone, password, role = 'student' } = req.body;
+
+  if (!fullName || !email || !password) {
+    return res.status(400).json({ error: 'fullName, email and password are required' });
+  }
+  if (!['student', 'landlord'].includes(role)) {
+    return res.status(400).json({ error: 'role must be student or landlord' });
   }
 
-  const { email, password, first_name, last_name, phone, role = 'student' } = req.body;
-
   try {
-    // Check if user already exists
-    const userExists = await pool.query(
-      'SELECT id FROM users WHERE email = $1',
-      [email]
-    );
-
-    if (userExists.rows.length > 0) {
-      return res.status(400).json({ error: 'User already exists' });
+    const exists = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (exists.rows.length > 0) {
+      return res.status(409).json({ error: 'An account with that email already exists' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashed = await bcrypt.hash(password, 10);
+    // .ac.zw emails are auto-verified as students.
+    const autoVerified = role === 'student' && /\.ac\.zw$/i.test(email);
 
-    // Create user
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name, phone, role)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, email, first_name as "first_name", last_name as "last_name", phone, role, created_at as "createdAt"`,
-      [email, hashedPassword, first_name, last_name, phone, role]
+      `INSERT INTO users (full_name, email, phone, password_hash, role, is_verified)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [fullName, email, phone || null, hashed, role, autoVerified]
     );
 
     const user = result.rows[0];
-    const token = generateToken(user);
-
-    res.status(201).json({
-      message: 'User registered successfully',
-      token,
-      user
-    });
+    res.status(201).json({ token: generateToken(user), user: serializeUser(user) });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Error registering user' });
   }
 };
 
-// Login user
+// POST /api/auth/login
 exports.login = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'email and password are required' });
   }
 
-  const { email, password } = req.body;
-
   try {
-    // Check if user exists
-    const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = result.rows[0];
-
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate token
-    const token = generateToken({ id: user.id, email: user.email, role: user.role });
-
-    // Don't send password back
-    const userResponse = {
-      id: user.id,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      phone: user.phone,
-      role: user.role,
-      created_at: user.created_at,
-      updated_at: user.updated_at
-    };
-
-    res.json({
-      message: 'Login successful',
-      token,
-      user: userResponse
-    });
+    res.json({ token: generateToken(user), user: serializeUser(user) });
   } catch (error) {
     console.error('Login error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack
-    });
-    
-    res.status(500).json({ 
-      error: 'Error logging in',
-      details: process.env.NODE_ENV === 'development' ? {
-        message: error.message,
-        code: error.code
-      } : undefined
-    });
+    res.status(500).json({ error: 'Error logging in' });
   }
 };
 
-// Get current user profile
-exports.getProfile = async (req, res) => {
+// GET /api/auth/me
+exports.me = async (req, res) => {
   try {
-    console.log('Fetching profile for user ID:', req.user.id);
-    
-    const result = await pool.query(
-      `SELECT id, email, "first_name", "last_name", phone, role, 
-              "created_at" as "createdAt", "updated_at" as "updatedAt"
-       FROM users 
-       WHERE id = $1`,
-      [req.user.id]
-    );
-
-    console.log('Query result:', result.rows);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.json({ user: result.rows[0] });
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: serializeUser(result.rows[0]) });
   } catch (error) {
-    console.error('Get profile error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      detail: error.detail,
-      hint: error.hint
-    });
+    console.error('Get me error:', error);
     res.status(500).json({ error: 'Error fetching profile' });
   }
 };
 
-// Update user profile
-exports.updateProfile = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+// PATCH /api/users/me
+exports.updateMe = async (req, res) => {
+  const map = {
+    fullName: 'full_name',
+    phone: 'phone',
+    universityId: 'university_id',
+    year: 'year_of_study',
+    course: 'course',
+    budget: 'budget',
+    moveIn: 'move_in',
+    avatarUrl: 'avatar_url',
+  };
 
-  const userId = req.user.id;
-  const updates = req.body;
-  const updateFields = [];
-  const queryParams = [];
-  let paramCount = 1;
-
-  // Build the dynamic update query based on provided fields
-  const allowedFields = ['first_name', 'last_name', 'phone'];
-  
-  for (const [key, value] of Object.entries(updates)) {
-    if (allowedFields.includes(key)) {
-      updateFields.push(`"${key}" = $${paramCount}`);
-      queryParams.push(value);
-      paramCount++;
+  const sets = [];
+  const params = [];
+  let i = 1;
+  for (const [key, col] of Object.entries(map)) {
+    if (req.body[key] !== undefined) {
+      sets.push(`${col} = $${i++}`);
+      params.push(req.body[key] === '' ? null : req.body[key]);
     }
   }
+  if (sets.length === 0) return res.status(400).json({ error: 'No valid fields to update' });
 
-  if (updateFields.length === 0) {
-    return res.status(400).json({ error: 'No valid fields to update' });
-  }
-
+  params.push(req.user.id);
   try {
-    // Update the user's profile
-    const query = `
-      UPDATE users 
-      SET ${updateFields.join(', ')}, "updated_at" = NOW()
-      WHERE id = $${paramCount}
-      RETURNING id, email, "first_name", "last_name", phone, role, 
-                "created_at" as "createdAt", "updated_at" as "updatedAt"
-    `;
-    
-    queryParams.push(userId);
-    
-    const result = await pool.query(query, queryParams);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const user = result.rows[0];
-    res.json({
-      message: 'Profile updated successfully',
-      user
-    });
+    const result = await pool.query(
+      `UPDATE users SET ${sets.join(', ')} WHERE id = $${i} RETURNING *`,
+      params
+    );
+    res.json({ user: serializeUser(result.rows[0]) });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ error: 'Error updating profile' });
   }
 };
 
-// Change password
-exports.changePassword = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { currentPassword, newPassword } = req.body;
-  const userId = req.user.id;
-
+// POST /api/users/verify  { method:'email'|'document', payload }
+exports.verify = async (req, res) => {
+  const { method, payload } = req.body;
   try {
-    // Get user's current password
-    const userResult = await pool.query(
-      'SELECT password_hash FROM users WHERE id = $1',
-      [userId]
-    );
-
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+    let verified = false;
+    if (method === 'email') {
+      // accept .ac.zw student emails
+      verified = /\.ac\.zw$/i.test(String(payload || req.user.email || ''));
+    } else if (method === 'document') {
+      // a real impl would queue manual review; here an uploaded doc marks verified
+      verified = Boolean(payload);
     }
 
-    // Check current password
-    const isMatch = await bcrypt.compare(currentPassword, userResult.rows[0].password_hash);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
+    if (!verified) {
+      return res.status(400).json({ error: 'Could not verify with the provided details' });
     }
 
-    // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    // Update password
-    await pool.query(
-      'UPDATE users SET password_hash = $1, "updatedAt" = NOW() WHERE id = $2',
-      [hashedPassword, userId]
+    const result = await pool.query(
+      'UPDATE users SET is_verified = true WHERE id = $1 RETURNING is_verified',
+      [req.user.id]
     );
-
-    res.json({ message: 'Password updated successfully' });
+    res.json({ is_verified: result.rows[0].is_verified });
   } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ error: 'Error changing password' });
+    console.error('Verify error:', error);
+    res.status(500).json({ error: 'Error verifying account' });
   }
 };
+
+exports.serializeUser = serializeUser;

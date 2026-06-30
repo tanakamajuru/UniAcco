@@ -1,299 +1,310 @@
-import React, { useState } from "react";
-import { accommodationApi } from "../services/api";
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronDown, Camera, Loader2 } from 'lucide-react';
+import { useNavigation } from '../App';
+import { accommodationApi, universityApi } from '../services/api';
+import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
+
+const STEPS = ['Basics', 'Photos', 'Pricing', 'Review'];
+const TYPES = ['Ensuite room', 'Studio flat', 'Shared house'];
 
 export default function ListPropertyPage() {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    address: "",
-    city: "",
-    pricePerMonth: "",
-    peoplePerRoom: 1,
+  const { navigate } = useNavigation();
+  const [universities, setUniversities] = useState([]);
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    universityId: '',
+    campusId: '',
+    suburb: '',
+    type: 'Ensuite room',
+    pricePerMonth: '180',
+    bedrooms: '1',
+    peoplePerRoom: '1',
+    leaseTerms: 'Per semester or 12 mo',
   });
-  const [imageFile, setImageFile] = useState(null);
+  const [amenities, setAmenities] = useState(new Set(['wifi']));
+  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'peoplePerRoom' ? parseInt(value) : value
-    }));
+  useEffect(() => {
+    universityApi
+      .getAll()
+      .then((u) => {
+        setUniversities(u);
+        if (u.length) setForm((f) => ({ ...f, universityId: f.universityId || u[0].id }));
+      })
+      .catch(() => {});
+  }, []);
+
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  // Changing university resets the chosen campus.
+  const onUniversity = (e) =>
+    setForm((f) => ({ ...f, universityId: e.target.value, campusId: '' }));
+
+  const selectedUni = universities.find((u) => u.id === form.universityId);
+  const campuses = selectedUni?.campuses || [];
+  const selectedCampus = campuses.find((c) => c.id === form.campusId);
+  const toggleAmenity = (id) =>
+    setAmenities((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const onFiles = (e) => {
+    const picked = Array.from(e.target.files || []).filter((f) => {
+      if (f.size > 5 * 1024 * 1024) {
+        setError(`${f.name} is larger than 5MB`);
+        return false;
+      }
+      return true;
+    });
+    setFiles((prev) => [...prev, ...picked].slice(0, 5));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setError("Image size should be less than 5MB");
-        return;
-      }
-      setImageFile(file);
-      setError("");
+  const submit = async (status) => {
+    if (!form.title || !form.pricePerMonth) {
+      setError('Please add a title and rent.');
+      return;
     }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     setLoading(true);
-    setError("");
-    setSuccess("");
-
+    setError('');
     try {
-      const accommodationData = {
-        title: formData.title,
-        description: formData.description,
-        address: formData.address,
-        city: formData.city,
-        price_per_month: parseFloat(formData.pricePerMonth),
-        people_per_room: formData.peoplePerRoom,
-        // Add other fields as needed for your API
-      };
+      const fd = new FormData();
+      fd.append('title', form.title);
+      fd.append('description', form.description);
+      fd.append('type', form.type);
+      fd.append('suburb', form.suburb);
+      // City follows the selected campus (falls back to the university's city).
+      fd.append('city', selectedCampus?.city || selectedUni?.city || 'Harare');
+      fd.append('universityId', form.universityId);
+      if (form.campusId) fd.append('campusId', form.campusId);
+      fd.append('pricePerMonth', form.pricePerMonth);
+      fd.append('bedrooms', form.bedrooms);
+      fd.append('peoplePerRoom', form.peoplePerRoom);
+      fd.append('leaseTerms', form.leaseTerms);
+      fd.append('status', status);
+      fd.append('amenities', JSON.stringify([...amenities]));
+      files.forEach((f) => fd.append('images', f));
 
-      // First create the accommodation
-      const data = await accommodationApi.create(accommodationData);
-      
-      // If there's an image, handle the upload separately
-      if (imageFile) {
-        const formDataToSend = new FormData();
-        formDataToSend.append('image', imageFile);
-        
-        // Assuming your API has an endpoint for uploading accommodation images
-        const response = await fetch(`${process.env.VITE_API_URL || 'http://localhost:5000'}/api/accommodations/${data.id}/image`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: formDataToSend
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to upload image');
-        }
-      }
-
-      console.log("Created:", data);
-      setSuccess("Accommodation listed successfully!");
-      
-      // Reset form
-      setFormData({
-        title: "",
-        description: "",
-        address: "",
-        city: "",
-        pricePerMonth: "",
-        peoplePerRoom: 1,
-      });
-      setImageFile(null);
-      const imageUpload = document.getElementById("image-upload");
-      if (imageUpload) imageUpload.value = "";
-    } catch (err) {
-      console.error("Error:", err);
-      setError("An unexpected error occurred. Please try again.");
+      await accommodationApi.create(fd);
+      navigate('host-dashboard');
+    } catch (e) {
+      setError(e.message || 'Something went wrong.');
     } finally {
       setLoading(false);
     }
   };
 
+  const input =
+    'w-full rounded-[11px] border border-input-border bg-bg-surface px-3.5 py-3 text-sm text-text-primary outline-none focus:border-brand-primary';
+  const label = 'mb-1.5 block text-sm font-bold text-text-primary';
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">List Your Property</h1>
-          
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-md">
-              {error}
-            </div>
-          )}
-          
-          {success && (
-            <div className="mb-4 p-4 bg-green-50 text-green-700 rounded-md">
-              {success}
-            </div>
-          )}
+    <div className="ua-fade mx-auto max-w-[760px] px-6 pb-20 pt-[100px]">
+      <button
+        onClick={() => navigate('host-dashboard')}
+        className="mb-2.5 flex items-center gap-1.5 py-1.5 text-sm font-semibold text-text-secondary"
+      >
+        <ChevronLeft className="h-4 w-4" /> Back to dashboard
+      </button>
+      <h1 className="font-display mb-1 text-[28px] font-extrabold tracking-tight text-text-primary">
+        List your property
+      </h1>
+      <p className="mb-[22px] text-[15px] text-text-secondary">
+        Reach thousands of verified students near campus. Free to list — you only pay when you find a tenant.
+      </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Property Title *
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="e.g., Cozy Studio in City Center"
-              />
+      {/* step indicator */}
+      <div className="mb-6 flex gap-2">
+        {STEPS.map((s, i) => (
+          <div key={s} className="flex flex-1 items-center gap-2">
+            <div
+              className={`flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-full text-[13px] font-bold ${
+                i === 0 ? 'bg-brand-primaryDark text-white' : 'bg-bg-surface-alt text-text-muted'
+              }`}
+            >
+              {i + 1}
             </div>
+            <span
+              className={`text-[12.5px] font-bold ${i === 0 ? 'text-text-primary' : 'text-text-muted'}`}
+            >
+              {s}
+            </span>
+          </div>
+        ))}
+      </div>
 
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description *
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={4}
-                value={formData.description}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="Describe your property in detail..."
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                  Address *
-                </label>
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="Street address"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                  City *
-                </label>
-                <input
-                  type="text"
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="e.g., Harare, Bulawayo"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="pricePerMonth" className="block text-sm font-medium text-gray-700">
-                  Price per Month (USD) *
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">$</span>
-                  </div>
-                  <input
-                    type="number"
-                    id="pricePerMonth"
-                    name="pricePerMonth"
-                    min="0"
-                    step="0.01"
-                    value={formData.pricePerMonth}
-                    onChange={handleChange}
-                    required
-                    className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="peoplePerRoom" className="block text-sm font-medium text-gray-700">
-                  People per Room *
-                </label>
-                <select
-                  id="peoplePerRoom"
-                  name="peoplePerRoom"
-                  value={formData.peoplePerRoom}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                >
-                  {[1, 2, 3, 4, 5, 6].map((num) => (
-                    <option key={num} value={num}>
-                      {num} {num === 1 ? 'person' : 'people'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Property Image</label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                <div className="space-y-1 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label
-                      htmlFor="image-upload"
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
-                    >
-                      <span>Upload a file</span>
-                      <input 
-                        id="image-upload" 
-                        name="image-upload" 
-                        type="file" 
-                        className="sr-only" 
-                        onChange={handleFileChange}
-                        accept="image/*"
-                      />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    PNG, JPG, GIF up to 5MB
-                  </p>
-                  {imageFile && (
-                    <p className="text-sm text-gray-900 mt-2">
-                      Selected: {imageFile.name}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Listing...
-                  </>
-                ) : (
-                  'List Property'
-                )}
-              </button>
-            </div>
-          </form>
+      {error && (
+        <div className="mb-4 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+          {error}
         </div>
+      )}
+
+      <div className="rounded-[20px] border border-border bg-bg-surface p-6 shadow-sm">
+        <h3 className="font-display mb-[18px] text-[18px] font-bold text-text-primary">The basics</h3>
+
+        <label className={label}>Property title</label>
+        <input
+          value={form.title}
+          onChange={set('title')}
+          className={`${input} mb-4`}
+          placeholder="e.g. Sunny ensuite room in Mount Pleasant"
+        />
+
+        <label className={label}>Description</label>
+        <textarea
+          value={form.description}
+          onChange={set('description')}
+          className={`${input} mb-4 h-[90px] resize-none`}
+          placeholder="Describe the room, the house, the vibe, who it suits..."
+        />
+
+        <div className="mb-4 grid grid-cols-2 gap-3.5">
+          <div>
+            <label className={label}>Nearest university</label>
+            <div className="relative">
+              <select value={form.universityId} onChange={onUniversity} className={`${input} appearance-none pr-9`}>
+                {universities.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-text-muted" />
+            </div>
+          </div>
+          <div>
+            <label className={label}>Campus</label>
+            <div className="relative">
+              <select
+                value={form.campusId}
+                onChange={set('campusId')}
+                disabled={campuses.length === 0}
+                className={`${input} appearance-none pr-9 disabled:opacity-60`}
+              >
+                <option value="">{campuses.length ? 'Select a campus' : 'No campuses listed'}</option>
+                {campuses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.city ? ` — ${c.city}` : ''}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-text-muted" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className={label}>Suburb</label>
+          <input value={form.suburb} onChange={set('suburb')} className={input} placeholder="Mount Pleasant" />
+        </div>
+
+        <div className="mb-4">
+          <label className={label}>Property type</label>
+          <div className="relative">
+            <select value={form.type} onChange={set('type')} className={`${input} appearance-none pr-9`}>
+              {TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-text-muted" />
+          </div>
+        </div>
+
+        <div className="mb-5 grid grid-cols-3 gap-3.5">
+          <div>
+            <label className={label}>Rent (USD/mo)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-3 font-semibold text-text-muted">$</span>
+              <input
+                value={form.pricePerMonth}
+                onChange={set('pricePerMonth')}
+                type="number"
+                className={`${input} pl-6`}
+              />
+            </div>
+          </div>
+          <div>
+            <label className={label}>Bedrooms</label>
+            <input value={form.bedrooms} onChange={set('bedrooms')} type="number" className={input} />
+          </div>
+          <div>
+            <label className={label}>People / room</label>
+            <input
+              value={form.peoplePerRoom}
+              onChange={set('peoplePerRoom')}
+              type="number"
+              className={input}
+            />
+          </div>
+        </div>
+
+        <label className={`${label} mb-2.5`}>Amenities</label>
+        <div className="mb-5 flex flex-wrap gap-2">
+          {ALL_AMENITIES.map((id) => {
+            const active = amenities.has(id);
+            return (
+              <button
+                key={id}
+                onClick={() => toggleAmenity(id)}
+                className="flex items-center gap-1.5 rounded-[10px] border px-3 py-2 text-[13px] font-semibold transition-colors"
+                style={{
+                  borderColor: active ? '#2F8FB8' : '#E2E8F0',
+                  background: active ? '#EAF6FB' : 'transparent',
+                  color: active ? '#2F8FB8' : '#475569',
+                }}
+              >
+                <AmenityIcon id={id} className="h-3.5 w-3.5" /> {LABELS[id]}
+              </button>
+            );
+          })}
+        </div>
+
+        <label className={`${label} mb-2.5`}>Photos</label>
+        <label
+          htmlFor="photo-input"
+          className="block cursor-pointer rounded-[14px] border-2 border-dashed border-border-strong bg-bg-page p-8 text-center"
+        >
+          <Camera className="mx-auto mb-2 h-8 w-8 text-text-muted" />
+          <p className="mb-1 text-sm font-bold text-text-primary">Drag photos here or click to upload</p>
+          <p className="text-[12.5px] text-text-muted">PNG or JPG up to 5MB each · add at least 3</p>
+          <input id="photo-input" type="file" multiple accept="image/*" className="sr-only" onChange={onFiles} />
+        </label>
+        {files.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {files.map((f, i) => (
+              <span
+                key={i}
+                className="rounded-lg bg-bg-surface-alt px-2.5 py-1 text-xs font-medium text-text-secondary"
+              >
+                {f.name}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-[22px] flex justify-between">
+        <button
+          onClick={() => submit('draft')}
+          disabled={loading}
+          className="rounded-xl border border-border bg-bg-surface px-5 py-3 text-[15px] font-bold text-text-secondary disabled:opacity-60"
+        >
+          Save draft
+        </button>
+        <button
+          onClick={() => submit('pending')}
+          disabled={loading}
+          className="flex items-center gap-2 rounded-xl bg-brand-primaryDark px-7 py-3 text-[15px] font-bold text-white shadow-md disabled:opacity-60"
+        >
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          Publish listing →
+        </button>
       </div>
     </div>
   );

@@ -47,35 +47,23 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      if (isSignUp) {
-        const parts = formData.name.trim().split(/\s+/);
-        const first_name = parts[0] || '';
-        const last_name = parts.slice(1).join(' ') || 'User';
+      const res = isSignUp
+        ? await authApi.register({
+            fullName: formData.name.trim(),
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+          })
+        : await authApi.login({ email: formData.email, password: formData.password });
 
-        const res = await authApi.register({
-          email: formData.email,
-          password: formData.password,
-          first_name,
-          last_name,
-          role: formData.role,
-        });
+      if (res?.token) localStorage.setItem('token', res.token);
 
-        if (res?.token) {
-          localStorage.setItem('token', res.token);
-        }
-
-        navigate('home');
-        return;
-      }
-
-      const res = await authApi.login(formData.email, formData.password);
-      if (res?.token) {
-        localStorage.setItem('token', res.token);
-      }
-
-      navigate('home');
+      // Full reload so the navbar + nav context pick up the new role/session,
+      // landing on the right home screen for the user's role.
+      const landing = res?.user?.role === 'landlord' ? '/host-dashboard' : '/listings';
+      window.location.assign(landing);
     } catch (err) {
-      setError(typeof err === 'string' ? err : 'Failed to authenticate');
+      setError(err?.message || (typeof err === 'string' ? err : 'Failed to authenticate'));
     } finally {
       setLoading(false);
     }

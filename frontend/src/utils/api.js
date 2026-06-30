@@ -23,7 +23,9 @@ export async function fetchAccommodations(filters = {}) {
     );
     
     const data = await accommodationApi.getAll(apiFilters);
-    return data || [];
+    // New API returns { results, total }; older callers expect an array.
+    if (Array.isArray(data)) return data;
+    return (data && data.results) || [];
   } catch (error) {
     console.error('Error fetching accommodations:', error);
     throw error;

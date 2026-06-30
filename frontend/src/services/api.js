@@ -1,176 +1,164 @@
-// src/services/api.js
+// src/services/api.js — UniAcco API client
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// Generic API request helper
-const apiRequest = async (endpoint, options = {}) => {
-  const token = localStorage.getItem('token');
+export const getToken = () => localStorage.getItem('token');
+
+export const parseJwt = (token) => {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+        .join('')
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+};
+
+export const currentRole = () => {
+  const t = getToken();
+  return t ? parseJwt(t)?.role || null : null;
+};
+
+// Resolve an image path returned by the API (e.g. "/uploads/...") to an absolute URL.
+export const imageUrl = (url) => {
+  if (!url) return null;
+  if (/^https?:\/\//.test(url)) return url;
+  return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
+const request = async (endpoint, options = {}) => {
+  const token = getToken();
+  const isForm = options.body instanceof FormData;
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isForm ? {} : { 'Content-Type': 'application/json' }),
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
 
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+  let data = null;
+  const text = await res.text();
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error(`API request failed for ${endpoint}:`, error);
-    throw error;
   }
+  if (!res.ok) {
+    const err = new Error((data && data.error) || `Request failed (${res.status})`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
 };
 
-// Accommodation API
-export const accommodationApi = {
-  // Get all accommodations with optional filters
-  getAll: async (filters = {}) => {
-    const queryParams = new URLSearchParams();
-    
-    // Add filters to query params
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value);
-      }
-    });
-
-    const queryString = queryParams.toString();
-    const endpoint = `/api/accommodations${queryString ? `?${queryString}` : ''}`;
-    
-    return apiRequest(endpoint);
-  },
-
-  // Get accommodation by ID
-  getById: async (id) => {
-    return apiRequest(`/api/accommodations/${id}`);
-  },
-
-  // Create new accommodation (landlord only)
-  create: async (accommodationData) => {
-    return apiRequest('/api/accommodations', {
-      method: 'POST',
-      body: JSON.stringify(accommodationData),
-    });
-  },
-
-  // Update accommodation (landlord only)
-  update: async (id, accommodationData) => {
-    return apiRequest(`/api/accommodations/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(accommodationData),
-    });
-  },
-
-  // Delete accommodation (landlord only)
-  delete: async (id) => {
-    return apiRequest(`/api/accommodations/${id}`, {
-      method: 'DELETE',
-    });
-  },
-
-  // Get landlord's properties
-  getLandlordProperties: async () => {
-    return apiRequest('/api/properties/landlord');
-  },
+const qs = (params = {}) => {
+  const sp = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') sp.append(k, v);
+  });
+  const s = sp.toString();
+  return s ? `?${s}` : '';
 };
 
-// University API
-export const universityApi = {
-  // Get all universities
-  getAll: async () => {
-    return apiRequest('/api/universities');
-  },
-
-  // Get university by ID
-  getById: async (id) => {
-    return apiRequest(`/api/universities/${id}`);
-  },
-
-  // Get campuses for a university
-  getCampuses: async (universityId) => {
-    return apiRequest(`/api/universities/${universityId}/campuses`);
-  },
-};
-
-// Campus API
-export const campusApi = {
-  // Get all campuses
-  getAll: async () => {
-    return apiRequest('/api/campuses');
-  },
-
-  // Get campus by ID
-  getById: async (id) => {
-    return apiRequest(`/api/campuses/${id}`);
-  },
-};
-
-// Booking API
-export const bookingApi = {
-  // Get user's bookings
-  getMyBookings: async () => {
-    return apiRequest('/api/bookings/my-bookings');
-  },
-
-  // Create booking
-  create: async (bookingData) => {
-    return apiRequest('/api/bookings', {
-      method: 'POST',
-      body: JSON.stringify(bookingData),
-    });
-  },
-
-  // Cancel booking
-  cancel: async (id) => {
-    return apiRequest(`/api/bookings/${id}/cancel`, {
-      method: 'PUT',
-    });
-  },
-};
-
-// Auth API
+// ---------------- Auth ----------------
 export const authApi = {
-  // Login
-  login: async (credentials) => {
-    return apiRequest('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-  },
-
-  // Register
-  register: async (userData) => {
-    return apiRequest('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  },
-
-  // Get profile
-  getProfile: async () => {
-    return apiRequest('/api/auth/profile');
-  },
-
-  // Update profile
-  updateProfile: async (userData) => {
-    return apiRequest('/api/auth/profile', {
-      method: 'PUT',
-      body: JSON.stringify(userData),
-    });
-  },
+  register: (body) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+  login: (body) => request('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+  me: () => request('/api/auth/me'),
 };
 
-// Export all APIs
+export const userApi = {
+  updateMe: (body) => request('/api/users/me', { method: 'PATCH', body: JSON.stringify(body) }),
+  verify: (body) => request('/api/users/verify', { method: 'POST', body: JSON.stringify(body) }),
+};
+
+// ---------------- Lookups ----------------
+export const universityApi = {
+  getAll: () => request('/api/universities'),
+};
+export const amenityApi = {
+  getAll: () => request('/api/amenities'),
+};
+
+// ---------------- Accommodations ----------------
+export const accommodationApi = {
+  getAll: (filters = {}) => request(`/api/accommodations${qs(filters)}`),
+  getById: (id) => request(`/api/accommodations/${id}`),
+  create: (body) =>
+    request('/api/accommodations', {
+      method: 'POST',
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    }),
+  update: (id, body) =>
+    request(`/api/accommodations/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  remove: (id) => request(`/api/accommodations/${id}`, { method: 'DELETE' }),
+  landlord: () => request('/api/accommodations/landlord'),
+};
+
+// ---------------- Favourites ----------------
+export const favouriteApi = {
+  list: () => request('/api/favourites'),
+  add: (id) => request(`/api/favourites/${id}`, { method: 'POST' }),
+  remove: (id) => request(`/api/favourites/${id}`, { method: 'DELETE' }),
+};
+
+// ---------------- Applications ----------------
+export const applicationApi = {
+  create: (body) => request('/api/applications', { method: 'POST', body: JSON.stringify(body) }),
+  mine: () => request('/api/applications/mine'),
+  landlord: () => request('/api/applications/landlord'),
+  setStatus: (id, status) =>
+    request(`/api/applications/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+};
+
+// ---------------- Messaging ----------------
+export const threadApi = {
+  list: () => request('/api/threads'),
+  messages: (id) => request(`/api/threads/${id}/messages`),
+  send: (id, body) =>
+    request(`/api/threads/${id}/messages`, { method: 'POST', body: JSON.stringify({ body }) }),
+  start: (accommodationId) =>
+    request('/api/threads', { method: 'POST', body: JSON.stringify({ accommodationId }) }),
+};
+
+// ---------------- Payments ----------------
+export const paymentApi = {
+  initiate: (body) => request('/api/payments/initiate', { method: 'POST', body: JSON.stringify(body) }),
+  status: (reference) => request(`/api/payments/status/${reference}`),
+  history: () => request('/api/payments/history'),
+};
+
+// ---------------- Host ----------------
+export const hostApi = {
+  stats: () => request('/api/host/stats'),
+  applicants: () => request('/api/host/applicants'),
+};
+
+// ---------------- Compatibility shims (legacy pages) ----------------
+export const campusApi = {
+  getAll: async () => [],
+  getById: async () => null,
+};
+export const bookingApi = {
+  getMyBookings: () => applicationApi.mine(),
+};
+
 export default {
-  accommodation: accommodationApi,
-  university: universityApi,
-  campus: campusApi,
-  booking: bookingApi,
   auth: authApi,
+  user: userApi,
+  university: universityApi,
+  amenity: amenityApi,
+  accommodation: accommodationApi,
+  favourite: favouriteApi,
+  application: applicationApi,
+  thread: threadApi,
+  payment: paymentApi,
+  host: hostApi,
 };

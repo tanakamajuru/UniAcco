@@ -1,480 +1,288 @@
-import { useState, useEffect } from 'react';
-import {
-  Search,
-  MapPin,
-  Star,
-  Filter,
-  Home as HomeIcon,
-  Wifi,
-  Utensils,
-  BookOpen,
-  Droplets,
-  Dumbbell,
-  WashingMachine,
-  Snowflake,
-  Tv2,
-  X,
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  Sun,
-  Car,
-  Sofa,
-  PawPrint,
-  Cigarette,
-  CreditCard,
-  Lock,
-  Unlock,
-  Eye,
-  ArrowRight,
-} from 'lucide-react';
-import AnimatedBackground from '@/components/AnimatedBackground';
-import ImageSlider from '@/components/ImageSlider';
-import PaymentForm from '@/components/PaymentForm';
-import { usePaymentVerification, PaymentRequired } from '../hooks/usePaymentVerification';
-import { motion, AnimatePresence } from 'framer-motion';
-import { fetchAccommodations } from '../utils/api';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Search, GraduationCap, Loader2, RotateCw } from 'lucide-react';
 import { useNavigation } from '../App';
+import { accommodationApi, universityApi, favouriteApi, currentRole } from '../services/api';
+import ListingCard from '../components/listings/ListingCard';
 
-// Separate component for property cards to avoid hooks in loops
-const PropertyCard = ({ property, amenities, onPropertyClick, onViewDetails }) => {
-  const { hasPaid: hasPaidForAccommodation, isLoading: paymentLoading } = usePaymentVerification('accommodation_details', property.id);
-  
-  return (
-    <motion.div
-      key={property.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-bg-surface rounded-xl shadow-lg overflow-hidden"
-    >
-      <div className="h-48 w-full bg-bg-surface-alt flex items-center justify-center overflow-hidden">
-        <ImageSlider 
-          images={property.images} 
-          autoplay={false}
-          autoplayDelay={0}
-        />
-      </div>
-      <div className="p-5">
-        <h3 className="text-xl font-bold">{property.title}</h3>
-        <p className="text-sm text-text-muted">
-          {property.university?.name || 'University'} — {property.campus?.name || 'Campus'}
-        </p>
-        <div className="flex items-center gap-4 mt-2">
-          <p className="font-semibold">${property.price_per_month}/month</p>
-          <p className="text-sm text-text-muted">• {property.people_per_room ? `${property.people_per_room} ${property.people_per_room === 1 ? 'Person' : 'People'}/room` : 'N/A'}</p>
-        </div>
+const TYPES = [
+  { value: 'Ensuite room', label: 'Ensuite' },
+  { value: 'Studio flat', label: 'Studio' },
+  { value: 'Shared house', label: 'Shared' },
+];
 
-        {/* Payment Status Indicator */}
-        <div className="mt-2 mb-3">
-          {paymentLoading ? (
-            <div className="flex items-center text-sm text-text-secondary">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-primary mr-2"></div>
-              Checking access...
-            </div>
-          ) : hasPaidForAccommodation ? (
-            <div className="flex items-center text-sm text-success">
-              <Unlock className="w-4 h-4 mr-1" />
-              Full Access Unlocked
-            </div>
-          ) : (
-            <div className="flex items-center text-sm text-warning">
-              <Lock className="w-4 h-4 mr-1" />
-              Limited Access - Payment Required
-            </div>
-          )}
-        </div>
-
-        {/* Amenities */}
-        <div className="mt-3">
-          <h4 className="text-sm font-medium mb-2">Amenities:</h4>
-          <div className="grid grid-cols-2 gap-2">
-            {amenities.map((amenity) => {
-              const isAvailable = property.accommodation_amenities?.[amenity.id] === true;
-              
-              return (
-                <label 
-                  key={amenity.id} 
-                  className={`flex items-center space-x-2 text-sm ${isAvailable ? 'text-text-primary dark:text-text-primary' : 'text-text-muted dark:text-text-muted'}`}
-                >
-                  <div className={`flex items-center justify-center w-5 h-5 border rounded ${isAvailable ? 'border-brand-primary bg-brand-primary/10 dark:bg-brand-primary/20' : 'border-border dark:border-border'}`}>
-                    {isAvailable && (
-                      <svg className="w-3 h-3 text-brand-primary" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-1">{amenity.icon}</span>
-                    <span>{amenity.label}</span>
-                  </div>
-                </label>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Contact Information - Only show if paid */}
-        {hasPaidForAccommodation ? (
-          <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
-            <h5 className="font-semibold text-green-800 mb-2">Contact Information</h5>
-            <div className="text-sm text-green-700 space-y-1">
-              <p><strong>Landlord:</strong> {property.landlord_name || 'Available after payment'}</p>
-              <p><strong>Phone:</strong> {property.landlord_phone || 'Available after payment'}</p>
-              <p><strong>Email:</strong> {property.landlord_email || 'Available after payment'}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-            <p className="text-sm text-orange-700">
-              <strong>Contact information</strong> and full details are available after payment
-            </p>
-          </div>
-        )}
-
-        <button
-          onClick={() => onPropertyClick(property, hasPaidForAccommodation)}
-          className="mt-4 w-full bg-brand-primary text-text-inverse rounded-lg hover:bg-brand-primary-dark transition-colors"
-        >
-          {hasPaidForAccommodation ? 'Apply Now' : 'Pay to Unlock & Apply'}
-        </button>
-        
-        {/* View Details Button */}
-        <button
-          onClick={() => onViewDetails(property.id)}
-          className="mt-2 w-full bg-bg-surface-alt text-text-primary rounded-lg hover:bg-bg-surface transition-colors flex items-center justify-center"
-        >
-          <Eye className="w-4 h-4 mr-2" />
-          View Details
-        </button>
-      </div>
-    </motion.div>
+// Map a [lat,lng] to an x/y % inside the map panel, normalised to the result set.
+function computePins(list) {
+  const withCoords = list.filter((a) => a.lat != null && a.lng != null);
+  if (withCoords.length < 2) {
+    return Object.fromEntries(
+      list.map((a, i) => [a.id, { x: 28 + ((i * 37) % 50), y: 24 + ((i * 53) % 50) }])
+    );
+  }
+  const lats = withCoords.map((a) => a.lat);
+  const lngs = withCoords.map((a) => a.lng);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+  const span = (v, lo, hi) => (hi === lo ? 0.5 : (v - lo) / (hi - lo));
+  return Object.fromEntries(
+    list.map((a) => {
+      if (a.lat == null || a.lng == null) return [a.id, { x: 50, y: 50 }];
+      return [
+        a.id,
+        { x: 18 + span(a.lng, minLng, maxLng) * 64, y: 22 + (1 - span(a.lat, minLat, maxLat)) * 56 },
+      ];
+    })
   );
-};
+}
 
-const Listings = () => {
-  const { currentPage, navigate } = useNavigation();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUniversity, setSelectedUniversity] = useState('');
-  const [selectedCampus, setSelectedCampus] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 1000]);
-  const [selectedAmenities, setSelectedAmenities] = useState([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState(null);
-  const [showApplicationForm, setShowApplicationForm] = useState(false);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [applicationData, setApplicationData] = useState(null);
+export default function Listings() {
+  const { navigate } = useNavigation();
+  const isStudent = currentRole() !== 'landlord';
 
-  const [accommodations, setAccommodations] = useState([]);
+  const [universities, setUniversities] = useState([]);
+  const [uniIdx, setUniIdx] = useState(0);
+  const [search, setSearch] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [maxPrice, setMaxPrice] = useState(320);
+  const [mapMode, setMapMode] = useState('split');
+  const [selectedId, setSelectedId] = useState(null);
+
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [savedIds, setSavedIds] = useState(new Set());
 
-  const [applicationForm, setApplicationForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    moveInDate: '',
-    message: '',
-    termsAgreed: false,
-  });
+  const activeUni = universities[uniIdx];
 
-  const universities = [
-    'University of Zimbabwe',
-    'Midlands State University',
-    'National University of Science and Technology',
-    'Africa University',
-    'Chinhoyi University of Technology',
-  ];
-
-  const campuses = [
-    'Main Campus',
-    'Medical Campus',
-    'Engineering Campus',
-    'Business School',
-    'Arts Campus',
-  ];
-
-  const amenities = [
-    { id: 'tv', label: 'TV', icon: <Tv2 className="w-4 h-4" /> },
-    { id: 'wifi', label: 'WiFi', icon: <Wifi className="w-4 h-4" /> },
-    { id: 'heating', label: 'Heating', icon: <Sun className="w-4 h-4" /> },
-    { id: 'kitchen', label: 'Kitchen', icon: <Utensils className="w-4 h-4" /> },
-    { id: 'laundry', label: 'Laundry', icon: <WashingMachine className="w-4 h-4" /> },
-    { id: 'parking', label: 'Parking', icon: <Car className="w-4 h-4" /> },
-    { id: 'furnished', label: 'Furnished', icon: <Sofa className="w-4 h-4" /> },
-    { id: 'pets_allowed', label: 'Pets Allowed', icon: <PawPrint className="w-4 h-4" /> },
-    { id: 'smoking_allowed', label: 'Smoking Allowed', icon: <Cigarette className="w-4 h-4" /> },
-  ];
-
-  /* =======================
-     DATA FETCH
-  ======================= */
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchAccommodations({
-          university: selectedUniversity,
-          campus: selectedCampus,
-          minPrice: priceRange[0],
-          maxPrice: priceRange[1],
-        });
+    universityApi.getAll().then(setUniversities).catch(() => {});
+  }, []);
 
-        const normalized = (data || []).map((p) => {
-          const normalizedAmenities =
-            p.amenities ??
-            p.accommodation_amenities?.[0] ??
-            p.accommodation_amenities ??
-            {};
+  useEffect(() => {
+    if (!isStudent) return;
+    favouriteApi
+      .list()
+      .then((items) => setSavedIds(new Set(items.map((a) => a.id))))
+      .catch(() => {});
+  }, [isStudent]);
 
-          const normalizedImages =
-            (p.images ?? p.accommodation_images?.map((img) => img.image_url) ?? [])
-              .map(url => url?.trim())
-              .filter(url => url && url.length > 0);
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    accommodationApi
+      .getAll({
+        university: activeUni?.short,
+        maxPrice,
+        q: search,
+        type: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
+      })
+      .then((data) => {
+        let list = data.results || [];
+        // client-side multi-type filter (API takes a single type)
+        if (selectedTypes.length > 1) list = list.filter((a) => selectedTypes.includes(a.type));
+        setResults(list);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [activeUni, maxPrice, search, selectedTypes]);
 
-          return {
-            ...p,
-            accommodation_amenities: normalizedAmenities,
-            images: normalizedImages,
-          };
-        });
+  useEffect(() => {
+    const t = setTimeout(load, 250); // debounce search/price
+    return () => clearTimeout(t);
+  }, [load]);
 
-        setAccommodations(normalized);
-      } catch (err) {
-        console.error('Error loading accommodations:', err);
-        setError('Failed to load accommodations.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const pins = useMemo(() => computePins(results), [results]);
 
-    loadData();
-  }, [selectedUniversity, selectedCampus, priceRange]);
-
-  /* =======================
-     FILTERING
-  ======================= */
-  const toggleAmenity = (id) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
+  const toggleType = (value) =>
+    setSelectedTypes((prev) =>
+      prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]
     );
-  };
 
-  const filteredProperties = accommodations.filter((p) => {
-    if (searchQuery && !p.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-
-    if (
-      selectedAmenities.length &&
-      selectedAmenities.some((a) => !p.accommodation_amenities?.[a])
-    )
-      return false;
-
-    return true;
-  });
-
-  /* =======================
-     FORM HANDLERS
-  ======================= */
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setApplicationForm((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Store application data and show payment form
-    setApplicationData(applicationForm);
-    setShowApplicationForm(false);
-    setShowPaymentForm(true);
-  };
-
-  const handlePaymentSuccess = (paymentData) => {
-    // Payment successful - reset forms and show success
-    setShowPaymentForm(false);
-    setApplicationData(null);
-    setApplicationForm({
-      fullName: '',
-      email: '',
-      phone: '',
-      moveInDate: '',
-      message: ''
+  const toggleSave = async (acc) => {
+    if (!isStudent || !localStorage.getItem('token')) {
+      navigate('auth');
+      return;
+    }
+    const isSaved = savedIds.has(acc.id);
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (isSaved) next.delete(acc.id);
+      else next.add(acc.id);
+      return next;
     });
-    // You could show a success message or redirect
-    alert('Payment successful! Your booking has been confirmed.');
-  };
-
-  const handleCancelPayment = () => {
-    setShowPaymentForm(false);
-    setApplicationData(null);
-  };
-
-  const handlePropertyClick = (property, hasPaidForAccommodation) => {
-    setSelectedProperty(property);
-    if (hasPaidForAccommodation) {
-      // If already paid, show application form directly
-      setShowApplicationForm(true);
-    } else {
-      // If not paid, show payment form
-      setShowPaymentForm(true);
+    try {
+      if (isSaved) await favouriteApi.remove(acc.id);
+      else await favouriteApi.add(acc.id);
+    } catch {
+      load(); // revert on failure
     }
   };
 
-  const handleViewDetails = (propertyId) => {
-    navigate(`property-details/${propertyId}`);
-  };
+  const open = (acc) => navigate('property-details', { id: acc.id });
 
-  /* =======================
-     UI STATES
-  ======================= */
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-blue-600" />
-      </div>
-    );
-  }
+  const uniShort = activeUni?.short || 'UZ';
+  const gridCols = mapMode === 'split' ? 'repeat(2,minmax(0,1fr))' : 'repeat(3,minmax(0,1fr))';
 
-  if (error) {
-    return <div className="p-6 text-red-600 text-center">{error}</div>;
-  }
-
-  /* =======================
-     RENDER
-  ======================= */
   return (
-    <AnimatedBackground variant="morphing">
-      <div className="min-h-screen pt-24 pb-16 px-6">
+    <div className="ua-fade pt-[78px]">
+      <div className="mx-auto max-w-[1280px] px-6 pb-1 pt-6">
+        <div className="flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <h1 className="font-display text-[32px] font-extrabold tracking-tight text-text-primary">
+              Student homes near <span className="text-brand-primaryDark">{uniShort}</span>
+            </h1>
+            <p className="mt-1 text-[15px] text-text-secondary">
+              {results.length} verified rooms &amp; houses · {activeUni?.city || 'Harare'} · prices in USD/month
+            </p>
+          </div>
+          <div className="flex gap-1 rounded-xl border border-border bg-bg-surface p-1">
+            {['split', 'hidden'].map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setMapMode(mode)}
+                className={`whitespace-nowrap rounded-lg px-3.5 py-1.5 text-[13.5px] font-bold ${
+                  mapMode === mode ? 'bg-brand-primaryDark text-white' : 'text-text-secondary'
+                }`}
+              >
+                {mode === 'split' ? 'Map + list' : 'List'}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        {/* Header / Filters */}
-        <div className="bg-bg-surface rounded-2xl shadow-card p-6 mb-10">
-          <h1 className="text-3xl font-bold mb-6">Find Your Perfect Student Accommodation</h1>
-
-          {/* Search */}
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-text-muted" />
+        {/* Filter bar */}
+        <div className="mt-[18px] flex flex-wrap items-center gap-2.5 rounded-2xl border border-border bg-bg-surface p-3 shadow-sm">
+          <div className="flex min-w-[190px] flex-1 items-center gap-2 rounded-[11px] bg-bg-surface-alt px-3 py-2.5">
+            <Search className="h-[17px] w-[17px] text-text-muted" />
             <input
-              className="w-full pl-10 py-3 rounded-lg border bg-input dark:bg-input"
-              placeholder="Search by property name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by property, suburb or street"
+              className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
             />
           </div>
-
-          {/* Top Filters */}
-          <div className="grid md:grid-cols-4 gap-4">
-            <select className="p-2 rounded-lg" value={selectedUniversity} onChange={(e) => setSelectedUniversity(e.target.value)}>
-              <option value="">All Universities</option>
-              {universities.map((u) => <option key={u}>{u}</option>)}
-            </select>
-
-            <select className="p-2 rounded-lg" value={selectedCampus} onChange={(e) => setSelectedCampus(e.target.value)}>
-              <option value="">All Campuses</option>
-              {campuses.map((c) => <option key={c}>{c}</option>)}
-            </select>
-
+          <button
+            onClick={() => setUniIdx((i) => (universities.length ? (i + 1) % universities.length : 0))}
+            className="flex items-center gap-1.5 rounded-[11px] border border-border bg-bg-surface px-3.5 py-2.5 text-sm font-semibold text-text-secondary"
+          >
+            <GraduationCap className="h-4 w-4" /> {uniShort}
+          </button>
+          {TYPES.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => toggleType(t.value)}
+              className={`rounded-[11px] border px-3.5 py-2.5 text-[13.5px] font-semibold transition-colors ${
+                selectedTypes.includes(t.value)
+                  ? 'border-brand-primaryDark bg-brand-primaryDark text-white'
+                  : 'border-border bg-bg-surface text-text-secondary'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+          <div className="h-6 w-px bg-border" />
+          <div className="flex items-center gap-2.5 px-1">
+            <span className="whitespace-nowrap text-[13px] font-semibold text-text-secondary">
+              Max ${maxPrice}
+            </span>
             <input
               type="range"
-              min="0"
-              max="1000"
-              value={priceRange[1]}
-              onChange={(e) => setPriceRange([0, Number(e.target.value)])}
+              min="100"
+              max="500"
+              step="20"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(+e.target.value)}
+              className="w-[110px] accent-brand-primaryDark"
             />
-
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="bg-brand-primary text-text-inverse rounded-lg flex items-center justify-center gap-2 hover:bg-brand-primary-dark transition-colors"
-            >
-              <Filter className="w-4 h-4" />
-              More Filters
-            </button>
           </div>
+        </div>
+      </div>
 
-          {/* Amenities */}
-          {showFilters && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
-              {amenities.map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => toggleAmenity(a.id)}
-                  className={`p-2 rounded-lg border ${
-                    selectedAmenities.includes(a.id)
-                      ? 'bg-blue-100 text-blue-700'
-                      : ''
-                  }`}
-                >
-                  {a.icon} {a.label}
-                </button>
+      <div className="mx-auto flex max-w-[1280px] items-start gap-[22px] px-6 pb-14 pt-4">
+        <div className={mapMode === 'split' ? 'min-w-0 flex-1' : 'w-full'}>
+          {loading ? (
+            <div className="flex justify-center py-24 text-text-secondary">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="rounded-2xl border border-border bg-bg-surface py-16 text-center">
+              <p className="font-bold text-text-primary">Couldn't load listings</p>
+              <p className="mt-1 text-sm text-text-secondary">{error}</p>
+              <button
+                onClick={load}
+                className="mx-auto mt-4 flex items-center gap-2 rounded-xl bg-brand-primaryDark px-4 py-2 text-sm font-semibold text-white"
+              >
+                <RotateCw className="h-4 w-4" /> Retry
+              </button>
+            </div>
+          ) : results.length === 0 ? (
+            <div className="py-16 text-center text-text-secondary">
+              <div className="mb-2 text-4xl">🔍</div>
+              <p className="mb-1 font-bold text-text-primary">No homes match those filters</p>
+              <p className="text-sm">Try raising the price or clearing a filter.</p>
+            </div>
+          ) : (
+            <div className="grid gap-5" style={{ gridTemplateColumns: gridCols }}>
+              {results.map((acc) => (
+                <ListingCard
+                  key={acc.id}
+                  acc={acc}
+                  saved={savedIds.has(acc.id)}
+                  onOpen={open}
+                  onHover={(a) => setSelectedId(a.id)}
+                  onToggleSave={isStudent ? toggleSave : undefined}
+                />
               ))}
             </div>
           )}
         </div>
 
-        {/* Results */}
-        <div className="grid md:grid-cols-3 gap-8">
-          {filteredProperties.map((property) => (
-            <PropertyCard
-              key={property.id}
-              property={property}
-              amenities={amenities}
-              onPropertyClick={handlePropertyClick}
-              onViewDetails={handleViewDetails}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* APPLICATION MODAL */}
-      <AnimatePresence>
-        {showApplicationForm && selectedProperty && (
-          <motion.div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <motion.form
-              onSubmit={handleSubmit}
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="bg-bg-surface p-6 rounded-xl max-w-xl w-full"
-            >
-              <h2 className="text-2xl font-bold mb-4">
-                Apply for {selectedProperty.title}
-                <div className="text-sm text-text-muted mt-1">
-                  {selectedProperty.university?.name || 'University'} — {selectedProperty.campus?.name || 'Campus'}
-                </div>
-              </h2>
-
-              <input name="fullName" placeholder="Full Name" onChange={handleInputChange} className="w-full mb-2 p-2" required />
-              <input name="email" placeholder="Email" onChange={handleInputChange} className="w-full mb-2 p-2" required />
-              <input name="phone" placeholder="Phone" onChange={handleInputChange} className="w-full mb-2 p-2" required />
-              <input type="date" name="moveInDate" onChange={handleInputChange} className="w-full mb-2 p-2" required />
-
-              <textarea name="message" placeholder="Additional notes" className="w-full mb-3 p-2" />
-
-              <button className="w-full bg-brand-primary text-text-inverse py-2 rounded-lg">
-                Submit Application
-              </button>
-            </motion.form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* PAYMENT MODAL */}
-      <AnimatePresence>
-        {showPaymentForm && applicationData && selectedProperty && (
-          <motion.div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="bg-bg-surface p-6 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            >
-              <PaymentForm
-                accommodation={selectedProperty}
-                onPaymentSuccess={handlePaymentSuccess}
-                onCancel={handleCancelPayment}
+        {mapMode === 'split' && (
+          <div className="hidden w-[42%] flex-shrink-0 lg:block">
+            <div className="sticky top-[100px] h-[calc(100vh-124px)] overflow-hidden rounded-[20px] border border-[#DCE6EE] bg-[#E5EEF3]">
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    'repeating-linear-gradient(90deg, transparent 0 82px, rgba(255,255,255,.6) 82px 90px), repeating-linear-gradient(0deg, transparent 0 100px, rgba(255,255,255,.6) 100px 108px), radial-gradient(circle at 46% 40%, #cfe6ef, transparent 42%), linear-gradient(160deg,#e7f1f5,#dbe9f0)',
+                }}
               />
-            </motion.div>
-          </motion.div>
+              <div
+                className="absolute flex flex-col items-center gap-1.5"
+                style={{ left: '46%', top: '40%', transform: 'translate(-50%,-50%)' }}
+              >
+                <div className="whitespace-nowrap rounded-xl bg-brand-primaryDark px-3.5 py-2 text-[13px] font-bold text-white shadow-lg">
+                  🎓 {uniShort}
+                </div>
+                <div className="h-[90px] w-[90px] rounded-full border-2 border-dashed border-[rgba(47,143,184,0.45)] bg-[rgba(77,182,226,0.16)]" />
+              </div>
+              {results.map((acc) => {
+                const p = pins[acc.id] || { x: 50, y: 50 };
+                const active = selectedId === acc.id;
+                return (
+                  <button
+                    key={acc.id}
+                    onClick={() => open(acc)}
+                    onMouseEnter={() => setSelectedId(acc.id)}
+                    className="font-display absolute rounded-full border-2 border-white px-2.5 py-1.5 text-[13px] font-extrabold shadow-md transition-transform hover:scale-110"
+                    style={{
+                      left: `${p.x}%`,
+                      top: `${p.y}%`,
+                      transform: 'translate(-50%,-50%)',
+                      background: active ? '#0F172A' : '#fff',
+                      color: active ? '#fff' : '#0F172A',
+                    }}
+                  >
+                    ${acc.price_per_month}
+                  </button>
+                );
+              })}
+              <div className="absolute bottom-4 left-4 rounded-xl bg-white/95 px-3.5 py-2.5 text-xs text-text-secondary shadow">
+                <strong className="text-text-primary">{results.length} homes</strong> in this area
+              </div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
-    </AnimatedBackground>
+      </div>
+    </div>
   );
-};
-
-export default Listings;
+}

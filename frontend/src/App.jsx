@@ -1,18 +1,20 @@
-import { useState, createContext, useContext, useEffect } from 'react';
+import { useState, createContext, useContext, useEffect, useCallback } from 'react';
 import Navbar from './components/navbar.jsx';
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
 import Listings from './pages/Listings.jsx';
 import Auth from './pages/Auth.jsx';
-import ListYourProperty from './pages/ListYourProperty.jsx';
+import ListPropertyPage from './pages/ListPropertyPage.jsx';
 import PaymentReturn from './pages/PaymentReturn.jsx';
 import PremiumFeatures from './components/PremiumFeatures.jsx';
 import PropertyDetails from './pages/PropertyDetails.jsx';
-import UserProfile from './pages/UserProfile.jsx';
 import Account from './pages/Account.jsx';
 import MyListings from './pages/MyListings.jsx';
+import Messages from './pages/Messages.jsx';
+import HostDashboard from './pages/HostDashboard.jsx';
+import { currentRole } from './services/api';
 
-// URL to page mapping
+// URL <-> page mapping
 const urlToPageMap = {
   '/': 'home',
   '/listings': 'listings',
@@ -23,80 +25,78 @@ const urlToPageMap = {
   '/premium-features': 'premium-features',
   '/property-details': 'property-details',
   '/profile': 'profile',
-  '/my-listings': 'my-listings'
+  '/saved': 'profile',
+  '/messages': 'messages',
+  '/host-dashboard': 'host-dashboard',
+  '/my-listings': 'my-listings',
 };
 
 const pageToUrlMap = {
-  'home': '/',
-  'listings': '/listings',
-  'about': '/about',
-  'auth': '/auth',
+  home: '/',
+  listings: '/listings',
+  about: '/about',
+  auth: '/auth',
   'list-your-property': '/list-your-property',
   'payment-return': '/payment-return',
   'premium-features': '/premium-features',
   'property-details': '/property-details',
-  'profile': '/profile',
-  'my-listings': '/my-listings'
+  profile: '/profile',
+  messages: '/messages',
+  'host-dashboard': '/host-dashboard',
+  'my-listings': '/my-listings',
 };
 
-// Create Navigation Context
 const NavigationContext = createContext();
 
 export const useNavigation = () => {
   const context = useContext(NavigationContext);
-  if (!context) {
-    throw new Error('useNavigation must be used within NavigationProvider');
-  }
+  if (!context) throw new Error('useNavigation must be used within NavigationProvider');
   return context;
 };
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  // The accommodation currently opened in the detail/apply views.
+  const [selectedId, setSelectedId] = useState(null);
+  // Active "view" role for nav (defaults to the signed-in user's role).
+  const [role, setRole] = useState(currentRole() || 'student');
 
-  // Override body flex layout for all pages
   useEffect(() => {
     document.body.style.display = 'block';
     document.body.style.placeItems = 'unset';
     document.body.className = 'bg-bg-page text-text-primary';
-    
-    // Apply theme on initial load
-    const savedTheme = localStorage.getItem('theme') || 
+
+    const savedTheme =
+      localStorage.getItem('theme') ||
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.dataset.theme = savedTheme;
-    if (savedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
-    return () => {
-      // Cleanup if needed
-    };
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
   }, []);
 
-  // Sync URL with page state
   useEffect(() => {
     const handlePopState = () => {
-      const path = window.location.pathname;
-      const page = urlToPageMap[path] || 'home';
-      setCurrentPage(page);
+      setCurrentPage(urlToPageMap[window.location.pathname] || 'home');
     };
-
-    // Initialize page from URL
-    const path = window.location.pathname;
-    const page = urlToPageMap[path] || 'home';
-    setCurrentPage(page);
-
+    setCurrentPage(urlToPageMap[window.location.pathname] || 'home');
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigate = (page) => {
+  const navigate = useCallback((page, opts = {}) => {
+    if (opts.id !== undefined) {
+      setSelectedId(opts.id);
+      // Persist so the detail view survives a refresh / direct nav.
+      try {
+        localStorage.setItem('selectedAccommodationId', opts.id);
+      } catch {
+        /* ignore */
+      }
+    }
     const url = pageToUrlMap[page] || '/';
     setCurrentPage(page);
     window.history.pushState({}, '', url);
     window.scrollTo(0, 0);
-  };
+  }, []);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -109,7 +109,7 @@ function App() {
       case 'auth':
         return <Auth />;
       case 'list-your-property':
-        return <ListYourProperty />;
+        return <ListPropertyPage />;
       case 'payment-return':
         return <PaymentReturn />;
       case 'premium-features':
@@ -118,6 +118,10 @@ function App() {
         return <PropertyDetails />;
       case 'profile':
         return <Account />;
+      case 'messages':
+        return <Messages />;
+      case 'host-dashboard':
+        return <HostDashboard />;
       case 'my-listings':
         return <MyListings />;
       default:
@@ -127,11 +131,11 @@ function App() {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-bg-page text-text-primary">
-      <NavigationContext.Provider value={{ currentPage, navigate }}>
+      <NavigationContext.Provider
+        value={{ currentPage, navigate, selectedId, setSelectedId, role, setRole }}
+      >
         <Navbar />
-        <main className="w-full">
-          {renderPage()}
-        </main>
+        <main className="w-full">{renderPage()}</main>
       </NavigationContext.Provider>
     </div>
   );

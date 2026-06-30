@@ -1,95 +1,59 @@
-// routes/favoriteRoutes.js
 const express = require('express');
-const favoriteController = require('../controllers/favoriteController');
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
-
 const router = express.Router();
+const pool = require('../config/database');
+const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const {
+  ACC_SELECT,
+  unlockedAccommodationIds,
+  serializeAccommodation,
+} = require('../utils/accommodation');
 
-/**
- * @swagger
- * /api/favorites:
- *   post:
- *     summary: Add accommodation to favorites (Student only)
- *     tags: [Favorites]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - accommodationId
- *             properties:
- *               accommodationId:
- *                 type: string
- *                 format: uuid
- *                 example: a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1
- *     responses:
- *       201:
- *         description: Added to favorites
- *       400:
- *         description: Already in favorites
- */
-router.post('/',
-  authenticateToken,
-  authorizeRoles('student'),
-  favoriteController.addFavorite
-);
+router.use(authenticateToken, authorizeRoles('student'));
 
-/**
- * @swagger
- * /api/favorites:
- *   get:
- *     summary: Get current student's favorite accommodations
- *     tags: [Favorites]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of favorite accommodations
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 favorites:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Accommodation'
- */
-router.get('/',
-  authenticateToken,
-  authorizeRoles('student'),
-  favoriteController.getMyFavorites
-);
+// GET /api/favourites -> [Accommodation]
+router.get('/', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `${ACC_SELECT}
+       JOIN favourites f ON f.accommodation_id = a.id AND f.user_id = $1
+       ORDER BY f.created_at DESC`,
+      [req.user.id]
+    );
+    const unlocked = await unlockedAccommodationIds(req.user.id);
+    res.json(rows.map((r) => serializeAccommodation(r, unlocked.has(r.id))));
+  } catch (error) {
+    console.error('Favourites list error:', error);
+    res.status(500).json({ error: 'Failed to fetch favourites' });
+  }
+});
 
-/**
- * @swagger
- * /api/favorites/{accommodationId}:
- *   delete:
- *     summary: Remove accommodation from favorites
- *     tags: [Favorites]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: accommodationId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Removed from favorites
- *       404:
- *         description: Favorite not found
- */
-router.delete('/:accommodationId',
-  authenticateToken,
-  authorizeRoles('student'),
-  favoriteController.removeFavorite
-);
+// POST /api/favourites/:accommodationId -> { saved:true }
+router.post('/:accommodationId', async (req, res) => {
+  try {
+    await pool.query(
+      `INSERT INTO favourites (user_id, accommodation_id)
+       VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [req.user.id, req.params.accommodationId]
+    );
+    res.json({ saved: true });
+  } catch (error) {
+    console.error('Favourite add error:', error);
+    res.status(500).json({ error: 'Failed to save' });
+  }
+});
+
+// DELETE /api/favourites/:accommodationId -> { saved:false }
+router.delete('/:accommodationId', async (req, res) => {
+  try {
+    await pool.query(
+      'DELETE FROM favourites WHERE user_id = $1 AND accommodation_id = $2',
+      [req.user.id, req.params.accommodationId]
+    );
+    res.json({ saved: false });
+  } catch (error) {
+    console.error('Favourite remove error:', error);
+    res.status(500).json({ error: 'Failed to remove' });
+  }
+});
 
 module.exports = router;

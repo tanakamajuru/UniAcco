@@ -9,8 +9,12 @@ const PaymentReturn = () => {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const paymentReference = urlParams.get('merchantReference');
-    
+    // Pesepay returns ?referenceNumber=...; keep older params as fallbacks.
+    const paymentReference =
+      urlParams.get('referenceNumber') ||
+      urlParams.get('reference') ||
+      urlParams.get('merchantReference');
+
     if (!paymentReference) {
       setStatus('error');
       setMessage('No payment reference found');

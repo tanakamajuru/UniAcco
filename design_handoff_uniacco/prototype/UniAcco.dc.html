@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; border: 3px solid transparent; background-clip: content-box; }
+  @keyframes uaFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes uaPop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+  @keyframes uaSpin { to { transform: rotate(360deg); } }
+  @keyframes uaPulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; background: #F8FAFC; font-family: 'Plus Jakarta Sans', sans-serif; color: #0F172A;">
+
+  <!-- ===================== NAVBAR ===================== -->
+  <header style="position: sticky; top: 0; z-index: 50; padding: 14px 0; background: rgba(248,250,252,.82); backdrop-filter: blur(12px); border-bottom: 1px solid #E9EEF3;">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 18px;">
+      <div onClick="{{ goHome }}" style="display: flex; align-items: center; gap: 11px; cursor: pointer;">
+        <div style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#4DB6E2,#2F8FB8); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(77,182,226,.35);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 11.4 12 4l9 7.4" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10v9h13v-9" stroke="#F4C430" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="10" y="13" width="4" height="6" rx="1" fill="#fff"/></svg>
+        </div>
+        <span style="font-family: 'Sora'; font-weight: 800; font-size: 22px; letter-spacing: -.02em;">Uni<span style="color:#2F8FB8;">Acco</span></span>
+      </div>
+
+      <!-- role pill -->
+      <div style="display: flex; background: #fff; border: 1px solid #E2E8F0; border-radius: 999px; padding: 4px; gap: 2px; box-shadow: 0 1px 2px rgba(15,23,42,.04);">
+        <button onClick="{{ setStudent }}" style="{{ studentTabStyle }}">Student</button>
+        <button onClick="{{ setHost }}" style="{{ hostTabStyle }}">Host</button>
+      </div>
+
+      <nav style="display: flex; gap: 2px; background: #fff; border: 1px solid #E2E8F0; border-radius: 999px; padding: 4px 6px; box-shadow: 0 1px 2px rgba(15,23,42,.04);">
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="3">
+          <button onClick="{{ n.go }}" style="{{ n.style }}">{{ n.label }}</button>
+        </sc-for>
+      </nav>
+
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+        <button onClick="{{ goMessages }}" style="position: relative; width: 42px; height: 42px; border-radius: 50%; border: 1px solid #E2E8F0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(15,23,42,.04);">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 3.5z" stroke="#475569" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <span style="position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #F4C430; color: #4A3A00; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid #F8FAFC;">{{ unread }}</span>
+        </button>
+        <div onClick="{{ goProfile }}" style="display: flex; align-items: center; gap: 9px; background: #fff; border: 1px solid #E2E8F0; border-radius: 999px; padding: 4px 12px 4px 4px; cursor: pointer; box-shadow: 0 1px 2px rgba(15,23,42,.04);">
+          <div style="width: 34px; height: 34px; border-radius: 50%; background: {{ avatarBg }}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">{{ avatarInitials }}</div>
+          <span style="font-weight: 600; font-size: 14px;">{{ userFirst }}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== STUDENT: BROWSE ===================== -->
+  <sc-if value="{{ isBrowse }}" hint-placeholder-val="{{ true }}">
+  <main style="animation: uaFade .4s ease both;">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 26px 24px 4px;">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+        <div>
+          <h1 style="font-family: 'Sora'; font-weight: 800; font-size: 32px; letter-spacing: -.025em; margin: 0 0 5px;">Student homes near <span style="color: #2F8FB8;">{{ uniShort }}</span></h1>
+          <p style="margin: 0; color: #475569; font-size: 15px;">{{ resultCount }} verified rooms &amp; houses · Harare · prices in USD/month</p>
+        </div>
+        <div style="display: flex; gap: 4px; background: #fff; border: 1px solid #E2E8F0; padding: 4px; border-radius: 12px;">
+          <button onClick="{{ setMapSplit }}" style="{{ splitBtnStyle }}">Map + list</button>
+          <button onClick="{{ setMapHidden }}" style="{{ listBtnStyle }}">List</button>
+        </div>
+      </div>
+
+      <!-- filter bar -->
+      <div style="margin-top: 18px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04);">
+        <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 190px; background: #F1F5F9; border-radius: 11px; padding: 9px 13px;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#94A3B8" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/></svg>
+          <input placeholder="Search by property, suburb or street" value="{{ searchVal }}" onInput="{{ onSearch }}" style="border: none; background: none; outline: none; font-family: 'Plus Jakarta Sans'; font-size: 14px; width: 100%; color: #0F172A;"/>
+        </div>
+        <button onClick="{{ cycleUni }}" style="border: 1px solid #E2E8F0; background: #fff; border-radius: 11px; padding: 9px 14px; font-family: 'Plus Jakarta Sans'; font-weight: 600; font-size: 14px; cursor: pointer; color: #334155; display: flex; align-items: center; gap: 7px;">🎓 {{ uniLabel }}</button>
+        <sc-for list="{{ typeChips }}" as="c" hint-placeholder-count="3">
+          <button onClick="{{ c.toggle }}" style="{{ c.style }}">{{ c.label }}</button>
+        </sc-for>
+        <div style="width: 1px; height: 26px; background: #E2E8F0;"></div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 0 4px;">
+          <span style="font-size: 13px; color: #475569; font-weight: 600; white-space: nowrap;">Max ${{ maxPrice }}</span>
+          <input type="range" min="100" max="500" step="20" value="{{ maxPrice }}" onInput="{{ onPrice }}" style="accent-color: #2F8FB8; width: 110px;"/>
+        </div>
+      </div>
+    </div>
+
+    <div style="max-width: 1280px; margin: 0 auto; padding: 16px 24px 56px; display: flex; gap: 22px; align-items: flex-start;">
+      <div style="{{ listColStyle }}">
+        <div style="display: grid; grid-template-columns: {{ gridCols }}; gap: 20px;">
+          <sc-for list="{{ listings }}" as="h" hint-placeholder-count="6">
+            <article onClick="{{ h.open }}" onMouseEnter="{{ h.hover }}" style="background: #fff; border: 1px solid #E6EBF1; border-radius: 18px; overflow: hidden; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease; box-shadow: 0 1px 2px rgba(15,23,42,.04);" style-hover="transform: translateY(-4px); box-shadow: 0 14px 30px rgba(47,143,184,.14);">
+              <div style="position: relative; height: 180px; background: {{ h.grad }};">
+                {{ h.imgEl }}
+                <button onClick="{{ h.save }}" style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(255,255,255,.92); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,.14);">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ h.heartFill }}"><path d="M12 20s-7-4.6-7-9.5A3.8 3.8 0 0 1 12 7a3.8 3.8 0 0 1 7 3.5C19 15.4 12 20 12 20Z" stroke="{{ h.heartStroke }}" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </button>
+                <span style="position: absolute; bottom: 12px; left: 12px; background: rgba(15,23,42,.8); color: #fff; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 8px; backdrop-filter: blur(4px);">{{ h.walk }} to campus</span>
+              </div>
+              <div style="padding: 14px 16px 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                  <span style="font-size: 11.5px; font-weight: 700; color: #2F8FB8; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;">{{ h.type }}</span>
+                  <span style="display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color:#0F172A;">★ {{ h.rating }}</span>
+                </div>
+                <h3 style="margin: 6px 0 2px; font-family: 'Sora'; font-weight: 700; font-size: 17px; letter-spacing: -.01em;">{{ h.title }}</h3>
+                <p style="margin: 0 0 11px; color: #64748B; font-size: 13px;">{{ h.area }} · {{ h.uni }}</p>
+                <div style="display: flex; align-items: center; gap: 11px; color: #475569; font-size: 13px; font-weight: 600;">
+                  <span>{{ h.beds }} bed</span><span style="color:#CBD5E1;">·</span><span>{{ h.cap }}/room</span><span style="color:#CBD5E1;">·</span><span>{{ h.baths }} bath</span>
+                </div>
+                <!-- access state -->
+                <div style="margin-top: 10px;">
+                  <span style="{{ h.lockStyle }}">{{ h.lockIcon }} {{ h.lockLabel }}</span>
+                </div>
+                <div style="margin-top: 11px; padding-top: 11px; border-top: 1px solid #EEF2F6; display: flex; align-items: baseline; justify-content: space-between;">
+                  <span><span style="font-family: 'Sora'; font-weight: 800; font-size: 20px;">${{ h.price }}</span><span style="color: #64748B; font-size: 13px; font-weight: 600;">/mo</span></span>
+                  <span style="font-size: 12px; color: #64748B;">{{ h.available }}</span>
+                </div>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align: center; padding: 60px 20px; color: #64748B;">
+            <div style="font-size: 40px; margin-bottom: 8px;">🔍</div>
+            <p style="font-weight: 700; color: #0F172A; margin: 0 0 4px;">No homes match those filters</p>
+            <p style="margin: 0; font-size: 14px;">Try raising the price or clearing a filter.</p>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- MAP -->
+      <div style="{{ mapColStyle }}">
+        <div style="position: sticky; top: 100px; height: calc(100vh - 124px); border-radius: 20px; overflow: hidden; border: 1px solid #DCE6EE; background: #E5EEF3;">
+          <div style="position: absolute; inset: 0; background:
+              repeating-linear-gradient(90deg, transparent 0 82px, rgba(255,255,255,.6) 82px 90px),
+              repeating-linear-gradient(0deg, transparent 0 100px, rgba(255,255,255,.6) 100px 108px),
+              radial-gradient(circle at 46% 40%, #cfe6ef, transparent 42%),
+              linear-gradient(160deg,#e7f1f5,#dbe9f0);"></div>
+          <div style="position: absolute; left: 46%; top: 40%; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="background: #2F8FB8; color: #fff; padding: 8px 14px; border-radius: 12px; font-weight: 700; font-size: 13px; box-shadow: 0 6px 18px rgba(47,143,184,.4); white-space: nowrap;">🎓 {{ uniShort }}</div>
+            <div style="width: 90px; height: 90px; border-radius: 50%; background: rgba(77,182,226,.16); border: 2px dashed rgba(47,143,184,.45);"></div>
+          </div>
+          <sc-for list="{{ listings }}" as="h" hint-placeholder-count="6">
+            <button onClick="{{ h.open }}" onMouseEnter="{{ h.hover }}" style="position: absolute; left: {{ h.x }}%; top: {{ h.y }}%; transform: translate(-50%,-50%); border: 2px solid #fff; cursor: pointer; background: {{ h.pinBg }}; color: {{ h.pinColor }}; font-weight: 800; font-size: 13px; font-family: 'Sora'; padding: 6px 11px; border-radius: 22px; box-shadow: 0 6px 16px rgba(15,23,42,.22); white-space: nowrap; transition: transform .15s ease;" style-hover="transform: translate(-50%,-50%) scale(1.12);">${{ h.price }}</button>
+          </sc-for>
+          <div style="position: absolute; bottom: 16px; left: 16px; background: rgba(255,255,255,.94); border-radius: 12px; padding: 10px 14px; font-size: 12px; color: #475569; box-shadow: 0 4px 14px rgba(0,0,0,.1);">
+            <strong style="color:#0F172A;">{{ resultCount }} homes</strong> in this area
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ===================== STUDENT: DETAIL ===================== -->
+  <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width: 1080px; margin: 0 auto; padding: 22px 24px 80px; animation: uaFade .4s ease both;">
+    <button onClick="{{ goBrowse }}" style="border: none; background: none; cursor: pointer; color: #475569; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 7px; padding: 6px 0; margin-bottom: 12px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Back to search
+    </button>
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 14px;">
+      <div>
+        <h1 style="font-family: 'Sora'; font-weight: 800; font-size: 28px; letter-spacing: -.02em; margin: 0 0 6px;">{{ d.title }}</h1>
+        <div style="display: flex; align-items: center; gap: 11px; color: #475569; font-size: 14px; font-weight: 600; flex-wrap: wrap;">
+          <span>★ {{ d.rating }} · {{ d.reviews }} reviews</span><span style="color:#CBD5E1;">·</span><span>{{ d.area }}</span><span style="color:#CBD5E1;">·</span><span style="color:#2F8FB8;">{{ d.walk }} to {{ d.uniShort }}</span>
+        </div>
+      </div>
+      <button onClick="{{ saveCurrent }}" style="border: 1px solid #E2E8F0; background: #fff; border-radius: 12px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #0F172A;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="{{ d.heartFill }}"><path d="M12 20s-7-4.6-7-9.5A3.8 3.8 0 0 1 12 7a3.8 3.8 0 0 1 7 3.5C19 15.4 12 20 12 20Z" stroke="{{ d.heartStroke }}" stroke-width="1.8" stroke-linejoin="round"/></svg> {{ d.saveLabel }}
+      </button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: 132px 132px; gap: 10px; border-radius: 20px; overflow: hidden; height: 274px;">
+      <div style="grid-row: span 2; background: {{ d.grad }};">{{ d.photo0El }}</div>
+      <div style="background: linear-gradient(135deg,#cfe0ec,#a8c4d8);">{{ d.photo1El }}</div>
+      <div style="background: linear-gradient(135deg,#d8e3ee,#b3cbdd);">{{ d.photo2El }}</div>
+      <div style="background: linear-gradient(135deg,#d2dce8,#aec3d6);">{{ d.photo3El }}</div>
+      <div style="position: relative; background: linear-gradient(135deg,#cdd9e6,#a6bdd2);">{{ d.photo4El }}<span style="position:absolute;inset:0;background:rgba(15,23,42,.42);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">+9 photos</span></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 36px; margin-top: 28px; align-items: start;">
+      <div>
+        <div style="display: flex; gap: 26px; padding-bottom: 20px; border-bottom: 1px solid #E6EBF1;">
+          <sc-for list="{{ d.specs }}" as="s" hint-placeholder-count="4">
+            <div>
+              <div style="font-family: 'Sora'; font-weight: 800; font-size: 21px;">{{ s.v }}</div>
+              <div style="color: #64748B; font-size: 13px; font-weight: 600;">{{ s.k }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px; padding: 20px 0; border-bottom: 1px solid #E6EBF1;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg,#F4C430,#E0A800); display:flex;align-items:center;justify-content:center;color:#4A3A00;font-weight:800;font-size:18px;">{{ d.hostInit }}</div>
+          <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 15px;">Hosted by {{ d.host }}</div>
+            <div style="color: #64748B; font-size: 13px;">{{ d.hostMeta }}</div>
+          </div>
+          <span style="background: #E8F7EE; color: #16A34A; font-weight: 700; font-size: 12px; padding: 6px 12px; border-radius: 20px;">✓ Verified host</span>
+        </div>
+
+        <div style="padding: 20px 0; border-bottom: 1px solid #E6EBF1;">
+          <h3 style="font-family:'Sora';font-weight:700;font-size:18px;margin:0 0 10px;">About this place</h3>
+          <p style="color: #334155; line-height: 1.7; font-size: 15px; margin: 0; text-wrap: pretty;">{{ d.desc }}</p>
+        </div>
+
+        <div style="padding: 20px 0; border-bottom: 1px solid #E6EBF1;">
+          <h3 style="font-family:'Sora';font-weight:700;font-size:18px;margin:0 0 14px;">What this place offers</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 13px;">
+            <sc-for list="{{ d.amenities }}" as="a" hint-placeholder-count="6">
+              <div style="display: flex; align-items: center; gap: 11px; font-size: 14px; color: {{ a.color }}; font-weight: 500;">
+                <span style="width: 34px; height: 34px; border-radius: 9px; background: {{ a.chipBg }}; display: flex; align-items: center; justify-content: center; font-size: 16px;">{{ a.icon }}</span>
+                <span style="text-decoration: {{ a.strike }};">{{ a.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="padding: 20px 0;">
+          <h3 style="font-family:'Sora';font-weight:700;font-size:18px;margin:0 0 14px;">Recent reviews</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <sc-for list="{{ d.reviewList }}" as="r" hint-placeholder-count="2">
+              <div style="background: #fff; border: 1px solid #E6EBF1; border-radius: 14px; padding: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                  <div style="width: 34px; height: 34px; border-radius: 50%; background: #DBEAFE; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #2F8FB8;">{{ r.init }}</div>
+                  <div><div style="font-weight: 700; font-size: 13px;">{{ r.name }}</div><div style="color: #94A3B8; font-size: 12px;">{{ r.when }}</div></div>
+                </div>
+                <p style="margin: 0; color: #475569; font-size: 13px; line-height: 1.6;">{{ r.text }}</p>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <!-- sticky apply card -->
+      <aside style="position: sticky; top: 100px; background: #fff; border: 1px solid #E2E8F0; border-radius: 20px; padding: 22px; box-shadow: 0 10px 28px rgba(15,23,42,.08);">
+        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px;">
+          <span style="font-family: 'Sora'; font-weight: 800; font-size: 27px;">${{ d.price }}</span><span style="color: #64748B; font-weight: 600;">/month</span>
+        </div>
+        <p style="margin: 0 0 16px; color: #64748B; font-size: 13px;">{{ d.available }} · {{ d.lease }}</p>
+
+        <!-- locked contact -->
+        <sc-if value="{{ d.locked }}" hint-placeholder-val="{{ true }}">
+        <div style="background: #FFF7E6; border: 1px solid #F4C430; border-radius: 13px; padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #92660B; margin-bottom: 6px;">🔒 Contact locked</div>
+          <p style="margin: 0; color: #92660B; font-size: 12.5px; line-height: 1.5;">Unlock the landlord's phone, email &amp; full address with a one-time $2 access fee via PayNow.</p>
+        </div>
+        </sc-if>
+        <sc-if value="{{ d.unlocked }}" hint-placeholder-val="{{ false }}">
+        <div style="background: #E8F7EE; border: 1px solid #86E0AB; border-radius: 13px; padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #15803D; margin-bottom: 8px;">🔓 Full access unlocked</div>
+          <div style="font-size: 13px; color: #166534; line-height: 1.7;"><strong>{{ d.host }}</strong><br/>{{ d.phone }}<br/>{{ d.email }}</div>
+        </div>
+        </sc-if>
+
+        <div style="border: 1px solid #E2E8F0; border-radius: 13px; overflow: hidden; margin-bottom: 14px;">
+          <div style="display: flex;">
+            <div style="flex: 1; padding: 11px 14px; border-right: 1px solid #E2E8F0;"><div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Move in</div><div style="font-weight: 600; font-size: 14px;">Aug 25, 2026</div></div>
+            <div style="flex: 1; padding: 11px 14px;"><div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Lease</div><div style="font-weight: 600; font-size: 14px;">{{ d.leaseShort }}</div></div>
+          </div>
+          <div style="padding: 11px 14px; border-top: 1px solid #E2E8F0;"><div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Sharing</div><div style="font-weight: 600; font-size: 14px;">{{ d.cap }} per room</div></div>
+        </div>
+
+        <button onClick="{{ openApply }}" style="width: 100%; border: none; background: #2F8FB8; color: #fff; font-family: 'Plus Jakarta Sans'; font-weight: 700; font-size: 16px; padding: 14px; border-radius: 13px; cursor: pointer; box-shadow: 0 8px 20px rgba(47,143,184,.3); transition: background .15s;" style-hover="background: #287AA0;">{{ d.applyLabel }}</button>
+        <button onClick="{{ goMessages }}" style="width: 100%; margin-top: 10px; border: 1px solid #E2E8F0; background: #fff; color: #0F172A; font-weight: 700; font-size: 15px; padding: 12px; border-radius: 13px; cursor: pointer;">Message host</button>
+        <p style="text-align: center; margin: 14px 0 0; color: #94A3B8; font-size: 12px;">You won't be charged rent yet</p>
+      </aside>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ===================== APPLY + PAYNOW MODAL ===================== -->
+  <sc-if value="{{ applyOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position: fixed; inset: 0; z-index: 80; background: rgba(15,23,42,.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: uaFade .25s ease both;">
+    <div style="background: #F8FAFC; width: 580px; max-width: 100%; max-height: 92vh; overflow: auto; border-radius: 22px; animation: uaPop .3s ease both; box-shadow: 0 30px 70px rgba(0,0,0,.3);">
+      <div style="padding: 20px 26px; border-bottom: 1px solid #E6EBF1; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #F8FAFC; z-index: 2;">
+        <div>
+          <div style="font-family:'Sora';font-weight:800;font-size:19px;">{{ applyHeading }}</div>
+          <div style="color:#64748B;font-size:13px;">{{ d.title }} · ${{ d.price }}/mo</div>
+        </div>
+        <button onClick="{{ closeApply }}" style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid #E2E8F0; background: #fff; cursor: pointer; font-size: 18px; color: #475569;">✕</button>
+      </div>
+
+      <sc-if value="{{ applyActive }}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 18px 26px 0;">
+        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+          <sc-for list="{{ applySteps }}" as="st" hint-placeholder-count="3">
+            <div style="flex: 1;">
+              <div style="height: 5px; border-radius: 3px; background: {{ st.bar }};"></div>
+              <div style="margin-top: 7px; font-size: 12px; font-weight: 700; color: {{ st.tColor }};">{{ st.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <div style="padding: 4px 26px 24px;">
+        <!-- step 1: application -->
+        <sc-if value="{{ step1 }}" hint-placeholder-val="{{ true }}">
+        <div style="animation: uaFade .3s ease both;">
+          <label style="display:block;font-weight:700;font-size:14px;margin:8px 0 6px;">Full name</label>
+          <input value="{{ f_name }}" onInput="{{ onFName }}" placeholder="Tariro Moyo" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;background:#fff;"/>
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <div style="flex:1;"><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">University email</label><input value="{{ f_email }}" onInput="{{ onFEmail }}" placeholder="t.moyo@students.uz.ac.zw" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;background:#fff;"/></div>
+            <div style="flex:1;"><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Phone</label><input value="{{ f_phone }}" onInput="{{ onFPhone }}" placeholder="077X XXX XXX" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;background:#fff;"/></div>
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <div style="flex:1;"><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Year of study</label><input placeholder="2nd year" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;background:#fff;"/></div>
+            <div style="flex:1;"><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Move-in date</label><input type="date" value="2026-08-25" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;background:#fff;"/></div>
+          </div>
+          <label style="display:block;font-weight:700;font-size:14px;margin:16px 0 6px;">Message to the host <span style="color:#94A3B8;font-weight:500;">(optional)</span></label>
+          <textarea placeholder="Hi! I'm a quiet 2nd-year at UZ and would love to view the place..." style="width:100%;height:84px;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;resize:none;background:#fff;"></textarea>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 16px; background: #EAF6FB; border-radius: 12px; padding: 12px 14px;">
+            <span style="font-size: 18px;">🪪</span>
+            <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Verify you're a student</div><div style="color:#64748B;font-size:12px;">Use your .ac.zw email or upload your registration letter</div></div>
+            <button style="border:1px solid #2F8FB8;background:#fff;color:#2F8FB8;font-weight:700;font-size:13px;padding:8px 12px;border-radius:9px;cursor:pointer;">Upload</button>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- step 2: PayNow -->
+        <sc-if value="{{ step2 }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: uaFade .3s ease both;">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #E6EBF1; border-radius: 13px; padding: 14px 16px; margin: 6px 0 18px;">
+            <div><div style="font-weight: 700; font-size: 14px;">Access fee (one-time)</div><div style="color:#64748B;font-size:12px;">Unlocks contact details &amp; sends your application</div></div>
+            <div style="font-family:'Sora';font-weight:800;font-size:22px;color:#2F8FB8;">$2.00</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <svg width="78" viewBox="0 0 120 28" fill="none"><text x="0" y="20" font-family="Sora,sans-serif" font-weight="800" font-size="19" fill="#0F172A">Pay</text><text x="40" y="20" font-family="Sora,sans-serif" font-weight="800" font-size="19" fill="#22C55E">now</text></svg>
+            <span style="font-size: 12px; color: #64748B;">Secure checkout · Zimbabwe</span>
+          </div>
+          <label style="display:block;font-weight:700;font-size:14px;margin:6px 0 8px;">Payment method</label>
+          <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+            <sc-for list="{{ payMethods }}" as="p" hint-placeholder-count="2">
+              <button onClick="{{ p.pick }}" style="{{ p.style }}">
+                <div style="font-size: 20px; margin-bottom: 4px;">{{ p.icon }}</div>
+                <div style="font-weight: 700; font-size: 14px;">{{ p.label }}</div>
+                <div style="font-size: 12px; color: #64748B;">{{ p.sub }}</div>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ payMobile }}" hint-placeholder-val="{{ false }}">
+          <div style="animation: uaFade .25s ease both;">
+            <label style="display:block;font-weight:700;font-size:14px;margin:6px 0 8px;">Mobile money provider</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+              <sc-for list="{{ mobileProviders }}" as="m" hint-placeholder-count="2">
+                <button onClick="{{ m.pick }}" style="{{ m.style }}">{{ m.label }}</button>
+              </sc-for>
+            </div>
+            <label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">{{ providerName }} number</label>
+            <input value="{{ f_phone }}" onInput="{{ onFPhone }}" placeholder="077X XXX XXX or 071X XXX XXX" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;background:#fff;"/>
+            <p style="margin: 10px 0 0; color: #64748B; font-size: 12px;">You'll get a prompt on your phone to approve the {{ providerName }} payment.</p>
+          </div>
+          </sc-if>
+          <sc-if value="{{ payWeb }}" hint-placeholder-val="{{ true }}">
+          <div style="animation: uaFade .25s ease both;">
+            <label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Email for receipt</label>
+            <input value="{{ f_email }}" onInput="{{ onFEmail }}" placeholder="you@email.com" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;background:#fff;"/>
+            <p style="margin: 10px 0 0; color: #64748B; font-size: 12px;">You'll be taken to PayNow to pay securely by Visa, Mastercard or bank transfer.</p>
+          </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <!-- step 3: review -->
+        <sc-if value="{{ step3 }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: uaFade .3s ease both;">
+          <div style="background:#fff;border:1px solid #E6EBF1;border-radius:14px;padding:18px;">
+            <div style="display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #EEF2F6;"><span style="color:#64748B;font-size:14px;">Applicant</span><span style="font-weight:700;font-size:14px;">{{ reviewName }}</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #EEF2F6;"><span style="color:#64748B;font-size:14px;">Property</span><span style="font-weight:700;font-size:14px;">{{ d.title }}</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #EEF2F6;"><span style="color:#64748B;font-size:14px;">Pay via</span><span style="font-weight:700;font-size:14px;">{{ reviewPay }}</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #EEF2F6;"><span style="color:#64748B;font-size:14px;">Rent</span><span style="font-weight:700;font-size:14px;">${{ d.price }}/mo (paid to host later)</span></div>
+            <div style="display:flex;justify-content:space-between;padding-top:12px;"><span style="color:#64748B;font-size:14px;">Access fee now</span><span style="font-family:'Sora';font-weight:800;font-size:18px;color:#2F8FB8;">$2.00</span></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-top:16px;background:#FFF7E6;border:1px solid #F4C430;border-radius:12px;padding:13px 15px;">
+            <span style="font-size:16px;">🔒</span><p style="margin:0;color:#92660B;font-size:12.5px;line-height:1.5;">Only the $2 access fee is charged now via PayNow. Rent is arranged directly with the verified host once they accept your application.</p>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+
+      <!-- processing -->
+      <sc-if value="{{ payProcessing }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 44px 30px; text-align: center;">
+        <div style="width: 52px; height: 52px; border: 4px solid #DBEAFE; border-top-color: #2F8FB8; border-radius: 50%; margin: 0 auto 18px; animation: uaSpin .8s linear infinite;"></div>
+        <h3 style="font-family:'Sora';font-weight:700;font-size:18px;margin:0 0 6px;">{{ processingTitle }}</h3>
+        <p style="color:#64748B;font-size:14px;margin:0;">{{ processingSub }}</p>
+      </div>
+      </sc-if>
+
+      <!-- success -->
+      <sc-if value="{{ applyDone }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 38px 30px 42px; text-align: center; animation: uaPop .35s ease both;">
+        <div style="width: 76px; height: 76px; border-radius: 50%; background: #E8F7EE; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#16A34A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 style="font-family:'Sora';font-weight:800;font-size:23px;margin:0 0 8px;">You're in! 🎉</h3>
+        <p style="color:#475569;font-size:15px;margin:0 0 14px;line-height:1.6;">Payment confirmed — contact details unlocked and your application was sent to {{ d.host }}.</p>
+        <div style="background:#fff;border:1px solid #E6EBF1;border-radius:13px;padding:14px;text-align:left;font-size:13px;color:#166534;line-height:1.7;margin-bottom:22px;">
+          <strong>{{ d.host }}</strong><br/>{{ d.phone }}<br/>{{ d.email }}
+        </div>
+        <button onClick="{{ finishApply }}" style="border:none;background:#2F8FB8;color:#fff;font-weight:700;font-size:15px;padding:13px 28px;border-radius:12px;cursor:pointer;">View in Messages</button>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ applyActive }}" hint-placeholder-val="{{ true }}">
+      <div style="position: sticky; bottom: 0; background: #F8FAFC; border-top: 1px solid #E6EBF1; padding: 16px 26px; display: flex; gap: 12px; justify-content: space-between;">
+        <button onClick="{{ applyBack }}" style="border: 1px solid #CBD5E1; background: #fff; color: #475569; font-weight: 700; font-size: 15px; padding: 12px 20px; border-radius: 12px; cursor: pointer;">{{ backLabel }}</button>
+        <button onClick="{{ applyNext }}" style="border: none; background: #2F8FB8; color: #fff; font-weight: 700; font-size: 15px; padding: 12px 28px; border-radius: 12px; cursor: pointer; box-shadow: 0 6px 16px rgba(47,143,184,.28);">{{ nextLabel }}</button>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ===================== STUDENT: SAVED + PROFILE ===================== -->
+  <sc-if value="{{ isSaved }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width: 1080px; margin: 0 auto; padding: 30px 24px 70px; animation: uaFade .4s ease both;">
+    <div style="display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap;">
+      <div style="background: #fff; border: 1px solid #E6EBF1; border-radius: 20px; padding: 24px; width: 290px; flex-shrink: 0; box-shadow: 0 1px 2px rgba(15,23,42,.04);">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg,#4DB6E2,#2F8FB8); display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;margin-bottom:14px;">TM</div>
+        <h2 style="font-family:'Sora';font-weight:800;font-size:21px;margin:0 0 2px;">Tariro Moyo</h2>
+        <p style="color:#64748B;font-size:13px;margin:0 0 14px;">2nd year · BSc Computer Science · UZ</p>
+        <div style="display:flex;align-items:center;gap:8px;background:#E8F7EE;border-radius:10px;padding:9px 12px;margin-bottom:18px;"><span>✓</span><span style="font-weight:700;font-size:13px;color:#15803D;">Verified student</span></div>
+        <div style="display: grid; gap: 12px;">
+          <sc-for list="{{ profileRows }}" as="p" hint-placeholder-count="4">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:#64748B;">{{ p.k }}</span><span style="font-weight:700;">{{ p.v }}</span></div>
+          </sc-for>
+        </div>
+        <button style="width:100%;margin-top:18px;border:1px solid #E2E8F0;background:#fff;font-weight:700;font-size:14px;padding:10px;border-radius:11px;cursor:pointer;color:#0F172A;">Edit profile</button>
+      </div>
+
+      <div style="flex: 1; min-width: 300px;">
+        <h1 style="font-family:'Sora';font-weight:800;font-size:27px;letter-spacing:-.02em;margin:0 0 4px;">Saved homes</h1>
+        <p style="color:#64748B;font-size:14px;margin:0 0 22px;">{{ savedCount }} places you're keeping an eye on</p>
+        <sc-if value="{{ hasSaved }}" hint-placeholder-val="{{ true }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+          <sc-for list="{{ savedList }}" as="h" hint-placeholder-count="2">
+            <article onClick="{{ h.open }}" style="background:#fff;border:1px solid #E6EBF1;border-radius:16px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(15,23,42,.04);">
+              <div style="height:140px;background:{{ h.grad }};position:relative;">
+                {{ h.imgEl }}
+                <button onClick="{{ h.save }}" style="position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.92);cursor:pointer;font-size:15px;color:#2F8FB8;">♥</button>
+              </div>
+              <div style="padding:13px 15px;">
+                <h3 style="margin:0 0 2px;font-family:'Sora';font-weight:700;font-size:16px;">{{ h.title }}</h3>
+                <p style="margin:0 0 8px;color:#64748B;font-size:12px;">{{ h.area }}</p>
+                <span><span style="font-family:'Sora';font-weight:800;font-size:17px;">${{ h.price }}</span><span style="color:#64748B;font-size:12px;">/mo</span></span>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+        </sc-if>
+        <sc-if value="{{ noSaved }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border:1px dashed #CBD5E1;border-radius:18px;padding:50px 20px;text-align:center;">
+            <div style="font-size:38px;margin-bottom:8px;">♥</div>
+            <p style="font-weight:700;margin:0 0 4px;">No saved homes yet</p>
+            <p style="color:#64748B;font-size:14px;margin:0 0 16px;">Tap the heart on any listing to keep it here.</p>
+            <button onClick="{{ goBrowse }}" style="border:none;background:#2F8FB8;color:#fff;font-weight:700;font-size:14px;padding:11px 22px;border-radius:11px;cursor:pointer;">Browse homes</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ===================== MESSAGES ===================== -->
+  <sc-if value="{{ isMessages }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width: 1080px; margin: 0 auto; padding: 24px 24px 40px; animation: uaFade .4s ease both;">
+    <h1 style="font-family:'Sora';font-weight:800;font-size:25px;margin:0 0 18px;">Messages</h1>
+    <div style="display: grid; grid-template-columns: 300px 1fr; border: 1px solid #E6EBF1; border-radius: 20px; overflow: hidden; background: #fff; height: 560px; box-shadow: 0 1px 2px rgba(15,23,42,.04);">
+      <div style="border-right: 1px solid #E6EBF1; overflow-y: auto;">
+        <sc-for list="{{ threads }}" as="t" hint-placeholder-count="3">
+          <div onClick="{{ t.select }}" style="{{ t.rowStyle }}">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: {{ t.avBg }}; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; flex-shrink: 0;">{{ t.init }}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline;"><span style="font-weight: 700; font-size: 14px;">{{ t.name }}</span><span style="font-size: 11px; color: #94A3B8;">{{ t.time }}</span></div>
+              <div style="color: #64748B; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ t.preview }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #E6EBF1; display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#F4C430,#E0A800); display:flex;align-items:center;justify-content:center;color:#4A3A00;font-weight:800;">{{ chat.init }}</div>
+          <div><div style="font-weight: 700; font-size: 15px;">{{ chat.name }}</div><div style="color: #16A34A; font-size: 12px; font-weight: 600;">{{ chat.sub }}</div></div>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 22px 20px; display: flex; flex-direction: column; gap: 12px; background: #F8FAFC;">
+          <sc-for list="{{ chat.msgs }}" as="m" hint-placeholder-count="4">
+            <div style="{{ m.wrap }}"><div style="{{ m.bubble }}">{{ m.text }}</div></div>
+          </sc-for>
+        </div>
+        <div style="padding: 14px 18px; border-top: 1px solid #E6EBF1; display: flex; gap: 10px;">
+          <input value="{{ draft }}" onInput="{{ onDraft }}" placeholder="Write a message..." style="flex:1;border:1px solid #CBD5E1;border-radius:12px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;"/>
+          <button onClick="{{ sendMsg }}" style="border:none;background:#2F8FB8;color:#fff;font-weight:700;font-size:14px;padding:0 22px;border-radius:12px;cursor:pointer;">Send</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ===================== HOST: DASHBOARD ===================== -->
+  <sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width: 1180px; margin: 0 auto; padding: 28px 24px 70px; animation: uaFade .4s ease both;">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h1 style="font-family:'Sora';font-weight:800;font-size:29px;letter-spacing:-.02em;margin:0 0 4px;">Welcome back, Rumbi</h1>
+        <p style="color:#64748B;font-size:15px;margin:0;">Here's how your listings are doing this week</p>
+      </div>
+      <button onClick="{{ goCreate }}" style="border:none;background:#2F8FB8;color:#fff;font-weight:700;font-size:15px;padding:13px 20px;border-radius:13px;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(47,143,184,.28);">+ List a new place</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 26px;">
+      <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+        <div style="background:#fff;border:1px solid #E6EBF1;border-radius:16px;padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,.04);">
+          <div style="display:flex;align-items:center;justify-content:space-between;"><span style="color:#64748B;font-size:13px;font-weight:600;">{{ s.k }}</span><span style="width:32px;height:32px;border-radius:9px;background:{{ s.iconBg }};display:flex;align-items:center;justify-content:center;font-size:15px;">{{ s.icon }}</span></div>
+          <div style="font-family:'Sora';font-weight:800;font-size:26px;margin-top:10px;">{{ s.v }}</div>
+          <div style="font-size:12px;font-weight:700;color:{{ s.deltaColor }};margin-top:2px;">{{ s.delta }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.55fr 1fr; gap: 22px; align-items: start;">
+      <!-- listings -->
+      <div style="background:#fff;border:1px solid #E6EBF1;border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04);">
+        <div style="padding:18px 20px;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;justify-content:space-between;"><h3 style="font-family:'Sora';font-weight:700;font-size:17px;margin:0;">Your listings</h3><span style="color:#64748B;font-size:13px;">{{ myListings.length }} active</span></div>
+        <sc-for list="{{ myListings }}" as="l" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid #F1F5F9;">
+            <div style="width:62px;height:62px;border-radius:12px;background:{{ l.grad }};overflow:hidden;flex-shrink:0;">{{ l.imgEl }}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:8px;"><h4 style="margin:0;font-weight:700;font-size:15px;">{{ l.title }}</h4><span style="{{ l.badge }}">{{ l.status }}</span></div>
+              <div style="color:#64748B;font-size:12.5px;margin-top:3px;">{{ l.area }} · ${{ l.price }}/mo</div>
+              <div style="display:flex;gap:14px;margin-top:6px;font-size:12px;color:#475569;font-weight:600;"><span>👁 {{ l.views }} views</span><span>✉ {{ l.enquiries }} enquiries</span></div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button style="width:34px;height:34px;border-radius:9px;border:1px solid #E2E8F0;background:#fff;cursor:pointer;color:#475569;">✎</button>
+              <button style="width:34px;height:34px;border-radius:9px;border:1px solid #E2E8F0;background:#fff;cursor:pointer;color:#475569;">⋯</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- applicants -->
+      <div style="background:#fff;border:1px solid #E6EBF1;border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04);">
+        <div style="padding:18px 20px;border-bottom:1px solid #EEF2F6;display:flex;align-items:center;justify-content:space-between;"><h3 style="font-family:'Sora';font-weight:700;font-size:17px;margin:0;">New applicants</h3><span style="background:#FEF3C7;color:#92660B;font-weight:700;font-size:12px;padding:3px 9px;border-radius:20px;">{{ applicants.length }} pending</span></div>
+        <sc-for list="{{ applicants }}" as="a" hint-placeholder-count="3">
+          <div style="padding:16px 20px;border-bottom:1px solid #F1F5F9;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:42px;height:42px;border-radius:50%;background:{{ a.avBg }};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0;">{{ a.init }}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:700;font-size:14px;">{{ a.name }}</span><sc-if value="{{ a.verified }}" hint-placeholder-val="{{ true }}"><span style="color:#16A34A;font-size:12px;">✓</span></sc-if></div>
+                <div style="color:#64748B;font-size:12px;">{{ a.meta }}</div>
+              </div>
+              <span style="font-size:11px;color:#94A3B8;">{{ a.when }}</span>
+            </div>
+            <div style="color:#475569;font-size:12.5px;margin:8px 0 10px;line-height:1.5;">"{{ a.msg }}"</div>
+            <div style="display:flex;gap:8px;">
+              <button style="flex:1;border:none;background:#2F8FB8;color:#fff;font-weight:700;font-size:13px;padding:9px;border-radius:9px;cursor:pointer;">Accept</button>
+              <button style="flex:1;border:1px solid #E2E8F0;background:#fff;color:#475569;font-weight:700;font-size:13px;padding:9px;border-radius:9px;cursor:pointer;">Message</button>
+              <button style="border:1px solid #E2E8F0;background:#fff;color:#94A3B8;font-weight:700;font-size:13px;padding:9px 12px;border-radius:9px;cursor:pointer;">Decline</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ===================== HOST: CREATE LISTING ===================== -->
+  <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width: 760px; margin: 0 auto; padding: 26px 24px 80px; animation: uaFade .4s ease both;">
+    <button onClick="{{ goDash }}" style="border: none; background: none; cursor: pointer; color: #475569; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 7px; padding: 6px 0; margin-bottom: 10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Back to dashboard
+    </button>
+    <h1 style="font-family:'Sora';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:0 0 4px;">List your property</h1>
+    <p style="color:#64748B;font-size:15px;margin:0 0 22px;">Reach thousands of verified students near campus. Free to list — you only pay when you find a tenant.</p>
+
+    <div style="display:flex;gap:8px;margin-bottom:24px;">
+      <sc-for list="{{ createSteps }}" as="cs" hint-placeholder-count="4">
+        <div style="flex:1;display:flex;align-items:center;gap:8px;">
+          <div style="width:26px;height:26px;border-radius:50%;background:{{ cs.dot }};color:{{ cs.dotText }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">{{ cs.n }}</div>
+          <span style="font-size:12.5px;font-weight:700;color:{{ cs.text }};">{{ cs.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background:#fff;border:1px solid #E6EBF1;border-radius:20px;padding:26px;box-shadow:0 1px 2px rgba(15,23,42,.04);">
+      <h3 style="font-family:'Sora';font-weight:700;font-size:18px;margin:0 0 18px;">The basics</h3>
+      <label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Property title</label>
+      <input placeholder="e.g. Sunny ensuite room in Mount Pleasant" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;margin-bottom:16px;"/>
+
+      <label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Description</label>
+      <textarea placeholder="Describe the room, the house, the vibe, who it suits..." style="width:100%;height:90px;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;resize:none;margin-bottom:16px;"></textarea>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Nearest university</label>
+          <div style="position:relative;"><select style="width:100%;appearance:none;border:1px solid #CBD5E1;border-radius:11px;padding:12px 36px 12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;background:#fff;cursor:pointer;"><option>University of Zimbabwe</option><option>NUST — Bulawayo</option><option>Midlands State University</option><option>Africa University</option><option>Chinhoyi University of Technology</option></select><span style="position:absolute;right:14px;top:14px;color:#94A3B8;pointer-events:none;">▾</span></div>
+        </div>
+        <div><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Suburb</label><input placeholder="Mount Pleasant" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;"/></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;">
+        <div><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Rent (USD/mo)</label><div style="position:relative;"><span style="position:absolute;left:13px;top:12px;color:#94A3B8;font-weight:600;">$</span><input value="180" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px 12px 26px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;"/></div></div>
+        <div><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">Bedrooms</label><input value="1" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;"/></div>
+        <div><label style="display:block;font-weight:700;font-size:14px;margin-bottom:6px;">People / room</label><input value="1" style="width:100%;border:1px solid #CBD5E1;border-radius:11px;padding:12px 14px;font-family:'Plus Jakarta Sans';font-size:14px;outline:none;"/></div>
+      </div>
+
+      <label style="display:block;font-weight:700;font-size:14px;margin-bottom:10px;">Amenities</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+        <sc-for list="{{ createAmenities }}" as="a" hint-placeholder-count="6">
+          <button onClick="{{ a.toggle }}" style="{{ a.style }}">{{ a.icon }} {{ a.label }}</button>
+        </sc-for>
+      </div>
+
+      <label style="display:block;font-weight:700;font-size:14px;margin-bottom:10px;">Photos</label>
+      <div style="border:2px dashed #CBD5E1;border-radius:14px;padding:30px;text-align:center;background:#F8FAFC;">
+        <div style="font-size:30px;margin-bottom:8px;">📷</div>
+        <p style="margin:0 0 4px;font-weight:700;font-size:14px;">Drag photos here or click to upload</p>
+        <p style="margin:0;color:#94A3B8;font-size:12.5px;">PNG or JPG up to 5MB each · add at least 3</p>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;margin-top:22px;">
+      <button onClick="{{ goDash }}" style="border:1px solid #CBD5E1;background:#fff;color:#475569;font-weight:700;font-size:15px;padding:13px 22px;border-radius:12px;cursor:pointer;">Save draft</button>
+      <button onClick="{{ publishListing }}" style="border:none;background:#2F8FB8;color:#fff;font-weight:700;font-size:15px;padding:13px 28px;border-radius:12px;cursor:pointer;box-shadow:0 8px 20px rgba(47,143,184,.28);">Continue to review →</button>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- toast -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+  <div style="position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 90; background: #0F172A; color: #fff; padding: 13px 22px; border-radius: 12px; font-weight: 600; font-size: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.3); animation: uaPop .3s ease both; display: flex; align-items: center; gap: 9px;">
+    <span style="color:#86E0AB;">✓</span> {{ toast }}
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:860}}">
+class Component extends DCLogic {
+  state = {
+    role: 'student',          // 'student' | 'host'
+    screen: 'browse',         // browse|detail|saved|messages|dash|create
+    selectedId: 1,
+    saved: { 2: true, 5: true },
+    search: '',
+    uniIdx: 0,
+    maxPrice: 320,
+    types: {},                // active type filters
+    mapMode: 'split',
+    // apply flow
+    applyOpen: false,
+    applyStep: 1,             // 1 app, 2 pay, 3 review
+    applyPhase: 'form',       // form | processing | done
+    payMethod: 'mobile',      // 'mobile' | 'web'
+    mobileProvider: 'ecocash',// 'ecocash' | 'onemoney'
+    fName: 'Tariro Moyo',
+    fEmail: 't.moyo@students.uz.ac.zw',
+    fPhone: '',
+    unlocked: {},             // ids unlocked after payment
+    // messaging
+    threadIdx: 0,
+    draft: '',
+    sent: [],
+    toast: '',
+  };
+
+  UNIS = ['University of Zimbabwe', 'NUST — Bulawayo', 'Midlands State Univ.', 'Africa University'];
+  UNI_SHORT = ['UZ', 'NUST', 'MSU', 'Africa Univ.'];
+
+  DATA = [
+    { id:1, type:'Ensuite room', title:'Sunny ensuite, Mount Pleasant', area:'Mount Pleasant', uni:'UZ', price:180, beds:1, baths:1, cap:1, rating:4.9, reviews:34, walk:'8 min walk', available:'Avail. Aug 25', lease:'Per semester or 12 mo', x:38, y:30,
+      host:'Rumbi Chikomo', hostInit:'RC', hostMeta:'Superhost · 4 listings · replies in ~2h', phone:'+263 77 412 8890', email:'rumbi.c@gmail.com',
+      photo:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80', grad:'linear-gradient(135deg,#bcd6e8,#7da9c8)',
+      amenities:['wifi','furnished','kitchen','laundry','heating','parking'],
+      desc:'A bright, private ensuite room in a secure four-bedroom house shared with three other UZ students. Fast fibre, a backup solar inverter for load-shedding, and an 8-minute walk to the main gate. Quiet street in Mount Pleasant, walking distance to Avondale shops.' },
+    { id:2, type:'Shared house', title:'4-bed student house, Avondale', area:'Avondale', uni:'UZ', price:140, beds:4, baths:2, cap:1, rating:4.7, reviews:28, walk:'14 min walk', available:'Avail. now', lease:'12 month lease', x:54, y:24,
+      host:'Tendai Nyathi', hostInit:'TN', hostMeta:'Verified host · 2 listings · replies in ~5h', phone:'+263 71 220 5567', email:'t.nyathi@gmail.com',
+      photo:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80', grad:'linear-gradient(135deg,#c7dac9,#90b39a)',
+      amenities:['wifi','furnished','kitchen','parking','tv'],
+      desc:'Spacious shared house perfect for a group of friends. Big communal kitchen and lounge, walled yard with parking and a borehole so water is never a problem. Five minutes from Avondale shopping centre and a short combi ride to campus.' },
+    { id:3, type:'Studio flat', title:'Compact studio, Belgravia', area:'Belgravia', uni:'UZ', price:230, beds:1, baths:1, cap:1, rating:4.8, reviews:19, walk:'11 min walk', available:'Avail. Sep 1', lease:'6 or 12 months', x:44, y:52,
+      host:'Grace Madziva', hostInit:'GM', hostMeta:'Verified host · replies in ~1h', phone:'+263 78 905 1123', email:'g.madziva@gmail.com',
+      photo:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80', grad:'linear-gradient(135deg,#d6cebc,#b09b78)',
+      amenities:['wifi','furnished','kitchen','laundry','heating','tv'],
+      desc:'Self-contained studio with its own entrance, kitchenette and ensuite — total privacy and quiet for finals. Prepaid ZESA and solar backup lighting. Leafy Belgravia street, close to the Avenues and an easy walk to UZ.' },
+    { id:4, type:'Ensuite room', title:'Modern room, Hatcliffe', area:'Hatcliffe', uni:'UZ', price:120, beds:1, baths:1, cap:2, rating:4.5, reviews:12, walk:'6 min walk', available:'Avail. now', lease:'Per semester', x:60, y:46,
+      host:'Brian Sibanda', hostInit:'BS', hostMeta:'New host · replies in ~6h', phone:'+263 77 661 2204', email:'b.sibanda@gmail.com',
+      photo:'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80', grad:'linear-gradient(135deg,#c2cfe0,#94abc8)',
+      amenities:['wifi','kitchen','parking'],
+      desc:'Affordable twin-share room in a friendly student house close to campus. Great value with WiFi and a shared kitchen included. Suits first-years looking for a budget option with good company.' },
+    { id:5, type:'Studio flat', title:'Garden cottage, Milton Park', area:'Milton Park', uni:'UZ', price:260, beds:1, baths:1, cap:1, rating:5.0, reviews:41, walk:'16 min walk', available:'Avail. Aug 25', lease:'12 month lease', x:30, y:60,
+      host:'Chiedza Moyo', hostInit:'CM', hostMeta:'Superhost · 3 listings · replies in ~1h', phone:'+263 71 778 3390', email:'c.moyo@gmail.com',
+      photo:'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80', grad:'linear-gradient(135deg,#cdd9c6,#9bb592)',
+      amenities:['wifi','furnished','kitchen','laundry','heating','parking','tv'],
+      desc:'A charming private garden cottage behind a family home in leafy Milton Park. Fully furnished with a proper desk for study, fast WiFi, solar backup and secure parking. Landlord lives on-site — safe and well looked after.' },
+    { id:6, type:'Shared house', title:'5-bed, Greendale', area:'Greendale', uni:'UZ', price:155, beds:5, baths:3, cap:1, rating:4.6, reviews:22, walk:'19 min walk', available:'Avail. Sep 1', lease:'12 month lease', x:66, y:64,
+      host:'Farai Dube', hostInit:'FD', hostMeta:'Verified host · 2 listings · replies in ~4h', phone:'+263 78 332 6677', email:'f.dube@gmail.com',
+      photo:'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80', grad:'linear-gradient(135deg,#d9d2c4,#b3a187)',
+      amenities:['wifi','furnished','kitchen','parking','tv','laundry'],
+      desc:'Large five-bedroom house ideal for a group renting together. Three bathrooms means no morning queues, plus a big garden, DSTV in the lounge and a generator for load-shedding. Quiet, leafy Greendale neighbourhood.' },
+  ];
+
+  AMENITY_META = {
+    wifi:{icon:'📶',label:'WiFi'}, furnished:{icon:'🛋️',label:'Furnished'}, kitchen:{icon:'🍳',label:'Kitchen'},
+    laundry:{icon:'🧺',label:'Laundry'}, heating:{icon:'☀️',label:'Solar backup'}, parking:{icon:'🚗',label:'Parking'},
+    tv:{icon:'📺',label:'DSTV'}, water:{icon:'💧',label:'Borehole'},
+  };
+
+  // ---------- helpers ----------
+  cur() { return this.DATA.find(d => d.id === this.state.selectedId) || this.DATA[0]; }
+  isUnlocked(id) { return !!this.state.unlocked[id]; }
+
+  filtered() {
+    const { search, maxPrice, types } = this.state;
+    const activeTypes = Object.keys(types).filter(k => types[k]);
+    return this.DATA.filter(h => {
+      if (search && !(h.title + h.area).toLowerCase().includes(search.toLowerCase())) return false;
+      if (h.price > maxPrice) return false;
+      if (activeTypes.length && !activeTypes.includes(h.type)) return false;
+      return true;
+    });
+  }
+
+  go(screen) { this.setState({ screen }); window.scrollTo(0, 0); }
+  flashToast(msg) { this.setState({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: '' }), 2600); }
+
+  toggleSave = (id, e) => {
+    if (e) e.stopPropagation();
+    this.setState(s => { const sv = { ...s.saved }; sv[id] = !sv[id]; return { saved: sv }; });
+  };
+
+  THREADS = [
+    { id:'rumbi', name:'Rumbi Chikomo', init:'RC', avBg:'linear-gradient(135deg,#F4C430,#E0A800)', time:'2h', sub:'Mount Pleasant ensuite · Verified host',
+      preview:"Great — the room's still available!", msgs:[
+      { me:false, text:"Hi Tariro! Thanks for applying — the Mount Pleasant room is still available 🙂" },
+      { me:true, text:"Amazing! Is the solar backup enough to run a laptop during load-shedding?" },
+      { me:false, text:"Yes, the inverter easily covers laptops, WiFi and lights for the whole evening." },
+      { me:true, text:"Perfect. Could I come view it on Saturday morning?" },
+      { me:false, text:"Saturday 10am works great. I'll send the gate code closer to the time." },
+    ]},
+    { id:'tendai', name:'Tendai Nyathi', init:'TN', avBg:'linear-gradient(135deg,#4DB6E2,#2F8FB8)', time:'1d', sub:'Avondale 4-bed house',
+      preview:'There are 2 rooms left in the house.', msgs:[
+      { me:false, text:"Hello! Two rooms are still open in the Avondale house." },
+      { me:true, text:"Are the other housemates also UZ students?" },
+      { me:false, text:"Yes, all four are 2nd and 3rd years at UZ. Really friendly group." },
+    ]},
+    { id:'grace', name:'Grace Madziva', init:'GM', avBg:'linear-gradient(135deg,#34D399,#059669)', time:'3d', sub:'Belgravia studio',
+      preview:'I can hold it until Friday for you.', msgs:[
+      { me:false, text:"Hi! Happy to hold the Belgravia studio until Friday while you decide." },
+      { me:true, text:"Thank you so much, that really helps." },
+    ]},
+  ];
+
+  STATS = [
+    { k:'Total views', v:'1,284', icon:'👁', iconBg:'#EAF6FB', delta:'▲ 18% this week', deltaColor:'#16A34A' },
+    { k:'Enquiries', v:'37', icon:'✉', iconBg:'#FEF3C7', delta:'▲ 6 new', deltaColor:'#16A34A' },
+    { k:'Applications', v:'9', icon:'📝', iconBg:'#E0F2FE', delta:'3 pending review', deltaColor:'#92660B' },
+    { k:'Occupancy', v:'82%', icon:'🏠', iconBg:'#E8F7EE', delta:'5 of 6 rooms filled', deltaColor:'#475569' },
+  ];
+
+  APPLICANTS = [
+    { init:'PK', name:'Panashe Kuda', avBg:'linear-gradient(135deg,#4DB6E2,#2F8FB8)', meta:'3rd year · Law · UZ', when:'2h ago', verified:true, msg:"Hi! I'm a quiet final-year and a non-smoker. Could I move in for the August semester?" },
+    { init:'NM', name:'Nyasha Mpofu', avBg:'linear-gradient(135deg,#F4C430,#E0A800)', meta:'2nd year · Engineering · UZ', when:'5h ago', verified:true, msg:"Looking for a room near campus with good WiFi for online classes. Available immediately." },
+    { init:'TS', name:'Tatenda Sango', avBg:'linear-gradient(135deg,#34D399,#059669)', meta:'1st year · Commerce · UZ', when:'1d ago', verified:false, msg:"Is the room still open? I can pay a deposit this week to secure it." },
+  ];
+
+  CREATE_AMENITIES = ['wifi','furnished','kitchen','laundry','heating','parking','tv','water'];
+
+  renderVals() {
+    const s = this.state;
+    const host = s.role === 'host';
+    const cur = this.cur();
+    const unlocked = this.isUnlocked(cur.id);
+
+    // nav
+    const tabBase = 'border:none;cursor:pointer;font-family:Plus Jakarta Sans;font-weight:700;font-size:13.5px;padding:7px 16px;border-radius:999px;transition:all .15s;';
+    const tabOn = tabBase + 'background:#2F8FB8;color:#fff;';
+    const tabOff = tabBase + 'background:transparent;color:#64748B;';
+
+    const studentNav = [
+      { key:'browse', label:'Browse', screen:'browse' },
+      { key:'saved', label:'Saved', screen:'saved' },
+      { key:'messages', label:'Messages', screen:'messages' },
+    ];
+    const hostNav = [
+      { key:'dash', label:'Dashboard', screen:'dash' },
+      { key:'create', label:'List a place', screen:'create' },
+      { key:'messages', label:'Messages', screen:'messages' },
+    ];
+    const navSrc = host ? hostNav : studentNav;
+    const linkBase = 'border:none;background:none;cursor:pointer;font-family:Plus Jakarta Sans;font-weight:600;font-size:14.5px;padding:8px 15px;border-radius:999px;transition:all .15s;';
+    const navItems = navSrc.map(n => ({
+      label: n.label,
+      style: linkBase + (s.screen === n.screen ? 'background:#EAF6FB;color:#2F8FB8;font-weight:700;' : 'color:#475569;'),
+      go: () => this.go(n.screen),
+    }));
+
+    // type chips
+    const TYPES = ['Ensuite room','Studio flat','Shared house'];
+    const chipBase = 'border:1px solid #E2E8F0;background:#fff;border-radius:11px;padding:9px 13px;font-family:Plus Jakarta Sans;font-weight:600;font-size:13.5px;cursor:pointer;transition:all .15s;';
+    const typeChips = TYPES.map(t => ({
+      label: t.replace(' room','').replace(' flat','').replace(' house',''),
+      toggle: () => this.setState(st => ({ types: { ...st.types, [t]: !st.types[t] } })),
+      style: chipBase + (s.types[t] ? 'background:#2F8FB8;color:#fff;border-color:#2F8FB8;' : 'color:#475569;'),
+    }));
+
+    // listings cards
+    const list = this.filtered();
+    const lockChipBase = 'display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:7px;';
+    const mkImg = (u) => React.createElement('img', { src: u, style: { width:'100%', height:'100%', objectFit:'cover', display:'block' } });
+    const mkCard = (h) => {
+      const sv = !!s.saved[h.id];
+      const ul = this.isUnlocked(h.id);
+      return {
+        ...h, cap: h.cap,
+        photo: h.photo, grad: h.grad, imgEl: mkImg(h.photo),
+        heartFill: sv ? '#2F8FB8' : 'none', heartStroke: sv ? '#2F8FB8' : '#475569',
+        pinBg: this.state.selectedId === h.id ? '#0F172A' : '#fff',
+        pinColor: this.state.selectedId === h.id ? '#fff' : '#0F172A',
+        lockStyle: lockChipBase + (ul ? 'background:#E8F7EE;color:#15803D;' : 'background:#FFF7E6;color:#92660B;'),
+        lockIcon: ul ? '🔓' : '🔒',
+        lockLabel: ul ? 'Full access unlocked' : 'Contact locked · $2 to unlock',
+        open: () => { this.setState({ selectedId: h.id }); this.go('detail'); },
+        hover: () => this.setState({ selectedId: h.id }),
+        save: (e) => this.toggleSave(h.id, e),
+      };
+    };
+    const listings = list.map(mkCard);
+
+    // detail
+    const curSaved = !!s.saved[cur.id];
+    const dAmenities = Object.keys(this.AMENITY_META).filter(k => k !== 'water').map(k => {
+      const has = cur.amenities.includes(k);
+      return { icon: this.AMENITY_META[k].icon, label: this.AMENITY_META[k].label,
+        color: has ? '#1E293B' : '#94A3B8', chipBg: has ? '#EAF6FB' : '#F1F5F9', strike: has ? 'none' : 'line-through' };
+    });
+    const reviewsByName = {
+      1:[{init:'PK',name:'Panashe K.',when:'2 weeks ago',text:'Rumbi is a fantastic host. Room is exactly as pictured and the solar backup is a lifesaver during load-shedding.'},
+         {init:'AM',name:'Anesu M.',when:'1 month ago',text:'Super quiet street, fast WiFi and a 10-min walk to UZ. Would recommend to any student.'}],
+    };
+    const d = {
+      ...cur, uniShort: cur.uni, leaseShort: cur.lease.includes('semester') ? 'Per semester' : '12 months',
+      photo0: cur.photo,
+      photo1:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=80',
+      photo2:'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=80',
+      photo3:'https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=600&q=80',
+      photo4:'https://images.unsplash.com/photo-1522444690501-83539ad4e2f4?w=600&q=80',
+      heartFill: curSaved ? '#2F8FB8' : 'none', heartStroke: curSaved ? '#2F8FB8' : '#475569',
+      saveLabel: curSaved ? 'Saved' : 'Save',
+      specs: [{k:'Bedrooms',v:cur.beds},{k:'Bathrooms',v:cur.baths},{k:'Per room',v:cur.cap},{k:'Rating',v:cur.rating}],
+      amenities: dAmenities,
+      reviewList: reviewsByName[cur.id] || reviewsByName[1],
+      locked: !unlocked, unlocked,
+      applyLabel: unlocked ? 'Apply now' : 'Pay $2 to unlock & apply',
+    };
+    d.photo0El = mkImg(d.photo0); d.photo1El = mkImg(d.photo1); d.photo2El = mkImg(d.photo2); d.photo3El = mkImg(d.photo3); d.photo4El = mkImg(d.photo4);
+
+    // apply flow
+    const phase = s.applyPhase;
+    const applyActive = s.applyOpen && phase === 'form';
+    const stepMeta = (n, label) => ({ label,
+      bar: s.applyStep >= n ? '#2F8FB8' : '#E2E8F0',
+      tColor: s.applyStep >= n ? '#2F8FB8' : '#94A3B8' });
+    const applySteps = [stepMeta(1,'Your details'), stepMeta(2,'Payment'), stepMeta(3,'Review')];
+
+    const payMethodBtn = (key, icon, label, sub) => ({
+      icon, label, sub, pick: () => this.setState({ payMethod: key }),
+      style: 'flex:1;text-align:center;border:2px solid ' + (s.payMethod===key?'#2F8FB8':'#E2E8F0') + ';background:' + (s.payMethod===key?'#EAF6FB':'#fff') + ';border-radius:13px;padding:14px 10px;cursor:pointer;transition:all .15s;',
+    });
+    const payMethods = [
+      payMethodBtn('mobile','📱','Mobile money','EcoCash / OneMoney'),
+      payMethodBtn('web','💳','Card or bank','Visa · Mastercard'),
+    ];
+    const provBtn = (key, label) => ({ label, pick: () => this.setState({ mobileProvider: key }),
+      style: 'flex:1;border:1.5px solid ' + (s.mobileProvider===key?'#2F8FB8':'#E2E8F0') + ';background:' + (s.mobileProvider===key?'#EAF6FB':'#fff') + ';color:' + (s.mobileProvider===key?'#2F8FB8':'#475569') + ';font-weight:700;font-size:13.5px;padding:11px;border-radius:10px;cursor:pointer;' });
+    const mobileProviders = [provBtn('ecocash','EcoCash'), provBtn('onemoney','OneMoney')];
+    const providerName = s.mobileProvider === 'ecocash' ? 'EcoCash' : 'OneMoney';
+
+    const nextLabel = s.applyStep < 3 ? 'Continue' : 'Pay $2.00 with PayNow';
+    const backLabel = s.applyStep > 1 ? 'Back' : 'Cancel';
+
+    // saved
+    const savedList = this.DATA.filter(h => s.saved[h.id]).map(mkCard);
+
+    // messages
+    const thread = this.THREADS[s.threadIdx];
+    const threads = this.THREADS.map((t, i) => ({
+      ...t,
+      rowStyle: 'display:flex;gap:12px;padding:15px 16px;cursor:pointer;border-bottom:1px solid #F1F5F9;transition:background .15s;' + (i===s.threadIdx?'background:#EAF6FB;':'background:#fff;'),
+      select: () => this.setState({ threadIdx: i }),
+    }));
+    const baseMsgs = thread.msgs.concat((s.sent[s.threadIdx] || []).map(t => ({ me:true, text:t })));
+    const chat = {
+      name: thread.name, init: thread.init, sub: thread.sub,
+      msgs: baseMsgs.map(m => ({
+        text: m.text,
+        wrap: 'display:flex;justify-content:' + (m.me?'flex-end':'flex-start') + ';',
+        bubble: 'max-width:74%;padding:10px 14px;border-radius:15px;font-size:13.5px;line-height:1.5;' + (m.me
+          ? 'background:#2F8FB8;color:#fff;border-bottom-right-radius:4px;'
+          : 'background:#fff;color:#1E293B;border:1px solid #E6EBF1;border-bottom-left-radius:4px;'),
+      })),
+    };
+
+    // host dashboard listings
+    const statusBadge = (st) => {
+      const map = { Active:'#E8F7EE|#15803D', 'Pending':'#FEF3C7|#92660B', Rented:'#E0F2FE|#0369A1' };
+      const [bg, col] = (map[st] || '#F1F5F9|#475569').split('|');
+      return 'background:' + bg + ';color:' + col + ';font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;';
+    };
+    const myListings = [
+      { ...this.DATA[0], status:'Active', views:412, enquiries:14, badge: statusBadge('Active'), imgEl: mkImg(this.DATA[0].photo) },
+      { ...this.DATA[4], status:'Active', views:587, enquiries:19, badge: statusBadge('Active'), imgEl: mkImg(this.DATA[4].photo) },
+      { ...this.DATA[3], status:'Pending', views:0, enquiries:0, badge: statusBadge('Pending'), imgEl: mkImg(this.DATA[3].photo) },
+    ];
+
+    // create steps
+    const createSteps = ['Basics','Photos','Pricing','Review'].map((label, i) => ({
+      n: i+1, label,
+      dot: i===0 ? '#2F8FB8' : '#E2E8F0', dotText: i===0 ? '#fff' : '#94A3B8',
+      text: i===0 ? '#0F172A' : '#94A3B8',
+    }));
+    const createAmenities = this.CREATE_AMENITIES.map(k => ({
+      icon: this.AMENITY_META[k].icon, label: this.AMENITY_META[k].label,
+      toggle: () => this.setState(st => ({ types: { ...st.types, ['cre_'+k]: !st.types['cre_'+k] } })),
+      style: 'border:1px solid ' + (s.types['cre_'+k]?'#2F8FB8':'#E2E8F0') + ';background:' + (s.types['cre_'+k]?'#EAF6FB':'#fff') + ';color:' + (s.types['cre_'+k]?'#2F8FB8':'#475569') + ';font-weight:600;font-size:13px;padding:9px 13px;border-radius:10px;cursor:pointer;',
+    }));
+
+    return {
+      // role
+      isStudent: !host, isHost: host,
+      studentTabStyle: !host ? tabOn : tabOff,
+      hostTabStyle: host ? tabOn : tabOff,
+      setStudent: () => this.setState({ role:'student', screen:'browse' }),
+      setHost: () => this.setState({ role:'host', screen:'dash' }),
+      navItems,
+      goHome: () => this.go(host ? 'dash' : 'browse'),
+      goProfile: () => this.go(host ? 'dash' : 'saved'),
+      goMessages: () => this.go('messages'),
+      avatarInitials: host ? 'RC' : 'TM',
+      avatarBg: host ? 'linear-gradient(135deg,#F4C430,#E0A800)' : 'linear-gradient(135deg,#4DB6E2,#2F8FB8)',
+      userFirst: host ? 'Rumbi' : 'Tariro',
+      unread: '2',
+
+      // screen flags
+      isBrowse: s.screen==='browse', isDetail: s.screen==='detail', isSaved: s.screen==='saved',
+      isMessages: s.screen==='messages', isDash: s.screen==='dash', isCreate: s.screen==='create',
+
+      // browse
+      uniShort: this.UNI_SHORT[s.uniIdx], uniLabel: this.UNI_SHORT[s.uniIdx],
+      cycleUni: () => this.setState(st => ({ uniIdx: (st.uniIdx+1) % this.UNIS.length })),
+      resultCount: list.length, searchVal: s.search,
+      onSearch: (e) => this.setState({ search: e.target.value }),
+      maxPrice: s.maxPrice, onPrice: (e) => this.setState({ maxPrice: +e.target.value }),
+      typeChips, listings, noResults: list.length === 0,
+      setMapSplit: () => this.setState({ mapMode:'split' }), setMapHidden: () => this.setState({ mapMode:'hidden' }),
+      splitBtnStyle: 'border:none;cursor:pointer;font-weight:700;font-size:13.5px;padding:7px 14px;border-radius:9px;white-space:nowrap;' + (s.mapMode==='split'?'background:#2F8FB8;color:#fff;':'background:transparent;color:#64748B;'),
+      listBtnStyle: 'border:none;cursor:pointer;font-weight:700;font-size:13.5px;padding:7px 14px;border-radius:9px;white-space:nowrap;' + (s.mapMode==='hidden'?'background:#2F8FB8;color:#fff;':'background:transparent;color:#64748B;'),
+      listColStyle: s.mapMode==='split' ? 'flex:1;min-width:0;' : 'width:100%;',
+      gridCols: s.mapMode==='split' ? 'repeat(2,1fr)' : 'repeat(3,1fr)',
+      mapColStyle: s.mapMode==='split' ? 'width:42%;flex-shrink:0;' : 'display:none;',
+      hideImg: (e) => { e.target.style.display = 'none'; },
+
+      // detail
+      d, goBrowse: () => this.go('browse'),
+      saveCurrent: () => this.toggleSave(cur.id),
+      openApply: () => this.setState({ applyOpen:true, applyStep:1, applyPhase:'form' }),
+
+      // apply
+      applyOpen: s.applyOpen, applyActive, applyDone: phase==='done', payProcessing: phase==='processing',
+      applyHeading: phase==='done' ? 'Application sent' : (s.applyStep===2 ? 'Unlock & apply' : 'Apply to rent'),
+      step1: applyActive && s.applyStep===1, step2: applyActive && s.applyStep===2, step3: applyActive && s.applyStep===3,
+      applySteps,
+      payMethods, payMobile: s.payMethod==='mobile', payWeb: s.payMethod==='web',
+      mobileProviders, providerName,
+      f_name: s.fName, f_email: s.fEmail, f_phone: s.fPhone,
+      onFName: (e)=>this.setState({fName:e.target.value}), onFEmail:(e)=>this.setState({fEmail:e.target.value}), onFPhone:(e)=>this.setState({fPhone:e.target.value}),
+      reviewName: s.fName, reviewPay: s.payMethod==='mobile' ? (providerName + ' · ' + (s.fPhone||'your number')) : 'Card / bank (PayNow)',
+      processingTitle: s.payMethod==='mobile' ? 'Check your phone' : 'Redirecting to PayNow',
+      processingSub: s.payMethod==='mobile' ? 'Approve the ' + providerName + ' prompt to confirm $2.00' : 'Completing your secure $2.00 payment...',
+      nextLabel, backLabel,
+      applyNext: () => {
+        if (s.applyStep < 3) { this.setState({ applyStep: s.applyStep + 1 }); return; }
+        this.setState({ applyPhase:'processing' });
+        setTimeout(() => this.setState(st => ({ applyPhase:'done', unlocked: { ...st.unlocked, [cur.id]: true } })), 2200);
+      },
+      applyBack: () => { if (s.applyStep > 1) this.setState({ applyStep: s.applyStep - 1 }); else this.setState({ applyOpen:false }); },
+      closeApply: () => this.setState({ applyOpen:false }),
+      finishApply: () => { this.setState({ applyOpen:false }); this.go('messages'); },
+
+      // saved + profile
+      savedCount: savedList.length, savedList, hasSaved: savedList.length > 0, noSaved: savedList.length === 0,
+      profileRows: [
+        { k:'University', v:'UZ' }, { k:'Budget', v:'$120–260' },
+        { k:'Move-in', v:'Aug 2026' }, { k:'Applications', v:'1 active' },
+      ],
+
+      // messages
+      threads, chat,
+      draft: s.draft, onDraft: (e)=>this.setState({draft:e.target.value}),
+      sendMsg: () => {
+        const txt = s.draft.trim(); if (!txt) return;
+        this.setState(st => {
+          const sent = st.sent.slice(); sent[st.threadIdx] = (sent[st.threadIdx]||[]).concat(txt);
+          return { sent, draft:'' };
+        });
+      },
+
+      // host
+      stats: this.STATS, myListings, applicants: this.APPLICANTS,
+      goCreate: () => this.go('create'), goDash: () => this.go('dash'),
+      createSteps, createAmenities,
+      publishListing: () => { this.flashToast('Listing saved — continue to review when ready'); },
+
+      toast: s.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+.form { display: flex; flex-direction: column; gap: 0; }
+
+.section {
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #78716c;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.testBadge {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.field:last-child { margin-bottom: 0; }
+
+.methodGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.methodBtn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  background: #fafaf9;
+  border: 1px solid #e7e5e4;
+  border-radius: 10px;
+  text-align: left;
+  transition: all .15s;
+}
+.methodBtn:hover { border-color: #a8a29e; background: #fff; }
+.methodSel { border: 2px solid #2563eb !important; background: #eff6ff !important; }
+
+.methodIcon { font-size: 20px; margin-bottom: 4px; }
+.methodName { font-size: 13px; font-weight: 600; color: #1c1917; }
+.methodCurrency { font-size: 11px; color: #78716c; }
+.methodCode { font-size: 10px; color: #a8a29e; font-family: monospace; margin-top: 2px; }
+
+.submitBtn {
+  padding: 14px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background .15s, transform .1s;
+  margin-top: 4px;
+}
+.submitBtn:hover { background: #1d4ed8; }
+.submitBtn:active { transform: scale(.98); }
+.submitBtn:disabled { background: #93c5fd; cursor: not-allowed; transform: none; }
