@@ -226,7 +226,7 @@ exports.create = async (req, res) => {
         await client.query(
           `INSERT INTO accommodation_images (accommodation_id, image_url, position)
            VALUES ($1,$2,$3)`,
-          [accId, `/uploads/accommodations/${f.filename}`, pos++]
+          [accId, `/uploads/user/${f.filename}`, pos++]
         );
       }
     } else if (Array.isArray(b.images)) {

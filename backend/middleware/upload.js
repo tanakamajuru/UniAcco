@@ -3,8 +3,11 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '..', 'uploads', 'accommodations');
+// Host-uploaded photos live in uploads/user — deliberately separate from the
+// git-committed seed images in uploads/accommodations. In production a Railway
+// volume is mounted at /app/uploads/user, which persists uploads across deploys
+// WITHOUT shadowing the seed images baked into the image.
+const uploadsDir = path.join(__dirname, '..', 'uploads', 'user');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }

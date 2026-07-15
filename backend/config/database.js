@@ -1,15 +1,38 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// Managed hosts (Railway, Neon, Supabase, Render) hand out a single
+// DATABASE_URL connection string. Fall back to discrete DB_* vars locally.
+const useConnectionString = Boolean(process.env.DATABASE_URL);
+
+// SSL rules:
+//   DB_SSL=true/false always wins.
+//   Railway's private network (*.railway.internal) and localhost don't offer
+//   SSL, so default it off there; default on for any other remote URL.
+const isPrivateHost = (url) =>
+  /@([^:/@]*\.railway\.internal|localhost|127\.0\.0\.1)[:/]/i.test(url || '');
+
+const sslEnabled =
+  process.env.DB_SSL === 'true'
+    ? true
+    : process.env.DB_SSL === 'false'
+      ? false
+      : useConnectionString && !isPrivateHost(process.env.DATABASE_URL);
+
 const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'uniacco',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-  connectionTimeoutMillis: 2000, // How long to wait when connecting a new client
+  ...(useConnectionString
+    ? { connectionString: process.env.DATABASE_URL }
+    : {
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 5432,
+        database: process.env.DB_NAME || 'uniacco',
+        user: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD,
+      }),
+  ...(sslEnabled ? { ssl: { rejectUnauthorized: false } } : {}),
+  max: Number(process.env.DB_MAX_CONNECTIONS) || 20,
+  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT) || 30000,
+  connectionTimeoutMillis: Number(process.env.DB_CONNECTION_TIMEOUT) || 10000,
 });
 
 // Test connection on startup

@@ -112,32 +112,13 @@ export default function Home() {
   const nextSlide = () => setCurrentSlide((s) => Math.min(featuredListings.length - 1, s + 1));
 
   const handleSearch = () => {
-    // Trigger a new search with current filters - the useEffect will handle this
-    // Just trigger a re-fetch by updating a dependency or calling the fetch function directly
-    const loadProperties = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const filters = {
-          is_available: true,
-          ...(selectedUniversity && { university: selectedUniversity }),
-          ...(selectedCampus && { campus: selectedCampus }),
-          ...(searchQuery && { search: searchQuery }),
-        };
-        
-        const data = await fetchAccommodations(filters);
-        setFeaturedListings((data || []).slice(0, 6).map(toFeatured));
-      } catch (err) {
-        console.error('Error searching properties:', err);
-        setError('Search failed. Please try again.');
-        setFeaturedListings([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProperties();
+    if (selectedUniversity) {
+      localStorage.setItem('searchUniversity', selectedUniversity);
+    }
+    if (searchQuery) {
+      localStorage.setItem('searchQuery', searchQuery);
+    }
+    navigate('listings');
   };
 
   return (
@@ -159,7 +140,7 @@ export default function Home() {
               >
                 <h1 className="text-5xl md:text-6xl font-bold text-text-primary mb-6">
                   Find Your Perfect
-                  <span className="block bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-gray">
+                  <span className="block bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
                     Student Home
                   </span>
                 </h1>
@@ -179,7 +160,7 @@ export default function Home() {
                     <select
                       value={selectedUniversity}
                       onChange={(e) => setSelectedUniversity(e.target.value)}
-                      className="w-full px-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-input-focus"
+                      className="w-full px-4 py-3 bg-bg-surface text-text-primary border border-border rounded-xl focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary outline-none transition-all duration-200 cursor-pointer"
                     >
                       <option value="">All Universities</option>
                       {universities.map((uni) => (
@@ -190,7 +171,7 @@ export default function Home() {
                     </select>
                   </div>
 
-                  {/* Campus Selector */}
+                  {/* Campus/Location Box */}
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-2">Campus/Location</label>
                     <div className="relative">
@@ -198,7 +179,7 @@ export default function Home() {
                       <select
                         value={selectedCampus}
                         onChange={(e) => setSelectedCampus(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-input-focus"
+                        className="w-full pl-10 pr-4 py-3 bg-bg-surface text-text-primary border border-border rounded-xl focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary outline-none transition-all duration-200 cursor-pointer"
                       >
                         <option value="">All Campuses</option>
                         {campuses.map((campus) => (
@@ -221,12 +202,12 @@ export default function Home() {
                           placeholder="Enter area, street name, or property..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-input-focus"
+                          className="w-full pl-10 pr-4 py-3 bg-bg-surface text-text-primary border border-border rounded-xl focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary outline-none transition-all duration-200"
                         />
                       </div>
                       <button 
                         onClick={handleSearch}
-                        className="bg-gradient-to-r from-brand-primary to-brand-accent text-text-inverse px-8 py-3 rounded-lg hover:shadow-lg transition font-semibold"
+                        className="bg-gradient-to-r from-brand-primary to-brand-accent text-white px-8 py-3 rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 font-bold cursor-pointer"
                       >
                         Search
                       </button>

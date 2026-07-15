@@ -4,6 +4,10 @@ node_modules/
 # Environment variables
 .env
 
+# Runtime host uploads (persisted on a Railway volume in production).
+# Seed images in uploads/accommodations ARE committed and must stay tracked.
+uploads/user/
+
 # Logs
 logs
 *.log

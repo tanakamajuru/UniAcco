@@ -3,6 +3,8 @@ import { Search, GraduationCap, Loader2, RotateCw } from 'lucide-react';
 import { useNavigation } from '../App';
 import { accommodationApi, universityApi, favouriteApi, currentRole } from '../services/api';
 import ListingCard from '../components/listings/ListingCard';
+import ListingMap from '../components/listings/ListingMap';
+import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
 
 const TYPES = [
   { value: 'Ensuite room', label: 'Ensuite' },
@@ -10,29 +12,7 @@ const TYPES = [
   { value: 'Shared house', label: 'Shared' },
 ];
 
-// Map a [lat,lng] to an x/y % inside the map panel, normalised to the result set.
-function computePins(list) {
-  const withCoords = list.filter((a) => a.lat != null && a.lng != null);
-  if (withCoords.length < 2) {
-    return Object.fromEntries(
-      list.map((a, i) => [a.id, { x: 28 + ((i * 37) % 50), y: 24 + ((i * 53) % 50) }])
-    );
-  }
-  const lats = withCoords.map((a) => a.lat);
-  const lngs = withCoords.map((a) => a.lng);
-  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-  const span = (v, lo, hi) => (hi === lo ? 0.5 : (v - lo) / (hi - lo));
-  return Object.fromEntries(
-    list.map((a) => {
-      if (a.lat == null || a.lng == null) return [a.id, { x: 50, y: 50 }];
-      return [
-        a.id,
-        { x: 18 + span(a.lng, minLng, maxLng) * 64, y: 22 + (1 - span(a.lat, minLat, maxLat)) * 56 },
-      ];
-    })
-  );
-}
+
 
 export default function Listings() {
   const { navigate } = useNavigation();
@@ -40,8 +20,13 @@ export default function Listings() {
 
   const [universities, setUniversities] = useState([]);
   const [uniIdx, setUniIdx] = useState(0);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => {
+    const saved = localStorage.getItem('searchQuery') || '';
+    localStorage.removeItem('searchQuery');
+    return saved;
+  });
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [maxPrice, setMaxPrice] = useState(320);
   const [mapMode, setMapMode] = useState('split');
   const [selectedId, setSelectedId] = useState(null);
@@ -54,7 +39,17 @@ export default function Listings() {
   const activeUni = universities[uniIdx];
 
   useEffect(() => {
-    universityApi.getAll().then(setUniversities).catch(() => {});
+    universityApi.getAll().then((data) => {
+      setUniversities(data);
+      const savedUni = localStorage.getItem('searchUniversity');
+      if (savedUni) {
+        const idx = data.findIndex(u => u.short === savedUni || u.name === savedUni);
+        if (idx !== -1) {
+          setUniIdx(idx);
+        }
+        localStorage.removeItem('searchUniversity');
+      }
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -74,6 +69,7 @@ export default function Listings() {
         maxPrice,
         q: search,
         type: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
+        amenities: selectedAmenities.length ? selectedAmenities.join(',') : undefined,
       })
       .then((data) => {
         let list = data.results || [];
@@ -83,18 +79,21 @@ export default function Listings() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [activeUni, maxPrice, search, selectedTypes]);
+  }, [activeUni, maxPrice, search, selectedTypes, selectedAmenities]);
 
   useEffect(() => {
-    const t = setTimeout(load, 250); // debounce search/price
+    const t = setTimeout(load, 250); // debounce search/price/amenities
     return () => clearTimeout(t);
   }, [load]);
-
-  const pins = useMemo(() => computePins(results), [results]);
 
   const toggleType = (value) =>
     setSelectedTypes((prev) =>
       prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]
+    );
+
+  const toggleAmenity = (aid) =>
+    setSelectedAmenities((prev) =>
+      prev.includes(aid) ? prev.filter((a) => a !== aid) : [...prev, aid]
     );
 
   const toggleSave = async (acc) => {
@@ -162,7 +161,7 @@ export default function Listings() {
           </div>
           <button
             onClick={() => setUniIdx((i) => (universities.length ? (i + 1) % universities.length : 0))}
-            className="flex items-center gap-1.5 rounded-[11px] border border-border bg-bg-surface px-3.5 py-2.5 text-sm font-semibold text-text-secondary"
+            className="flex items-center gap-1.5 rounded-[11px] border border-border bg-bg-surface px-3.5 py-2.5 text-sm font-semibold text-text-secondary cursor-pointer"
           >
             <GraduationCap className="h-4 w-4" /> {uniShort}
           </button>
@@ -170,10 +169,10 @@ export default function Listings() {
             <button
               key={t.value}
               onClick={() => toggleType(t.value)}
-              className={`rounded-[11px] border px-3.5 py-2.5 text-[13.5px] font-semibold transition-colors ${
+              className={`rounded-[11px] border px-3.5 py-2.5 text-[13.5px] font-semibold transition-colors cursor-pointer ${
                 selectedTypes.includes(t.value)
                   ? 'border-brand-primaryDark bg-brand-primaryDark text-white'
-                  : 'border-border bg-bg-surface text-text-secondary'
+                  : 'border-border bg-bg-surface text-text-secondary hover:bg-bg-surface-alt'
               }`}
             >
               {t.label}
@@ -191,8 +190,32 @@ export default function Listings() {
               step="20"
               value={maxPrice}
               onChange={(e) => setMaxPrice(+e.target.value)}
-              className="w-[110px] accent-brand-primaryDark"
+              className="w-[110px] accent-brand-primaryDark cursor-pointer"
             />
+          </div>
+        </div>
+
+        {/* Amenities Filters */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-bg-surface p-3 shadow-sm animate-fade-in">
+          <span className="text-[13px] font-bold text-text-secondary px-1 uppercase tracking-wider">Amenities:</span>
+          <div className="flex flex-wrap gap-2">
+            {ALL_AMENITIES.map((aid) => {
+              const active = selectedAmenities.includes(aid);
+              return (
+                <button
+                  key={aid}
+                  onClick={() => toggleAmenity(aid)}
+                  className={`flex items-center gap-1.5 rounded-[11px] border px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 cursor-pointer ${
+                    active
+                      ? 'border-brand-primaryDark bg-brand-primary/10 text-brand-primaryDark ring-1 ring-brand-primaryDark font-bold'
+                      : 'border-border bg-bg-surface text-text-secondary hover:bg-bg-surface-alt'
+                  }`}
+                >
+                  <AmenityIcon id={aid} className="h-3.5 w-3.5" />
+                  {LABELS[aid]}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -238,47 +261,13 @@ export default function Listings() {
 
         {mapMode === 'split' && (
           <div className="hidden w-[42%] flex-shrink-0 lg:block">
-            <div className="sticky top-[100px] h-[calc(100vh-124px)] overflow-hidden rounded-[20px] border border-[#DCE6EE] bg-[#E5EEF3]">
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    'repeating-linear-gradient(90deg, transparent 0 82px, rgba(255,255,255,.6) 82px 90px), repeating-linear-gradient(0deg, transparent 0 100px, rgba(255,255,255,.6) 100px 108px), radial-gradient(circle at 46% 40%, #cfe6ef, transparent 42%), linear-gradient(160deg,#e7f1f5,#dbe9f0)',
-                }}
+            <div className="sticky top-[100px] h-[calc(100vh-124px)] overflow-hidden rounded-[20px] border border-border shadow-md bg-bg-surface">
+              <ListingMap
+                results={results}
+                selectedId={selectedId}
+                activeUni={activeUni}
+                onSelect={open}
               />
-              <div
-                className="absolute flex flex-col items-center gap-1.5"
-                style={{ left: '46%', top: '40%', transform: 'translate(-50%,-50%)' }}
-              >
-                <div className="whitespace-nowrap rounded-xl bg-brand-primaryDark px-3.5 py-2 text-[13px] font-bold text-white shadow-lg">
-                  🎓 {uniShort}
-                </div>
-                <div className="h-[90px] w-[90px] rounded-full border-2 border-dashed border-[rgba(47,143,184,0.45)] bg-[rgba(77,182,226,0.16)]" />
-              </div>
-              {results.map((acc) => {
-                const p = pins[acc.id] || { x: 50, y: 50 };
-                const active = selectedId === acc.id;
-                return (
-                  <button
-                    key={acc.id}
-                    onClick={() => open(acc)}
-                    onMouseEnter={() => setSelectedId(acc.id)}
-                    className="font-display absolute rounded-full border-2 border-white px-2.5 py-1.5 text-[13px] font-extrabold shadow-md transition-transform hover:scale-110"
-                    style={{
-                      left: `${p.x}%`,
-                      top: `${p.y}%`,
-                      transform: 'translate(-50%,-50%)',
-                      background: active ? '#0F172A' : '#fff',
-                      color: active ? '#fff' : '#0F172A',
-                    }}
-                  >
-                    ${acc.price_per_month}
-                  </button>
-                );
-              })}
-              <div className="absolute bottom-4 left-4 rounded-xl bg-white/95 px-3.5 py-2.5 text-xs text-text-secondary shadow">
-                <strong className="text-text-primary">{results.length} homes</strong> in this area
-              </div>
             </div>
           </div>
         )}

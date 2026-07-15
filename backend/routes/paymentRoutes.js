@@ -70,11 +70,17 @@ router.post('/initiate', authenticateToken, async (req, res) => {
       redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-return?referenceNumber=${reference}`;
       instructions = 'Simulated payment — approve to continue (dev mode).';
     } else {
+      // API_BASE_URL falls back to the host's injected public URL (Railway/Render).
+      const apiBase =
+        process.env.API_BASE_URL ||
+        (process.env.RAILWAY_PUBLIC_DOMAIN && `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`) ||
+        process.env.RENDER_EXTERNAL_URL ||
+        'http://localhost:5000';
       const base = {
         amountDetails: { amount: paymentAmount, currencyCode: 'USD' },
         reasonForPayment,
         merchantReference,
-        resultUrl: `${process.env.API_BASE_URL || 'http://localhost:5000'}/api/payments/webhook`,
+        resultUrl: `${apiBase}/api/payments/webhook`,
         returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-return`,
       };
 
