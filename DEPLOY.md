@@ -5,106 +5,186 @@
 | Frontend (Vite/React) | Vercel | `frontend` | [`frontend/vercel.json`](frontend/vercel.json) |
 | Backend (Express 5) | Railway | `backend` | [`backend/railway.json`](backend/railway.json) |
 | Database | Railway Postgres | — | `backend/database/*.sql` |
-| Domain | `uniacco.co.zw` | — | see step 5 |
+| Domain | `uniacco.co.zw` | — | Phase 5 |
+
+## The two URLs you don't have yet
+
+Neither URL exists until you deploy — **the platforms generate them**. That's the whole reason
+for the phase order below:
+
+| Value | Looks like | Where it comes from |
+|---|---|---|
+| **Backend URL** | `https://uniacco-production-a1b2.up.railway.app` | Railway → backend service → **Settings → Networking → Public Networking → Generate Domain**. Railway gives you **no public URL until you click that.** |
+| **Frontend URL** | `https://uni-acco.vercel.app` | Vercel creates it when the project is created (Project → **Domains**). |
+
+Order that resolves the circular dependency:
+**Phase 1** Railway backend (no frontend URL needed yet) → **Phase 2** load DB →
+**Phase 3** Vercel (uses the backend URL) → **Phase 4** back to Railway to fill in the frontend URL.
 
 ---
 
-## 1. Railway — backend service env vars
+# Phase 1 — Railway backend
 
-In the **backend service → Variables**:
+**1.1 Confirm Postgres exists.** Canvas should show two cards: your backend service + `Postgres`.
+If not: **+ New → Database → Add PostgreSQL**.
+
+**1.2 Root Directory** (this is the usual cause of a failed build)
+Backend service → **Settings → Source → Root Directory** = `backend`.
+Leave Build/Start commands empty — [`backend/railway.json`](backend/railway.json) sets them
+(Nixpacks, `pnpm start`, healthcheck `/api/health`).
+
+**1.3 Variables** → **Raw Editor**, paste exactly this (no placeholders left):
 
 ```
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 NODE_ENV=production
-ALLOWED_ORIGINS=https://uniacco.co.zw,https://www.uniacco.co.zw,https://<your-project>.vercel.app
-FRONTEND_URL=https://uniacco.co.zw
-JWT_SECRET=<long random string>
-PESEPAY_INTEGRATION_KEY=<your live integration key>
-PESEPAY_ENCRYPTION_KEY=<your live encryption key>
+JWT_SECRET=imHNeXIaXOYDct6Yw1HwCqfqol5xSUUTdTpxVSODYNkJE7xireH7rwKJKKpSZ4cI
 PESEPAY_ENV=production
 ```
 
-> 🔐 Never commit the real Pesepay keys — set them only in the Railway dashboard.
-> They live in `backend/.env` locally, which is gitignored.
+- `${{Postgres.DATABASE_URL}}` is a **literal Railway reference** — type it as-is; Railway resolves
+  it to the Postgres service's internal URL. Don't paste a real URL here.
+- `ALLOWED_ORIGINS` / `FRONTEND_URL` are added in **Phase 4** (you don't have the Vercel URL yet).
+  Their absence doesn't block anything: CORS defaults to localhost and only matters once the
+  frontend calls the API.
+- **Omit the Pesepay keys for now** → payments run in **simulated mode** (instant unlock, no real
+  money). Add them in Phase 5 when you're ready for live charges.
 
-Notes:
-- **The payment gateway is Pesepay, not PayNow.** `PAYNOW_SETUP.md` / `PAYNOW_TEST_MODE.md` are **stale**
-  — PayNow was removed. The only payment vars are the three `PESEPAY_*` above.
-- Leave `PESEPAY_INTEGRATION_KEY`/`PESEPAY_ENCRYPTION_KEY` **unset** to run payments in *simulated* mode
-  (instant success, no real charge) — useful for a first smoke test.
-- `API_BASE_URL` is optional; the Pesepay webhook URL falls back to Railway's injected
-  `RAILWAY_PUBLIC_DOMAIN`/`RENDER_EXTERNAL_URL`. Set `API_BASE_URL=https://api.uniacco.co.zw`
-  after DNS is live so callbacks use the custom domain.
-- `DB_SSL` is auto-decided: **off** for Railway's private `*.railway.internal` host, **on** for any
-  public/proxy URL. Override with `DB_SSL=true|false` if you hit an SSL error.
+**1.4 Deploy** → **Deployments** tab → watch the log. If it fails, copy the error (see Troubleshooting).
 
-## 2. Railway — load the database schema
+**1.5 Generate the public domain**
+**Settings → Networking → Public Networking → Generate Domain.** If it asks for a port, pick the
+one it auto-detects — the app binds Railway's injected `PORT` automatically.
+**Copy this URL — it is your `<backend-url>` for Phase 3.**
 
-The repo ships a Node runner, so you don't need `psql`:
-
-```bash
-# from the backend service shell, or locally with DATABASE_URL set to Railway's PUBLIC url
-pnpm db:setup    # schema + seed (DROPS and recreates the marketplace tables)
-pnpm db:seed     # idempotent re-seed only (universities + properties), safe on live data
+**1.6 Verify**
+Open `<backend-url>/api/health` → expect:
+```json
+{"status":"healthy","database":"connected"}
 ```
+`"database":"disconnected"` → the DB isn't reachable; see Troubleshooting.
 
-Run order is handled for you: `uniacco.sql` → `universities.sql` → `properties.sql`.
+**1.7 Volume (persistent uploads)**
+**Settings → Volumes → Add Volume**, mount path: **`/app/uploads/user`**
 
-> ⚠️ **Do NOT run `backend/database/migrations/*`.** Those are the superseded legacy schema
-> (`first_name`/`last_name` users, JSONB accommodations) and conflict with the current code.
-> `backend/database/uniacco.sql` is the canonical schema.
-
-Verify: `SELECT count(*) FROM accommodations;` → 25 active listings, 21 universities, 51 campuses.
-
-## 3. Railway — persistent uploads volume
-
-Host photo uploads go to **`uploads/user`**, kept separate from the 28 seed images committed at
-`uploads/accommodations` (which ship with every deploy).
-
-- Add a **Volume** mounted at **`/app/uploads/user`**.
-- ⚠️ Do **not** mount at `/app/uploads` — that would shadow the committed seed images and break
-  the photos on all seeded listings.
-
-Test: upload a photo via *List a property* → redeploy → confirm the image still loads.
-
-## 4. Vercel — frontend
-
-- **Root Directory:** `frontend` (`vercel.json` sets the Vite build + SPA rewrite for client-side routing).
-- **Environment variables:**
-  ```
-  VITE_API_URL=https://<your-backend>.up.railway.app     # later: https://api.uniacco.co.zw
-  ```
-  `VITE_API_URL` is baked in at **build time** — change it, then **redeploy**.
-- No other `VITE_*` vars are needed. (`@supabase/supabase-js` is an unused leftover dependency —
-  only `src/types/supabase.ts` references Supabase; no runtime code uses it.)
-
-## 5. Domain cutover (`uniacco.co.zw`)
-
-1. **Vercel → Project → Settings → Domains:** add `uniacco.co.zw` + `www.uniacco.co.zw`, then create the
-   A/CNAME records it shows at your registrar.
-2. **Railway → backend service → Settings → Networking → Custom Domain:** add `api.uniacco.co.zw` and
-   create the CNAME it shows.
-3. Wait for DNS propagation, then confirm `https://api.uniacco.co.zw/api/health`.
-4. Set `VITE_API_URL=https://api.uniacco.co.zw` in Vercel → **redeploy**.
-5. Update `ALLOWED_ORIGINS` + `FRONTEND_URL` + `API_BASE_URL` on Railway to the final domains → redeploy.
-6. In the **Pesepay dashboard**, whitelist the production URLs:
-   - Result/webhook: `https://api.uniacco.co.zw/api/payments/webhook`
-   - Return: `https://uniacco.co.zw/payment-return`
-
-## 6. Smoke test
-
-- [ ] `https://api.uniacco.co.zw/api/health` → `{"status":"healthy","database":"connected"}`
-- [ ] `https://uniacco.co.zw` loads, no console errors, **featured properties show images**
-- [ ] Signup/login works (writes to Postgres, returns a JWT)
-- [ ] Browse loads real listings; university filter works
-- [ ] Deep link (e.g. `https://uniacco.co.zw/listings`) loads directly → confirms the SPA rewrite
-- [ ] Image upload persists across a redeploy → confirms the volume
-- [ ] Apply flow reaches Pesepay (or simulated mode) without errors
-- [ ] `https://api.uniacco.co.zw/api-docs` (Swagger UI) loads
+> ⚠️ **Not `/app/uploads`.** That path already contains the 28 seed images baked into the repo;
+> mounting a volume over it hides them and blanks the photos on all 25 seeded listings.
+> Host uploads are written to `uploads/user` precisely so the volume has its own home.
 
 ---
 
-### Live-money warning
-Pesepay production keys charge **real money**. The access fee is currently **stubbed to $0.01**
-(`ACCESS_FEE_AMOUNT` in `backend/routes/paymentRoutes.js`, `ACCESS_FEE` in `frontend/src/lib/fees.js`).
-Set both back to `2.00` for launch.
+# Phase 2 — Load the database schema
+
+**Railway has no web shell**, so run this **from your own machine** using the database's *public* URL.
+
+**2.1 Get the public URL:** Railway → **Postgres** service → **Variables** → copy
+**`DATABASE_PUBLIC_URL`** (host looks like `switchback.proxy.rlwy.net:52341` — *not* the
+`.railway.internal` one, which is only reachable from inside Railway).
+
+**2.2 Run it** (PowerShell, from the repo):
+
+```powershell
+cd backend
+$env:DATABASE_URL="<paste DATABASE_PUBLIC_URL>"
+pnpm db:setup
+Remove-Item Env:DATABASE_URL     # so local dev goes back to your local Postgres
+```
+
+Git Bash equivalent:
+```bash
+cd backend
+DATABASE_URL="<paste DATABASE_PUBLIC_URL>" pnpm db:setup
+```
+
+Expect:
+```
+  • uniacco.sql ... done
+  • universities.sql ... done
+  • properties.sql ... done
+✅ Database setup complete
+```
+That's 21 universities, 51 campuses, 25 active listings.
+Later re-seeds without wiping: `pnpm db:seed`.
+
+- If you see **"The server does not support SSL connections"** → prefix with `DB_SSL=false`.
+- If you see **"self signed certificate"** → prefix with `DB_SSL=true`.
+- ⚠️ **Never run `backend/database/migrations/*`** — legacy schema, conflicts with the current code.
+  `backend/database/uniacco.sql` is canonical.
+
+**2.3 Re-check** `<backend-url>/api/health` → `"database":"connected"`, and
+`<backend-url>/api/accommodations` → 25 results.
+
+---
+
+# Phase 3 — Vercel frontend
+
+**3.1 Root Directory** = `frontend` (Project → Settings → General). This also clears the
+"multiple projects detected" warning. [`frontend/vercel.json`](frontend/vercel.json) handles the
+Vite build + the SPA rewrite.
+
+**3.2 Environment variable** → Settings → Environment Variables:
+```
+VITE_API_URL = <backend-url from Phase 1.5, no trailing slash>
+```
+e.g. `https://uniacco-production-a1b2.up.railway.app`
+
+**3.3 Deploy.** Vite inlines `VITE_API_URL` **at build time** → changing it later *requires a redeploy*.
+
+**3.4 Copy your frontend URL** (Project → Domains, e.g. `https://uni-acco.vercel.app`) —
+that's `<frontend-url>` for Phase 4.
+
+**3.5 Verify**
+- Home loads, **featured property images appear** (proves `VITE_API_URL` + image serving)
+- `<frontend-url>/listings` opened **directly** loads (proves the SPA rewrite)
+- No CORS errors in the console (fixed in Phase 4 if present)
+
+---
+
+# Phase 4 — Close the loop (CORS)
+
+Railway → backend → **Variables**, add:
+```
+ALLOWED_ORIGINS=<frontend-url>
+FRONTEND_URL=<frontend-url>
+```
+Both without a trailing slash, e.g. `https://uni-acco.vercel.app`. Railway redeploys automatically.
+Multiple origins are comma-separated (add previews/custom domain later).
+
+Verify: sign up / log in on the live site → should succeed and persist to Postgres.
+
+---
+
+# Phase 5 — Domain + going live
+
+1. **Vercel → Domains:** add `uniacco.co.zw` and `www.uniacco.co.zw`; create the A/CNAME records it
+   shows at your registrar.
+2. **Railway → backend → Settings → Networking → Custom Domain:** add `api.uniacco.co.zw`; create the
+   CNAME it shows.
+3. After DNS resolves, confirm `https://api.uniacco.co.zw/api/health`.
+4. **Vercel:** `VITE_API_URL=https://api.uniacco.co.zw` → **redeploy**.
+5. **Railway:** `ALLOWED_ORIGINS=https://uniacco.co.zw,https://www.uniacco.co.zw`,
+   `FRONTEND_URL=https://uniacco.co.zw`, `API_BASE_URL=https://api.uniacco.co.zw`.
+6. **Go live on payments:** add `PESEPAY_INTEGRATION_KEY` + `PESEPAY_ENCRYPTION_KEY` (from your local
+   `backend/.env`) in Railway. In the Pesepay dashboard whitelist:
+   - webhook: `https://api.uniacco.co.zw/api/payments/webhook`
+   - return: `https://uniacco.co.zw/payment-return`
+7. **Restore the real fee** — it's stubbed to **$0.01**: set `ACCESS_FEE_AMOUNT` back to `2.00` in
+   `backend/routes/paymentRoutes.js` and `ACCESS_FEE` to `2.00` / `'$2.00'` in `frontend/src/lib/fees.js`.
+   Pesepay production keys charge **real money**.
+
+---
+
+# Troubleshooting
+
+| Symptom | Cause / fix |
+|---|---|
+| Build fails immediately, no `pnpm` output | Root Directory isn't `backend` (Phase 1.2) |
+| `Cannot find module 'express'` | Same — Railway built the repo root, not `backend` |
+| Health = `"database":"disconnected"` | `DATABASE_URL` missing/typo'd. Must be the literal `${{Postgres.DATABASE_URL}}` |
+| `The server does not support SSL connections` | Add `DB_SSL=false` |
+| `self signed certificate` | Add `DB_SSL=true` |
+| `relation "accommodations" does not exist` | Phase 2 not run yet |
+| CORS error in browser console | Phase 4 — `ALLOWED_ORIGINS` must match the frontend origin exactly (https, no trailing slash) |
+| Listing photos missing in prod | Volume mounted at `/app/uploads` instead of `/app/uploads/user` |
+| Deep link `/listings` 404s | Root Directory isn't `frontend`, so `vercel.json` wasn't picked up |
+| Frontend calls `localhost:5000` | `VITE_API_URL` unset at build time → set it and **redeploy** |
