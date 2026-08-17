@@ -65,7 +65,7 @@ export default function Account() {
     <div className="ua-fade mx-auto max-w-[1080px] px-6 pb-[70px] pt-[100px]">
       <div className="flex flex-wrap items-start gap-7">
         {/* profile card */}
-        <div className="w-[290px] flex-shrink-0 rounded-[20px] border border-border bg-bg-surface p-6 shadow-sm">
+        <div className="w-full flex-shrink-0 rounded-[20px] border border-border bg-bg-surface p-6 shadow-sm md:w-[290px]">
           <div
             className="mb-3.5 flex h-[72px] w-[72px] items-center justify-center rounded-full text-[26px] font-extrabold text-white"
             style={{ background: 'linear-gradient(135deg,#4DB6E2,#2F8FB8)' }}
@@ -107,7 +107,7 @@ export default function Account() {
           </p>
 
           {saved.length > 0 ? (
-            <div className="grid grid-cols-2 gap-[18px]">
+            <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
               {saved.map((acc) => {
                 const photo = acc.images?.[0] ? imageUrl(acc.images[0]) : null;
                 return (

@@ -78,20 +78,20 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg-page/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-[1280px] items-center gap-4 px-6 py-3">
+      <div className="mx-auto flex max-w-[1280px] items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6">
         {/* Logo + wordmark */}
         <div
           onClick={() => navigate(isHost ? 'host-dashboard' : 'home')}
-          className="flex cursor-pointer items-center gap-2.5"
+          className="flex flex-shrink-0 cursor-pointer items-center gap-2.5"
         >
-          <img src={logo} alt="UniAcco" className="h-10 w-10 rounded-full shadow-md" />
-          <span className="font-display text-[22px] font-extrabold tracking-tight text-text-primary">
+          <img src={logo} alt="UniAcco" className="h-9 w-9 rounded-full shadow-md sm:h-10 sm:w-10" />
+          <span className="font-display hidden text-[22px] font-extrabold tracking-tight text-text-primary sm:inline">
             Uni<span className="text-brand-primaryDark">Acco</span>
           </span>
         </div>
 
         {/* Role pill */}
-        <div className="flex gap-0.5 rounded-full border border-border bg-bg-surface p-1 shadow-sm">
+        <div className="flex flex-shrink-0 gap-0.5 rounded-full border border-border bg-bg-surface p-1 shadow-sm">
           <button className={pill(!isHost)} onClick={() => switchRole('student')}>
             Student
           </button>
@@ -100,7 +100,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Nav pills */}
+        {/* Nav pills (desktop) */}
         <nav className="hidden gap-0.5 rounded-full border border-border bg-bg-surface px-1.5 py-1 shadow-sm md:flex">
           {navItems.map((item) => (
             <button
@@ -113,7 +113,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2.5">
+        <div className="ml-auto flex flex-shrink-0 items-center gap-1.5 sm:gap-2.5">
           {isAuthenticated && (
             <button
               onClick={() => navigate('messages')}
@@ -145,7 +145,7 @@ export default function Navbar() {
                 >
                   {initialsOf(displayName)}
                 </span>
-                <span className="text-sm font-semibold text-text-primary">{firstName}</span>
+                <span className="hidden text-sm font-semibold text-text-primary sm:inline">{firstName}</span>
               </button>
               <button
                 onClick={() => {
@@ -173,6 +173,19 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Nav pills (mobile) */}
+      <nav className="flex gap-1 overflow-x-auto px-3 pb-2 md:hidden">
+        {navItems.map((item) => (
+          <button
+            key={`m-${item.page}${item.label}`}
+            className={`${navPill(currentPage === item.page)} flex-shrink-0 whitespace-nowrap border border-border`}
+            onClick={() => navigate(item.page)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
     </header>
   );
 }

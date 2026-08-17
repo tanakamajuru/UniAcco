@@ -12,10 +12,10 @@
 Neither URL exists until you deploy — **the platforms generate them**. That's the whole reason
 for the phase order below:
 
-| Value | Looks like | Where it comes from |
+| Value | Current value | Where it comes from |
 |---|---|---|
-| **Backend URL** | `https://uniacco-production-a1b2.up.railway.app` | Railway → backend service → **Settings → Networking → Public Networking → Generate Domain**. Railway gives you **no public URL until you click that.** |
-| **Frontend URL** | `https://uni-acco.vercel.app` | Vercel creates it when the project is created (Project → **Domains**). |
+| **Backend URL** | ✅ **`https://uniacco-production.up.railway.app`** (live) | Railway → backend service → **Settings → Networking → Public Networking → Generate Domain**. Railway gives you **no public URL until you click that.** |
+| **Frontend URL** | *(not created yet)* e.g. `https://uni-acco.vercel.app` | Vercel creates it when the project is created (Project → **Domains**). |
 
 Order that resolves the circular dependency:
 **Phase 1** Railway backend (no frontend URL needed yet) → **Phase 2** load DB →
@@ -65,7 +65,8 @@ Open `<backend-url>/api/health` → expect:
 `"database":"disconnected"` → the DB isn't reachable; see Troubleshooting.
 
 **1.7 Volume (persistent uploads)**
-**Settings → Volumes → Add Volume**, mount path: **`/app/uploads/user`**
+Volumes are attached from the **canvas**, not the Settings page: right-click the backend service
+(or **+ New → Volume**) → **Attach Volume** → mount path **`/app/uploads/user`**.
 
 > ⚠️ **Not `/app/uploads`.** That path already contains the 28 seed images baked into the repo;
 > mounting a volume over it hides them and blanks the photos on all 25 seeded listings.

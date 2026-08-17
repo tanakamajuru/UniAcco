@@ -149,7 +149,7 @@ export default function HostDashboard() {
         ))}
       </div>
 
-      <div className="grid items-start gap-[22px]" style={{ gridTemplateColumns: '1.55fr 1fr' }}>
+      <div className="grid grid-cols-1 items-start gap-[22px] lg:grid-cols-[1.55fr_1fr]">
         {/* listings */}
         <div className="overflow-hidden rounded-[18px] border border-border bg-bg-surface shadow-sm">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">

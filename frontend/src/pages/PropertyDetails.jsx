@@ -174,15 +174,12 @@ export default function PropertyDetails() {
       </div>
 
       {/* gallery */}
-      <div
-        className="grid h-[274px] gap-2.5 overflow-hidden rounded-[20px]"
-        style={{ gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: '132px 132px' }}
-      >
-        <div className="row-span-2" style={{ background: gradientFor(acc.id) }}>
+      <div className="grid h-[230px] grid-cols-1 gap-2.5 overflow-hidden rounded-[20px] md:h-[274px] md:grid-cols-[2fr_1fr_1fr] md:grid-rows-[132px_132px]">
+        <div className="md:row-span-2" style={{ background: gradientFor(acc.id) }}>
           {photos[0] && <img src={photos[0]} alt="" className="h-full w-full object-cover" />}
         </div>
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="relative" style={{ background: GALLERY_GRADIENTS[i - 1] }}>
+          <div key={i} className="relative hidden md:block" style={{ background: GALLERY_GRADIENTS[i - 1] }}>
             {photos[i] && <img src={photos[i]} alt="" className="h-full w-full object-cover" />}
             {i === 4 && (
               <span className="absolute inset-0 flex items-center justify-center bg-[rgba(15,23,42,0.42)] text-sm font-bold text-white">
@@ -193,10 +190,7 @@ export default function PropertyDetails() {
         ))}
       </div>
 
-      <div
-        className="mt-7 grid items-start gap-9"
-        style={{ gridTemplateColumns: 'minmax(0,1fr) 350px' }}
-      >
+      <div className="mt-7 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_350px]">
         <div>
           {/* specs */}
           <div className="flex gap-6 border-b border-border pb-5">
@@ -266,7 +260,7 @@ export default function PropertyDetails() {
           {acc.reviews?.length > 0 && (
             <div className="py-5">
               <h3 className="font-display mb-3.5 text-[18px] font-bold text-text-primary">Recent reviews</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {acc.reviews.map((r, i) => (
                   <div key={i} className="rounded-[14px] border border-border bg-bg-surface p-4">
                     <div className="mb-2 flex items-center gap-2.5">

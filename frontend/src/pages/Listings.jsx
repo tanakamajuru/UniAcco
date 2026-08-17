@@ -119,7 +119,10 @@ export default function Listings() {
   const open = (acc) => navigate('property-details', { id: acc.id });
 
   const uniShort = activeUni?.short || 'UZ';
-  const gridCols = mapMode === 'split' ? 'repeat(2,minmax(0,1fr))' : 'repeat(3,minmax(0,1fr))';
+  const gridColsClass =
+    mapMode === 'split'
+      ? 'grid-cols-1 sm:grid-cols-2'
+      : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
 
   return (
     <div className="ua-fade pt-[78px]">
@@ -244,7 +247,7 @@ export default function Listings() {
               <p className="text-sm">Try raising the price or clearing a filter.</p>
             </div>
           ) : (
-            <div className="grid gap-5" style={{ gridTemplateColumns: gridCols }}>
+            <div className={`grid gap-5 ${gridColsClass}`}>
               {results.map((acc) => (
                 <ListingCard
                   key={acc.id}

@@ -152,10 +152,10 @@ export default function ApplyModal({ accommodation, unlocked, onClose, onUnlocke
   // full viewport — the PropertyDetails container has a CSS transform (.ua-fade)
   // which would otherwise become the containing block for `position: fixed`.
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[rgba(15,23,42,0.55)] p-6 backdrop-blur-sm" style={{ animation: 'uaFade 0.25s ease both' }}>
-      <div className="ua-pop flex max-h-[92vh] w-[580px] max-w-full flex-col overflow-hidden rounded-[22px] bg-bg-page shadow-2xl">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[rgba(15,23,42,0.6)] p-3 backdrop-blur-sm sm:p-6" style={{ animation: 'uaFade 0.25s ease both' }}>
+      <div className="ua-pop flex max-h-[94vh] w-[580px] max-w-full flex-col overflow-hidden rounded-[22px] bg-[#F8FAFC] shadow-2xl dark:bg-[#0B1220]">
         {/* header */}
-        <div className="flex items-center justify-between border-b border-border bg-bg-page px-6 py-5">
+        <div className="flex items-center justify-between border-b border-border bg-[#F8FAFC] dark:bg-[#0B1220] px-6 py-5">
           <div>
             <div className="font-display text-[19px] font-extrabold text-text-primary">{heading}</div>
             <div className="text-[13px] text-text-secondary">
@@ -420,7 +420,7 @@ export default function ApplyModal({ accommodation, unlocked, onClose, onUnlocke
 
         {/* footer */}
         {phase === 'form' && (
-          <div className="flex justify-between gap-3 border-t border-border bg-bg-page px-6 py-4">
+          <div className="flex justify-between gap-3 border-t border-border bg-[#F8FAFC] dark:bg-[#0B1220] px-6 py-4">
             <button
               onClick={handleBack}
               className="rounded-xl border border-border bg-bg-surface px-5 py-3 text-[15px] font-bold text-text-secondary"

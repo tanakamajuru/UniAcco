@@ -161,7 +161,7 @@ export default function ListPropertyPage() {
           placeholder="Describe the room, the house, the vibe, who it suits..."
         />
 
-        <div className="mb-4 grid grid-cols-2 gap-3.5">
+        <div className="mb-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
           <div>
             <label className={label}>Nearest university</label>
             <div className="relative">
@@ -216,7 +216,7 @@ export default function ListPropertyPage() {
           </div>
         </div>
 
-        <div className="mb-5 grid grid-cols-3 gap-3.5">
+        <div className="mb-5 grid grid-cols-3 gap-2.5 sm:gap-3.5">
           <div>
             <label className={label}>Rent (USD/mo)</label>
             <div className="relative">

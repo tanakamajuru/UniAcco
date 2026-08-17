@@ -92,12 +92,9 @@ export default function Messages() {
           </button>
         </div>
       ) : (
-        <div
-          className="grid h-[560px] overflow-hidden rounded-[20px] border border-border bg-bg-surface shadow-sm"
-          style={{ gridTemplateColumns: '300px 1fr' }}
-        >
+        <div className="grid h-[75vh] grid-cols-1 grid-rows-[auto_1fr] overflow-hidden rounded-[20px] border border-border bg-bg-surface shadow-sm md:h-[560px] md:grid-cols-[300px_1fr] md:grid-rows-1">
           {/* thread list */}
-          <div className="overflow-y-auto border-r border-border">
+          <div className="max-h-[28vh] overflow-y-auto border-b border-border md:max-h-none md:border-b-0 md:border-r">
             {threads.map((t, i) => (
               <div
                 key={t.id}
