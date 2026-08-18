@@ -79,11 +79,7 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
             disabled={!interactive}
           >
             <Star
-              className={`w-5 h-5 ${
-                star <= rating
-                  ? 'fill-yellow-400 text-yellow-400'
-                  : 'text-gray-300'
-              }`}
+              className={`w-5 h-5 ${ star <= rating ? 'fill-yellow-400 text-brand-accent' : 'text-text-muted' }`}
             />
           </button>
         ))}
@@ -94,12 +90,12 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
   if (!hasPremiumAccess) {
     return (
       <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-        <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <Lock className="w-12 h-12 text-text-muted mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
-        <p className="text-gray-600 mb-4">
+        <p className="text-text-secondary mb-4">
           Share your experience and help other students make informed decisions about their accommodation.
         </p>
-        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+        <button className="bg-brand-primaryDark text-white px-6 py-2 rounded-lg hover:bg-brand-primary transition-colors">
           Upgrade to Premium
         </button>
       </div>
@@ -109,7 +105,7 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primaryDark mx-auto"></div>
       </div>
     );
   }
@@ -133,7 +129,7 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">No pending reviews</p>
+          <p className="text-text-muted">No pending reviews</p>
         )}
       </div>
 
@@ -154,25 +150,25 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <Building className="w-6 h-6 text-gray-600" />
+                    <div className="w-12 h-12 bg-bg-surface-alt rounded-lg flex items-center justify-center">
+                      <Building className="w-6 h-6 text-text-secondary" />
                     </div>
                     <div>
                       <h4 className="font-medium">{review.propertyName}</h4>
-                      <p className="text-sm text-gray-600">{review.location}</p>
+                      <p className="text-sm text-text-secondary">{review.location}</p>
                     </div>
                   </div>
                   <StarRating rating={review.rating} />
                 </div>
-                <p className="text-gray-700 mb-2">{review.comment}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-text-secondary mb-2">{review.comment}</p>
+                <p className="text-xs text-text-muted">
                   Reviewed on {new Date(review.createdAt).toLocaleDateString()}
                 </p>
               </motion.div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">No reviews written yet</p>
+          <p className="text-text-muted">No reviews written yet</p>
         )}
       </div>
     </div>
@@ -198,19 +194,19 @@ const ReviewForm = ({ booking, onSubmit }) => {
   return (
     <div className="border rounded-lg p-4">
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-          <Building className="w-5 h-5 text-gray-600" />
+        <div className="w-10 h-10 bg-bg-surface-alt rounded-lg flex items-center justify-center">
+          <Building className="w-5 h-5 text-text-secondary" />
         </div>
         <div>
           <h4 className="font-medium">{booking.propertyName}</h4>
-          <p className="text-sm text-gray-600">{booking.location}</p>
-          <p className="text-xs text-gray-500">Stayed: {booking.dates}</p>
+          <p className="text-sm text-text-secondary">{booking.location}</p>
+          <p className="text-xs text-text-muted">Stayed: {booking.dates}</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Rating
           </label>
           <StarRating
@@ -221,7 +217,7 @@ const ReviewForm = ({ booking, onSubmit }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Your Review
           </label>
           <textarea
@@ -236,7 +232,7 @@ const ReviewForm = ({ booking, onSubmit }) => {
         <button
           onClick={handleSubmit}
           disabled={submitting || rating === 0}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors disabled:bg-border-strong disabled:cursor-not-allowed"
         >
           {submitting ? 'Submitting...' : 'Submit Review'}
         </button>

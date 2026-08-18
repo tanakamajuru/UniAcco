@@ -95,31 +95,19 @@ const SupportSection = () => {
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => setActiveTab('help')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'help'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${ activeTab === 'help' ? 'bg-brand-primaryDark text-white' : 'bg-bg-surface-alt text-text-secondary hover:bg-bg-surface-alt' }`}
           >
             Help Center
           </button>
           <button
             onClick={() => setActiveTab('issue')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'issue'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${ activeTab === 'issue' ? 'bg-brand-primaryDark text-white' : 'bg-bg-surface-alt text-text-secondary hover:bg-bg-surface-alt' }`}
           >
             Report an Issue
           </button>
           <button
             onClick={() => setActiveTab('terms')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'terms'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${ activeTab === 'terms' ? 'bg-brand-primaryDark text-white' : 'bg-bg-surface-alt text-text-secondary hover:bg-bg-surface-alt' }`}
           >
             Terms & Privacy
           </button>
@@ -145,7 +133,7 @@ const SupportSection = () => {
                     <h4 className="font-medium mb-3">{category.title}</h4>
                     <ul className="space-y-2">
                       {category.items.map((item, itemIndex) => (
-                        <li key={itemIndex} className="text-sm text-gray-600 hover:text-blue-600 cursor-pointer">
+                        <li key={itemIndex} className="text-sm text-text-secondary hover:text-brand-primaryDark cursor-pointer">
                           • {item}
                         </li>
                       ))}
@@ -160,10 +148,10 @@ const SupportSection = () => {
                 <div className="space-y-3">
                   {faqs.map((faq, index) => (
                     <details key={index} className="border rounded-lg p-4">
-                      <summary className="font-medium cursor-pointer hover:text-blue-600">
+                      <summary className="font-medium cursor-pointer hover:text-brand-primaryDark">
                         {faq.question}
                       </summary>
-                      <p className="text-gray-600 mt-2 text-sm">{faq.answer}</p>
+                      <p className="text-text-secondary mt-2 text-sm">{faq.answer}</p>
                     </details>
                   ))}
                 </div>
@@ -175,22 +163,22 @@ const SupportSection = () => {
               <h4 className="font-medium mb-4">Still need help?</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 border rounded-lg">
-                  <Mail className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                  <Mail className="w-8 h-8 mx-auto mb-2 text-brand-primaryDark" />
                   <h5 className="font-medium">Email Support</h5>
-                  <p className="text-sm text-gray-600">support@uniacco.com</p>
-                  <p className="text-xs text-gray-500">24-48 hour response</p>
+                  <p className="text-sm text-text-secondary">support@uniacco.com</p>
+                  <p className="text-xs text-text-muted">24-48 hour response</p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <Phone className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                  <Phone className="w-8 h-8 mx-auto mb-2 text-success" />
                   <h5 className="font-medium">Phone Support</h5>
-                  <p className="text-sm text-gray-600">+1 234 567 8900</p>
-                  <p className="text-xs text-gray-500">Mon-Fri, 9AM-6PM</p>
+                  <p className="text-sm text-text-secondary">+1 234 567 8900</p>
+                  <p className="text-xs text-text-muted">Mon-Fri, 9AM-6PM</p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <MessageSquare className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                  <MessageSquare className="w-8 h-8 mx-auto mb-2 text-brand-accent" />
                   <h5 className="font-medium">Live Chat</h5>
-                  <p className="text-sm text-gray-600">Available now</p>
-                  <p className="text-xs text-gray-500">Instant response</p>
+                  <p className="text-sm text-text-secondary">Available now</p>
+                  <p className="text-xs text-text-muted">Instant response</p>
                 </div>
               </div>
             </div>
@@ -210,7 +198,7 @@ const SupportSection = () => {
             
             <form onSubmit={handleIssueSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Issue Category
                 </label>
                 <select
@@ -230,7 +218,7 @@ const SupportSection = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Subject
                 </label>
                 <input
@@ -244,7 +232,7 @@ const SupportSection = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Description
                 </label>
                 <textarea
@@ -258,7 +246,7 @@ const SupportSection = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Priority
                 </label>
                 <select
@@ -276,7 +264,7 @@ const SupportSection = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                className="bg-brand-primaryDark text-white px-6 py-2 rounded-lg hover:bg-brand-primary transition-colors disabled:bg-border-strong disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 {submitting ? 'Submitting...' : 'Submit Issue'}
@@ -298,11 +286,11 @@ const SupportSection = () => {
                   <FileText className="w-5 h-5" />
                   Terms of Service
                 </h3>
-                <div className="space-y-3 text-sm text-gray-600">
+                <div className="space-y-3 text-sm text-text-secondary">
                   <p>
                     By using UniAcco, you agree to our terms of service which govern your use of our platform and services.
                   </p>
-                  <h4 className="font-medium text-gray-800">Key Points:</h4>
+                  <h4 className="font-medium text-text-primary">Key Points:</h4>
                   <ul className="list-disc list-inside space-y-1">
                     <li>Accurate information requirement</li>
                     <li>Payment terms and conditions</li>
@@ -310,7 +298,7 @@ const SupportSection = () => {
                     <li>User responsibilities</li>
                     <li>Platform usage guidelines</li>
                   </ul>
-                  <button className="text-blue-600 hover:text-blue-700 font-medium">
+                  <button className="text-brand-primaryDark hover:text-brand-primaryDark font-medium">
                     Read Full Terms →
                   </button>
                 </div>
@@ -321,11 +309,11 @@ const SupportSection = () => {
                   <FileText className="w-5 h-5" />
                   Privacy Policy
                 </h3>
-                <div className="space-y-3 text-sm text-gray-600">
+                <div className="space-y-3 text-sm text-text-secondary">
                   <p>
                     Your privacy is important to us. Learn how we collect, use, and protect your personal information.
                   </p>
-                  <h4 className="font-medium text-gray-800">What We Collect:</h4>
+                  <h4 className="font-medium text-text-primary">What We Collect:</h4>
                   <ul className="list-disc list-inside space-y-1">
                     <li>Personal identification</li>
                     <li>Contact information</li>
@@ -333,7 +321,7 @@ const SupportSection = () => {
                     <li>Usage data</li>
                     <li>Communication records</li>
                   </ul>
-                  <button className="text-blue-600 hover:text-blue-700 font-medium">
+                  <button className="text-brand-primaryDark hover:text-brand-primaryDark font-medium">
                     Read Full Privacy Policy →
                   </button>
                 </div>
@@ -343,17 +331,17 @@ const SupportSection = () => {
             <div className="border rounded-lg p-6">
               <h4 className="font-medium mb-3">Your Rights</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div className="p-3 bg-gray-50 rounded">
+                <div className="p-3 bg-bg-surface-alt rounded">
                   <h5 className="font-medium mb-1">Access</h5>
-                  <p className="text-gray-600">Request access to your personal data</p>
+                  <p className="text-text-secondary">Request access to your personal data</p>
                 </div>
-                <div className="p-3 bg-gray-50 rounded">
+                <div className="p-3 bg-bg-surface-alt rounded">
                   <h5 className="font-medium mb-1">Correction</h5>
-                  <p className="text-gray-600">Update or correct your information</p>
+                  <p className="text-text-secondary">Update or correct your information</p>
                 </div>
-                <div className="p-3 bg-gray-50 rounded">
+                <div className="p-3 bg-bg-surface-alt rounded">
                   <h5 className="font-medium mb-1">Deletion</h5>
-                  <p className="text-gray-600">Request deletion of your data</p>
+                  <p className="text-text-secondary">Request deletion of your data</p>
                 </div>
               </div>
             </div>

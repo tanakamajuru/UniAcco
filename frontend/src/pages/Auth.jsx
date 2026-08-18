@@ -81,15 +81,15 @@ const Auth = () => {
               className="bg-white dark:bg-[#1A1F2E] rounded-2xl shadow-xl p-8"
             >
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-3xl font-bold text-text-primary">
                   {isSignUp ? 'Create your account' : 'Welcome back'}
                 </h2>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-2 text-sm text-text-secondary">
                   {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
                   <button
                     type="button"
                     onClick={() => setIsSignUp(!isSignUp)}
-                    className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none"
+                    className="font-medium text-brand-primaryDark hover:text-brand-primary dark:hover:text-brand-primaryLight focus:outline-none"
                   >
                     {isSignUp ? 'Sign in' : 'Sign up'}
                   </button>
@@ -97,7 +97,7 @@ const Auth = () => {
               </div>
 
               {error && (
-                <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                <div className="rounded-md bg-error/10 border border-error/30 p-3 text-sm text-error">
                   {error}
                 </div>
               )}
@@ -105,12 +105,12 @@ const Auth = () => {
               <form className="space-y-6" onSubmit={handleSubmit}>
                 {isSignUp && (
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label htmlFor="name" className="block text-sm font-medium text-text-secondary">
                       Full Name
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <User className="h-5 w-5 text-gray-400" />
+                        <User className="h-5 w-5 text-text-muted" />
                       </div>
                       <input
                         id="name"
@@ -120,7 +120,7 @@ const Auth = () => {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-[#2E4057] dark:text-white"
+                        className="pl-10 block w-full rounded-md border-border shadow-sm focus:border-brand-primary focus:ring-blue-500 dark:bg-[#2E4057]"
                         placeholder="John Doe"
                       />
                     </div>
@@ -129,7 +129,7 @@ const Auth = () => {
 
                 {isSignUp && (
                   <div>
-                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label htmlFor="role" className="block text-sm font-medium text-text-secondary">
                       Account Type
                     </label>
                     <select
@@ -137,7 +137,7 @@ const Auth = () => {
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-[#2E4057] dark:text-white"
+                      className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-brand-primary focus:ring-blue-500 dark:bg-[#2E4057]"
                     >
                       <option value="student">Student</option>
                       <option value="landlord">Landlord</option>
@@ -146,12 +146,12 @@ const Auth = () => {
                 )}
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label htmlFor="email" className="block text-sm font-medium text-text-secondary">
                     Email address
                   </label>
                   <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-text-muted" />
                     </div>
                     <input
                       id="email"
@@ -161,19 +161,19 @@ const Auth = () => {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-[#2E4057] dark:text-white"
+                      className="pl-10 block w-full rounded-md border-border shadow-sm focus:border-brand-primary focus:ring-blue-500 dark:bg-[#2E4057]"
                       placeholder="you@example.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
                     Password
                   </label>
                   <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-text-muted" />
                     </div>
                     <input
                       id="password"
@@ -183,7 +183,7 @@ const Auth = () => {
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      className="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-[#2E4057] dark:text-white"
+                      className="pl-10 block w-full rounded-md border-border shadow-sm focus:border-brand-primary focus:ring-blue-500 dark:bg-[#2E4057]"
                       placeholder="••••••••"
                     />
                   </div>
@@ -191,12 +191,12 @@ const Auth = () => {
 
                 {isSignUp && (
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary">
                       Confirm Password
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock className="h-5 w-5 text-gray-400" />
+                        <Lock className="h-5 w-5 text-text-muted" />
                       </div>
                       <input
                         id="confirmPassword"
@@ -206,7 +206,7 @@ const Auth = () => {
                         required
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        className="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-[#2E4057] dark:text-white"
+                        className="pl-10 block w-full rounded-md border-border shadow-sm focus:border-brand-primary focus:ring-blue-500 dark:bg-[#2E4057]"
                         placeholder="••••••••"
                       />
                     </div>
@@ -219,16 +219,16 @@ const Auth = () => {
                       id="remember-me"
                       name="remember-me"
                       type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-border text-brand-primaryDark focus:ring-blue-500"
                     />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                    <label htmlFor="remember-me" className="ml-2 block text-sm text-text-secondary">
                       Remember me
                     </label>
                   </div>
 
                   {!isSignUp && (
                     <div className="text-sm">
-                      <a href="#" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                      <a href="#" className="font-medium text-brand-primaryDark hover:text-brand-primary dark:hover:text-brand-primaryLight">
                         Forgot your password?
                       </a>
                     </div>
@@ -239,7 +239,7 @@ const Auth = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primaryDark hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     {loading ? 'Please wait...' : (isSignUp ? 'Sign up' : 'Sign in')}
                   </button>
@@ -249,10 +249,10 @@ const Auth = () => {
               <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                    <div className="w-full border-t border-border"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white dark:bg-[#1A1F2E] text-gray-500 dark:text-gray-400">
+                    <span className="px-2 bg-white dark:bg-[#1A1F2E] text-text-muted">
                       Or continue with
                     </span>
                   </div>
@@ -261,7 +261,7 @@ const Auth = () => {
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-[#2E4057] text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#3a4d6a]"
+                    className="w-full inline-flex justify-center py-2 px-4 border border-border rounded-md shadow-sm bg-white dark:bg-[#2E4057] text-sm font-medium text-text-secondary hover:bg-bg-surface-alt dark:hover:bg-[#3a4d6a]"
                   >
                     <span className="sr-only">Sign in with Google</span>
                     <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
@@ -271,7 +271,7 @@ const Auth = () => {
 
                   <button
                     type="button"
-                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-[#2E4057] text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#3a4d6a]"
+                    className="w-full inline-flex justify-center py-2 px-4 border border-border rounded-md shadow-sm bg-white dark:bg-[#2E4057] text-sm font-medium text-text-secondary hover:bg-bg-surface-alt dark:hover:bg-[#3a4d6a]"
                   >
                     <span className="sr-only">Sign in with Facebook</span>
                     <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">

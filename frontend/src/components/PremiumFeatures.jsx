@@ -38,8 +38,8 @@ const PremiumFeatures = ({ accommodationId = null }) => {
   if (bookingLoading || messagingLoading || searchLoading || supportLoading || detailsLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Checking premium features...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primaryDark"></div>
+        <span className="ml-3 text-text-secondary">Checking premium features...</span>
       </div>
     );
   }
@@ -51,9 +51,9 @@ const PremiumFeatures = ({ accommodationId = null }) => {
         
         <div className="grid md:grid-cols-2 gap-6">
           {/* Booking Feature */}
-          <div className={`border rounded-lg p-4 ${hasBooked ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50'}`}>
+          <div className={`border rounded-lg p-4 ${hasBooked ? 'border-success bg-success/10' : 'border-border bg-bg-surface-alt'}`}>
             <div className="flex items-center mb-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${hasBooked ? 'bg-green-500' : 'bg-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${hasBooked ? 'bg-success' : 'bg-border-strong'}`}>
                 {hasBooked ? (
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -66,16 +66,16 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               </div>
               <h3 className="text-lg font-semibold">Accommodation Booking</h3>
             </div>
-            <p className="text-gray-600 text-sm mb-3">
+            <p className="text-text-secondary text-sm mb-3">
               Book accommodations and manage your rental applications
             </p>
             <div className="text-sm">
               {hasBooked ? (
-                <span className="text-green-600 font-medium">✓ Unlocked</span>
+                <span className="text-success font-medium">✓ Unlocked</span>
               ) : (
                 <button
                   onClick={() => handleUpgrade('Accommodation Booking')}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-brand-primaryDark hover:text-brand-primaryDark font-medium"
                 >
                   Unlock →
                 </button>
@@ -84,9 +84,9 @@ const PremiumFeatures = ({ accommodationId = null }) => {
           </div>
 
           {/* Messaging Feature */}
-          <div className={`border rounded-lg p-4 ${canMessage ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50'}`}>
+          <div className={`border rounded-lg p-4 ${canMessage ? 'border-success bg-success/10' : 'border-border bg-bg-surface-alt'}`}>
             <div className="flex items-center mb-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${canMessage ? 'bg-green-500' : 'bg-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${canMessage ? 'bg-success' : 'bg-border-strong'}`}>
                 {canMessage ? (
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -99,16 +99,16 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               </div>
               <h3 className="text-lg font-semibold">Direct Messaging</h3>
             </div>
-            <p className="text-gray-600 text-sm mb-3">
+            <p className="text-text-secondary text-sm mb-3">
               Message landlords and other students directly
             </p>
             <div className="text-sm">
               {canMessage ? (
-                <span className="text-green-600 font-medium">✓ Unlocked</span>
+                <span className="text-success font-medium">✓ Unlocked</span>
               ) : (
                 <button
                   onClick={() => handleUpgrade('Direct Messaging')}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-brand-primaryDark hover:text-brand-primaryDark font-medium"
                 >
                   Unlock →
                 </button>
@@ -117,9 +117,9 @@ const PremiumFeatures = ({ accommodationId = null }) => {
           </div>
 
           {/* Advanced Search Feature */}
-          <div className={`border rounded-lg p-4 ${hasAdvancedSearch ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50'}`}>
+          <div className={`border rounded-lg p-4 ${hasAdvancedSearch ? 'border-success bg-success/10' : 'border-border bg-bg-surface-alt'}`}>
             <div className="flex items-center mb-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${hasAdvancedSearch ? 'bg-green-500' : 'bg-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${hasAdvancedSearch ? 'bg-success' : 'bg-border-strong'}`}>
                 {hasAdvancedSearch ? (
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -132,16 +132,16 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               </div>
               <h3 className="text-lg font-semibold">Advanced Search</h3>
             </div>
-            <p className="text-gray-600 text-sm mb-3">
+            <p className="text-text-secondary text-sm mb-3">
               Filter by distance, price range, and amenities
             </p>
             <div className="text-sm">
               {hasAdvancedSearch ? (
-                <span className="text-green-600 font-medium">✓ Unlocked</span>
+                <span className="text-success font-medium">✓ Unlocked</span>
               ) : (
                 <button
                   onClick={() => handleUpgrade('Advanced Search')}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-brand-primaryDark hover:text-brand-primaryDark font-medium"
                 >
                   Unlock →
                 </button>
@@ -150,9 +150,9 @@ const PremiumFeatures = ({ accommodationId = null }) => {
           </div>
 
           {/* Premium Support Feature */}
-          <div className={`border rounded-lg p-4 ${hasPremiumSupport ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50'}`}>
+          <div className={`border rounded-lg p-4 ${hasPremiumSupport ? 'border-success bg-success/10' : 'border-border bg-bg-surface-alt'}`}>
             <div className="flex items-center mb-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${hasPremiumSupport ? 'bg-green-500' : 'bg-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${hasPremiumSupport ? 'bg-success' : 'bg-border-strong'}`}>
                 {hasPremiumSupport ? (
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -165,16 +165,16 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               </div>
               <h3 className="text-lg font-semibold">Premium Support</h3>
             </div>
-            <p className="text-gray-600 text-sm mb-3">
+            <p className="text-text-secondary text-sm mb-3">
               Priority customer support and assistance
             </p>
             <div className="text-sm">
               {hasPremiumSupport ? (
-                <span className="text-green-600 font-medium">✓ Unlocked</span>
+                <span className="text-success font-medium">✓ Unlocked</span>
               ) : (
                 <button
                   onClick={() => handleUpgrade('Premium Support')}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-brand-primaryDark hover:text-brand-primaryDark font-medium"
                 >
                   Unlock →
                 </button>
@@ -185,17 +185,17 @@ const PremiumFeatures = ({ accommodationId = null }) => {
 
         {/* Accommodation-specific features */}
         {accommodationId && (
-          <div className="mt-6 p-4 border rounded-lg bg-blue-50">
+          <div className="mt-6 p-4 border rounded-lg bg-brand-primary/10">
             <h3 className="text-lg font-semibold mb-3">This Accommodation</h3>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Full Details & Contact Info</span>
                 {hasAccommodationDetails ? (
-                  <span className="text-green-600 text-sm font-medium">✓ Available</span>
+                  <span className="text-success text-sm font-medium">✓ Available</span>
                 ) : (
                   <button
                     onClick={() => handleUpgrade('Accommodation Details')}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    className="text-brand-primaryDark hover:text-brand-primaryDark text-sm font-medium"
                   >
                     Pay to Unlock →
                   </button>
@@ -206,30 +206,30 @@ const PremiumFeatures = ({ accommodationId = null }) => {
         )}
 
         {/* Summary */}
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+        <div className="mt-6 p-4 bg-bg-surface-alt rounded-lg">
           <h3 className="text-lg font-semibold mb-2">Your Status</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-600">Booking Access:</span>
-              <span className={`ml-2 font-medium ${hasBooked ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className="text-text-secondary">Booking Access:</span>
+              <span className={`ml-2 font-medium ${hasBooked ? 'text-success' : 'text-text-muted'}`}>
                 {hasBooked ? 'Active' : 'Locked'}
               </span>
             </div>
             <div>
-              <span className="text-gray-600">Messaging:</span>
-              <span className={`ml-2 font-medium ${canMessage ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className="text-text-secondary">Messaging:</span>
+              <span className={`ml-2 font-medium ${canMessage ? 'text-success' : 'text-text-muted'}`}>
                 {canMessage ? 'Active' : 'Locked'}
               </span>
             </div>
             <div>
-              <span className="text-gray-600">Advanced Search:</span>
-              <span className={`ml-2 font-medium ${hasAdvancedSearch ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className="text-text-secondary">Advanced Search:</span>
+              <span className={`ml-2 font-medium ${hasAdvancedSearch ? 'text-success' : 'text-text-muted'}`}>
                 {hasAdvancedSearch ? 'Active' : 'Locked'}
               </span>
             </div>
             <div>
-              <span className="text-gray-600">Premium Support:</span>
-              <span className={`ml-2 font-medium ${hasPremiumSupport ? 'text-green-600' : 'text-gray-500'}`}>
+              <span className="text-text-secondary">Premium Support:</span>
+              <span className={`ml-2 font-medium ${hasPremiumSupport ? 'text-success' : 'text-text-muted'}`}>
                 {hasPremiumSupport ? 'Active' : 'Locked'}
               </span>
             </div>
@@ -245,7 +245,7 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               <h3 className="text-xl font-bold">Unlock {selectedFeature}</h3>
               <button
                 onClick={handleCancelPayment}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-text-muted hover:text-text-secondary"
               >
                 ✕
               </button>

@@ -135,13 +135,13 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
   }, [paymentStatus]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-bg-surface-alt py-12 px-4">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Complete Payment</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Complete Payment</h2>
           <button
             onClick={onCancel}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-text-muted hover:text-text-secondary"
           >
             ✕
           </button>
@@ -149,26 +149,26 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
 
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-2">{accommodation.title}</h3>
-          <p className="text-gray-600 mb-4">{accommodation.address}, {accommodation.city}</p>
-          <div className="text-2xl font-bold text-blue-600">
+          <p className="text-text-secondary mb-4">{accommodation.address}, {accommodation.city}</p>
+          <div className="text-2xl font-bold text-brand-primaryDark">
             ${accommodation.price_per_month} USD/month
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-3 bg-error/15 border border-red-400 text-error rounded">
             {error}
           </div>
         )}
 
         {paymentStatus === 'paid' ? (
           <div className="text-center py-8">
-            <div className="text-green-600 text-6xl mb-4">✓</div>
-            <h3 className="text-xl font-semibold text-green-600 mb-2">Payment Successful!</h3>
-            <p className="text-gray-600">Your booking has been confirmed.</p>
+            <div className="text-success text-6xl mb-4">✓</div>
+            <h3 className="text-xl font-semibold text-success mb-2">Payment Successful!</h3>
+            <p className="text-text-secondary">Your booking has been confirmed.</p>
             <button
               onClick={() => navigate('bookings')}
-              className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+              className="mt-4 w-full bg-brand-primaryDark text-white py-2 px-4 rounded-lg hover:bg-brand-primary"
             >
               View My Bookings
             </button>
@@ -176,24 +176,24 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
         ) : paymentStatus === 'instructions' ? (
           <div className="text-center py-8">
             <h3 className="text-xl font-semibold mb-4">Mobile Payment Instructions</h3>
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
-              <p className="text-sm text-gray-700">
+            <div className="bg-warning/10 border border-warning/30 rounded p-4 mb-4">
+              <p className="text-sm text-text-secondary">
                 Please follow the instructions sent to your phone to complete the payment.
               </p>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-text-muted mt-2">
                 We're automatically checking for payment confirmation...
               </p>
             </div>
             <div className="flex space-x-4">
               <button
                 onClick={checkPaymentStatus}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                className="flex-1 bg-brand-primaryDark text-white py-2 px-4 rounded hover:bg-brand-primary"
               >
                 Check Status
               </button>
               <button
                 onClick={onCancel}
-                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded hover:bg-gray-400"
+                className="flex-1 bg-border-strong text-text-secondary py-2 px-4 rounded hover:bg-border-strong"
               >
                 Cancel
               </button>
@@ -202,39 +202,31 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Payment Method
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('web')}
-                  className={`p-3 border rounded-lg ${
-                    paymentMethod === 'web'
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 text-gray-700'
-                  }`}
+                  className={`p-3 border rounded-lg ${ paymentMethod === 'web' ? 'border-brand-primary bg-brand-primary/10 text-brand-primaryDark' : 'border-border text-text-secondary' }`}
                 >
                   <div className="text-sm font-medium">Web Payment</div>
-                  <div className="text-xs text-gray-500">Pay with card/bank</div>
+                  <div className="text-xs text-text-muted">Pay with card/bank</div>
                 </button>
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('mobile')}
-                  className={`p-3 border rounded-lg ${
-                    paymentMethod === 'mobile'
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 text-gray-700'
-                  }`}
+                  className={`p-3 border rounded-lg ${ paymentMethod === 'mobile' ? 'border-brand-primary bg-brand-primary/10 text-brand-primaryDark' : 'border-border text-text-secondary' }`}
                 >
                   <div className="text-sm font-medium">Mobile Money</div>
-                  <div className="text-xs text-gray-500">EcoCash/OneMoney</div>
+                  <div className="text-xs text-text-muted">EcoCash/OneMoney</div>
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Email Address *
               </label>
               <input
@@ -243,7 +235,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="your@email.com"
               />
             </div>
@@ -251,7 +243,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
             {paymentMethod === 'mobile' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
                     Phone Number *
                   </label>
                   <input
@@ -260,20 +252,20 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
                     value={formData.phone}
                     onChange={handleInputChange}
                     required={paymentMethod === 'mobile'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="077X XXX XXX or 071X XXX XXX"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
                     Mobile Money Method
                   </label>
                   <select
                     name="mobileMethod"
                     value={formData.mobileMethod}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="ecocash">EcoCash</option>
                     <option value="onemoney">OneMoney</option>
@@ -285,7 +277,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full bg-brand-primaryDark text-white py-3 px-4 rounded-lg hover:bg-brand-primary disabled:bg-border-strong disabled:cursor-not-allowed"
             >
               {loading ? 'Processing...' : `Pay ${formData.amount} USD`}
             </button>

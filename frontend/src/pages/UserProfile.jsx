@@ -85,7 +85,7 @@ const UserProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primaryDark"></div>
       </div>
     );
   }
@@ -149,21 +149,21 @@ const UserProfile = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Account Statistics</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">12</div>
-                  <div className="text-sm text-gray-600">Properties Viewed</div>
+                <div className="text-center p-4 bg-brand-primary/10 rounded-lg">
+                  <div className="text-2xl font-bold text-brand-primaryDark">12</div>
+                  <div className="text-sm text-text-secondary">Properties Viewed</div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">3</div>
-                  <div className="text-sm text-gray-600">Applications Sent</div>
+                <div className="text-center p-4 bg-success/10 rounded-lg">
+                  <div className="text-2xl font-bold text-success">3</div>
+                  <div className="text-sm text-text-secondary">Applications Sent</div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">1</div>
-                  <div className="text-sm text-gray-600">Active Bookings</div>
+                  <div className="text-2xl font-bold text-brand-accent">1</div>
+                  <div className="text-sm text-text-secondary">Active Bookings</div>
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">89%</div>
-                  <div className="text-sm text-gray-600">Profile Complete</div>
+                  <div className="text-sm text-text-secondary">Profile Complete</div>
                 </div>
               </div>
             </div>
@@ -176,23 +176,19 @@ const UserProfile = () => {
             {/* Current Plan */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Current Subscription</h3>
-              <div className={`border rounded-lg p-6 ${
-                hasPremiumAccess 
-                  ? 'border-green-200 bg-green-50' 
-                  : 'border-gray-200 bg-gray-50'
-              }`}>
+              <div className={`border rounded-lg p-6 ${ hasPremiumAccess ? 'border-success/30 bg-success/10' : 'border-border bg-bg-surface-alt' }`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     {hasPremiumAccess ? (
-                      <Crown className="w-6 h-6 text-yellow-500 mr-3" />
+                      <Crown className="w-6 h-6 text-brand-accent mr-3" />
                     ) : (
-                      <Lock className="w-6 h-6 text-gray-400 mr-3" />
+                      <Lock className="w-6 h-6 text-text-muted mr-3" />
                     )}
                     <div>
                       <h4 className="text-xl font-bold">
                         {hasPremiumAccess ? 'Premium Plan' : 'Free Plan'}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-text-secondary">
                         {hasPremiumAccess 
                           ? 'Full access to all features' 
                           : 'Limited access to basic features'
@@ -201,43 +197,43 @@ const UserProfile = () => {
                     </div>
                   </div>
                   {hasPremiumAccess && (
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                    <span className="bg-success/15 text-success text-xs px-2 py-1 rounded-full font-medium">
                       Active
                     </span>
                   )}
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                    <span className="text-gray-600">Property Details Access</span>
+                  <div className="flex items-center justify-between py-2 border-b border-border">
+                    <span className="text-text-secondary">Property Details Access</span>
                     {hasPremiumAccess ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-400" />
+                      <XCircle className="w-5 h-5 text-text-muted" />
                     )}
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                    <span className="text-gray-600">Direct Messaging</span>
+                  <div className="flex items-center justify-between py-2 border-b border-border">
+                    <span className="text-text-secondary">Direct Messaging</span>
                     {hasPremiumAccess ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-400" />
+                      <XCircle className="w-5 h-5 text-text-muted" />
                     )}
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                    <span className="text-gray-600">Advanced Search</span>
+                  <div className="flex items-center justify-between py-2 border-b border-border">
+                    <span className="text-text-secondary">Advanced Search</span>
                     {hasPremiumAccess ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-400" />
+                      <XCircle className="w-5 h-5 text-text-muted" />
                     )}
                   </div>
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-600">Priority Support</span>
+                    <span className="text-text-secondary">Priority Support</span>
                     {hasPremiumAccess ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <CheckCircle className="w-5 h-5 text-success" />
                     ) : (
-                      <XCircle className="w-5 h-5 text-gray-400" />
+                      <XCircle className="w-5 h-5 text-text-muted" />
                     )}
                   </div>
                 </div>
@@ -267,12 +263,12 @@ const UserProfile = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Payment Methods</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                   <div className="flex items-center">
-                    <CreditCard className="w-5 h-5 text-blue-600 mr-3" />
+                    <CreditCard className="w-5 h-5 text-brand-primaryDark mr-3" />
                     <div>
                       <div className="font-medium">PayNow</div>
-                      <div className="text-sm text-gray-600">Primary payment method</div>
+                      <div className="text-sm text-text-secondary">Primary payment method</div>
                     </div>
                   </div>
                   <button className="text-text-link hover:text-text-link text-sm font-medium">
@@ -299,35 +295,35 @@ const UserProfile = () => {
 
               {/* Sample payment history - in real app, this would come from API */}
               <div className="space-y-3">
-                <div className="border border-gray-200 rounded-lg p-4">
+                <div className="border border-border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <div className="font-medium">Sunshine Student Residences</div>
-                      <div className="text-sm text-gray-600">Room Booking</div>
+                      <div className="text-sm text-text-secondary">Room Booking</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">$350.00</div>
-                      <div className="text-sm text-green-600">Paid</div>
+                      <div className="text-lg font-bold text-success">$350.00</div>
+                      <div className="text-sm text-success">Paid</div>
                     </div>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-text-secondary">
                     <Calendar className="w-4 h-4 mr-2" />
                     <span>January 15, 2026 at 2:30 PM</span>
                   </div>
                 </div>
 
-                <div className="border border-gray-200 rounded-lg p-4">
+                <div className="border border-border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <div className="font-medium">Campus Heights Apartments</div>
-                      <div className="text-sm text-gray-600">Security Deposit</div>
+                      <div className="text-sm text-text-secondary">Security Deposit</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">$200.00</div>
-                      <div className="text-sm text-green-600">Paid</div>
+                      <div className="text-lg font-bold text-success">$200.00</div>
+                      <div className="text-sm text-success">Paid</div>
                     </div>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-text-secondary">
                     <Calendar className="w-4 h-4 mr-2" />
                     <span>January 10, 2026 at 10:15 AM</span>
                   </div>
@@ -351,19 +347,19 @@ const UserProfile = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                <div className="flex items-center justify-between py-3 border-b border-border">
                   <div>
                     <div className="font-medium">Email Notifications</div>
-                    <div className="text-sm text-gray-600">Receive booking updates via email</div>
+                    <div className="text-sm text-text-secondary">Receive booking updates via email</div>
                   </div>
                   <button className="bg-btn-primary text-text-inverse px-3 py-1 rounded-full text-sm">
                     Enabled
                   </button>
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                <div className="flex items-center justify-between py-3 border-b border-border">
                   <div>
                     <div className="font-medium">SMS Notifications</div>
-                    <div className="text-sm text-gray-600">Get SMS alerts for new messages</div>
+                    <div className="text-sm text-text-secondary">Get SMS alerts for new messages</div>
                   </div>
                   <button className="bg-btn-secondary text-btn-secondary-text px-3 py-1 rounded-full text-sm">
                     Disabled
@@ -372,7 +368,7 @@ const UserProfile = () => {
                 <div className="flex items-center justify-between py-3">
                   <div>
                     <div className="font-medium">Two-Factor Authentication</div>
-                    <div className="text-sm text-gray-600">Extra security for your account</div>
+                    <div className="text-sm text-text-secondary">Extra security for your account</div>
                   </div>
                   <button className="bg-btn-primary text-text-inverse px-3 py-1 rounded-full text-sm">
                     Enable
@@ -385,12 +381,12 @@ const UserProfile = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Privacy Settings</h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                <div className="flex items-center justify-between py-3 border-b border-border">
                   <div>
                     <div className="font-medium">Profile Visibility</div>
-                    <div className="text-sm text-gray-600">Control who can see your profile</div>
+                    <div className="text-sm text-text-secondary">Control who can see your profile</div>
                   </div>
-                  <select className="border border-gray-300 rounded-lg px-3 py-2">
+                  <select className="border border-border rounded-lg px-3 py-2">
                     <option>Everyone</option>
                     <option>Only Landlords</option>
                     <option>Private</option>
@@ -399,7 +395,7 @@ const UserProfile = () => {
                 <div className="flex items-center justify-between py-3">
                   <div>
                     <div className="font-medium">Data Sharing</div>
-                    <div className="text-sm text-gray-600">Share data with university partners</div>
+                    <div className="text-sm text-text-secondary">Share data with university partners</div>
                   </div>
                   <button className="bg-btn-secondary text-btn-secondary-text px-3 py-1 rounded-full text-sm">
                     Disabled
@@ -409,15 +405,15 @@ const UserProfile = () => {
             </div>
 
             {/* Danger Zone */}
-            <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4 text-red-800">Danger Zone</h3>
+            <div className="bg-error/10 border border-error/30 rounded-xl p-6">
+              <h3 className="text-lg font-semibold mb-4 text-error">Danger Zone</h3>
               <div className="space-y-3">
                 <button className="w-full text-left bg-btn-secondary border border-btn-danger text-btn-danger py-3 px-4 rounded-lg hover:bg-btn-danger/10 transition-colors">
                   <div className="flex items-center">
                     <Download className="w-4 h-4 mr-3" />
                     <div>
                       <div className="font-medium">Download My Data</div>
-                      <div className="text-sm text-red-600">Get a copy of all your data</div>
+                      <div className="text-sm text-error">Get a copy of all your data</div>
                     </div>
                   </div>
                 </button>
@@ -426,7 +422,7 @@ const UserProfile = () => {
                     <XCircle className="w-4 h-4 mr-3" />
                     <div>
                       <div className="font-medium">Delete Account</div>
-                      <div className="text-sm text-red-600">Permanently remove your account</div>
+                      <div className="text-sm text-error">Permanently remove your account</div>
                     </div>
                   </div>
                 </button>
@@ -441,23 +437,23 @@ const UserProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-surface-alt">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+            <h1 className="text-2xl font-bold text-text-primary">My Profile</h1>
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate('/listings')}
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-text-secondary hover:text-text-primary transition-colors"
               >
                 Browse Properties
               </button>
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                  className="flex items-center text-text-secondary hover:text-text-primary transition-colors"
                 >
                   <User className="w-5 h-5" />
                   <ChevronRight className="w-4 h-4 ml-1" />
@@ -470,7 +466,7 @@ const UserProfile = () => {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+                      className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-border z-50"
                     >
                       <div className="py-2">
                         <button
@@ -478,9 +474,9 @@ const UserProfile = () => {
                             navigate('/premium-features');
                             setShowDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                          className="w-full text-left px-4 py-2 text-text-secondary hover:bg-bg-surface-alt transition-colors flex items-center"
                         >
-                          <Crown className="w-4 h-4 mr-3 text-yellow-500" />
+                          <Crown className="w-4 h-4 mr-3 text-brand-accent" />
                           Premium Features
                         </button>
                         <button
@@ -488,7 +484,7 @@ const UserProfile = () => {
                             navigate('/bookings');
                             setShowDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                          className="w-full text-left px-4 py-2 text-text-secondary hover:bg-bg-surface-alt transition-colors flex items-center"
                         >
                           <Calendar className="w-4 h-4 mr-3" />
                           My Bookings
@@ -498,7 +494,7 @@ const UserProfile = () => {
                             navigate('/favorites');
                             setShowDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                          className="w-full text-left px-4 py-2 text-text-secondary hover:bg-bg-surface-alt transition-colors flex items-center"
                         >
                           <Heart className="w-4 h-4 mr-3" />
                           My Favorites
@@ -506,7 +502,7 @@ const UserProfile = () => {
                         <hr className="my-2" />
                         <button
                           onClick={handleSignOut}
-                          className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors flex items-center"
+                          className="w-full text-left px-4 py-2 text-error hover:bg-error/10 transition-colors flex items-center"
                         >
                           <LogOut className="w-4 h-4 mr-3" />
                           Sign Out
@@ -525,16 +521,12 @@ const UserProfile = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Tab Navigation */}
         <div className="bg-white rounded-xl shadow-sm mb-6">
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-border">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-4 px-6 text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 border-b-2 border-transparent hover:text-gray-900'
-                }`}
+                className={`flex-1 py-4 px-6 text-sm font-medium transition-colors ${ activeTab === tab.id ? 'text-brand-primaryDark border-b-2 border-brand-primaryDark' : 'text-text-secondary border-b-2 border-transparent hover:text-text-primary' }`}
               >
                 <div className="flex items-center justify-center">
                   {tab.icon}

@@ -7,7 +7,6 @@ import { fetchAccommodations } from '../utils/api';
 import { universityApi, campusApi, imageUrl } from '../services/api';
 import { LABELS } from '../lib/amenityIcons';
 import { useNavigation } from '../App';
-import '../styles/brand-colors.css';
 
 // Map an API accommodation into the shape the featured slider renders.
 const toFeatured = (p) => ({
@@ -140,7 +139,7 @@ export default function Home() {
               >
                 <h1 className="text-5xl md:text-6xl font-bold text-text-primary mb-6">
                   Find Your Perfect
-                  <span className="block bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
+                  <span className="block text-brand-primaryDark">
                     Student Home
                   </span>
                 </h1>
@@ -230,7 +229,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <div key={index} className="bg-bg-surface rounded-xl p-6 text-center shadow-card hover:shadow-lg transition">
-                <div className="text-3xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent mb-2">
+                <div className="text-3xl font-bold text-brand-primaryDark mb-2">
                   {stat.value}
                 </div>
                 <div className="text-text-secondary text-sm">{stat.label}</div>

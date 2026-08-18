@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { motion } from 'framer-motion';
-import '../styles/brand-colors.css';
 
 export default function Contacts() {
   const handleSubmit = (e) => {
@@ -80,23 +79,23 @@ export default function Contacts() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-12 h-12 bg-brand-primary/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Mail className="h-6 w-6 text-brand-primaryDark" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Email</h3>
-                    <p className="text-gray-600 dark:text-gray-300">info@bluestrike.co.zw</p>
-                    <p className="text-gray-600 dark:text-gray-300">sales@bluestrike.co.zw</p>
+                    <h3 className="font-semibold text-text-primary mb-1">Email</h3>
+                    <p className="text-text-secondary">info@bluestrike.co.zw</p>
+                    <p className="text-text-secondary">sales@bluestrike.co.zw</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-12 h-12 bg-brand-primary/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MapPin className="h-6 w-6 text-brand-primaryDark" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Office Location</h3>
-                    <p className="text-gray-600 dark:text-gray-300">
+                    <h3 className="font-semibold text-text-primary mb-1">Office Location</h3>
+                    <p className="text-text-secondary">
                       Bluestrike Investments Ltd<br />
                       123 Samora Machel Avenue<br />
                       Harare, Zimbabwe<br />
@@ -106,14 +105,14 @@ export default function Contacts() {
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-12 h-12 bg-brand-primary/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock className="h-6 w-6 text-brand-primaryDark" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Business Hours</h3>
-                    <p className="text-gray-600 dark:text-gray-300">Monday - Friday: 8:00 AM - 6:00 PM</p>
-                    <p className="text-gray-600 dark:text-gray-300">Saturday: 9:00 AM - 2:00 PM</p>
-                    <p className="text-gray-600 dark:text-gray-300">Sunday: Closed</p>
+                    <h3 className="font-semibold text-text-primary mb-1">Business Hours</h3>
+                    <p className="text-text-secondary">Monday - Friday: 8:00 AM - 6:00 PM</p>
+                    <p className="text-text-secondary">Saturday: 9:00 AM - 2:00 PM</p>
+                    <p className="text-text-secondary">Sunday: Closed</p>
                   </div>
                 </div>
               </CardContent>

@@ -216,7 +216,7 @@ export default function ListPropertyPage() {
           </div>
         </div>
 
-        <div className="mb-5 grid grid-cols-3 gap-2.5 sm:gap-3.5">
+        <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3.5">
           <div>
             <label className={label}>Rent (USD/mo)</label>
             <div className="relative">

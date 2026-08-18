@@ -64,12 +64,12 @@ const MessagesSection = ({ hasPremiumAccess }) => {
   if (!hasPremiumAccess) {
     return (
       <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-        <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <Lock className="w-12 h-12 text-text-muted mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
-        <p className="text-gray-600 mb-4">
+        <p className="text-text-secondary mb-4">
           Message landlords directly to get quick responses and negotiate better deals.
         </p>
-        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+        <button className="bg-brand-primaryDark text-white px-6 py-2 rounded-lg hover:bg-brand-primary transition-colors">
           Upgrade to Premium
         </button>
       </div>
@@ -79,7 +79,7 @@ const MessagesSection = ({ hasPremiumAccess }) => {
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primaryDark mx-auto"></div>
       </div>
     );
   }
@@ -102,21 +102,19 @@ const MessagesSection = ({ hasPremiumAccess }) => {
                 <button
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation)}
-                  className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
-                    selectedConversation?.id === conversation.id ? 'bg-blue-50' : ''
-                  }`}
+                  className={`w-full p-4 text-left hover:bg-bg-surface-alt transition-colors ${ selectedConversation?.id === conversation.id ? 'bg-brand-primary/10' : '' }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-gray-600" />
+                    <div className="w-10 h-10 bg-bg-surface-alt rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-text-secondary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium truncate">{conversation.landlordName}</h4>
-                      <p className="text-sm text-gray-600 truncate">{conversation.lastMessage}</p>
-                      <p className="text-xs text-gray-500">{conversation.timestamp}</p>
+                      <p className="text-sm text-text-secondary truncate">{conversation.lastMessage}</p>
+                      <p className="text-xs text-text-muted">{conversation.timestamp}</p>
                     </div>
                     {conversation.unreadCount > 0 && (
-                      <span className="bg-blue-600 text-white text-xs rounded-full px-2 py-1">
+                      <span className="bg-brand-primaryDark text-white text-xs rounded-full px-2 py-1">
                         {conversation.unreadCount}
                       </span>
                     )}
@@ -125,8 +123,8 @@ const MessagesSection = ({ hasPremiumAccess }) => {
               ))}
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-500">
-              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <div className="p-8 text-center text-text-muted">
+              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-text-muted" />
               <p>No conversations yet</p>
               <p className="text-sm">Start chatting with landlords when you make inquiries</p>
             </div>
@@ -140,12 +138,12 @@ const MessagesSection = ({ hasPremiumAccess }) => {
               {/* Chat Header */}
               <div className="border-b p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-gray-600" />
+                  <div className="w-8 h-8 bg-bg-surface-alt rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-text-secondary" />
                   </div>
                   <div>
                     <h4 className="font-medium">{selectedConversation.landlordName}</h4>
-                    <p className="text-xs text-gray-500">Active now</p>
+                    <p className="text-xs text-text-muted">Active now</p>
                   </div>
                 </div>
               </div>
@@ -160,16 +158,10 @@ const MessagesSection = ({ hasPremiumAccess }) => {
                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-xs px-4 py-2 rounded-lg ${
-                        msg.sender === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
+                      className={`max-w-xs px-4 py-2 rounded-lg ${ msg.sender === 'user' ? 'bg-brand-primaryDark text-white' : 'bg-bg-surface-alt text-text-primary' }`}
                     >
                       <p className="text-sm">{msg.message}</p>
-                      <p className={`text-xs mt-1 ${
-                        msg.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
-                      }`}>
+                      <p className={`text-xs mt-1 ${ msg.sender === 'user' ? 'text-white/80' : 'text-text-muted' }`}>
                         {msg.timestamp}
                       </p>
                     </div>
@@ -190,7 +182,7 @@ const MessagesSection = ({ hasPremiumAccess }) => {
                   />
                   <button
                     onClick={sendMessage}
-                    className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    className="bg-brand-primaryDark text-white p-2 rounded-lg hover:bg-brand-primary transition-colors"
                   >
                     <Send className="w-5 h-5" />
                   </button>
@@ -198,9 +190,9 @@ const MessagesSection = ({ hasPremiumAccess }) => {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="flex-1 flex items-center justify-center text-text-muted">
               <div className="text-center">
-                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-text-muted" />
                 <p>Select a conversation to start messaging</p>
               </div>
             </div>

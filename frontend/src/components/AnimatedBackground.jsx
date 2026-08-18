@@ -130,14 +130,14 @@ export default function AnimatedBackground({ variant = 'default', children }) {
       case 'morphing':
         return (
           <>
-            {/* Morphing gradient blobs */}
+            {/* Morphing gradient blobs — brand palette only (sky blue + gold) */}
             <motion.div
               animate={{
                 background: [
-                  'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.4) 0%, transparent 50%)',
-                  'radial-gradient(circle at 80% 50%, rgba(147, 51, 234, 0.4) 0%, transparent 50%)',
-                  'radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.4) 0%, transparent 50%)',
-                  'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.4) 0%, transparent 50%)',
+                  'radial-gradient(circle at 20% 50%, rgba(77, 182, 226, 0.35) 0%, transparent 50%)',
+                  'radial-gradient(circle at 80% 50%, rgba(47, 143, 184, 0.35) 0%, transparent 50%)',
+                  'radial-gradient(circle at 50% 80%, rgba(244, 196, 48, 0.25) 0%, transparent 50%)',
+                  'radial-gradient(circle at 20% 50%, rgba(77, 182, 226, 0.35) 0%, transparent 50%)',
                 ],
                 scale: [1, 1.2, 1.1, 1],
               }}
@@ -148,10 +148,10 @@ export default function AnimatedBackground({ variant = 'default', children }) {
             <motion.div
               animate={{
                 background: [
-                  'radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.3) 0%, transparent 50%)',
-                  'radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%)',
-                  'radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.3) 0%, transparent 50%)',
-                  'radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.3) 0%, transparent 50%)',
+                  'radial-gradient(circle at 80% 20%, rgba(244, 196, 48, 0.2) 0%, transparent 50%)',
+                  'radial-gradient(circle at 20% 80%, rgba(77, 182, 226, 0.25) 0%, transparent 50%)',
+                  'radial-gradient(circle at 50% 20%, rgba(47, 143, 184, 0.25) 0%, transparent 50%)',
+                  'radial-gradient(circle at 80% 20%, rgba(244, 196, 48, 0.2) 0%, transparent 50%)',
                 ],
                 scale: [1, 1.1, 1.2, 1],
               }}
@@ -162,10 +162,10 @@ export default function AnimatedBackground({ variant = 'default', children }) {
             <motion.div
               animate={{
                 background: [
-                  'radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.25) 0%, transparent 50%)',
-                  'radial-gradient(circle at 30% 70%, rgba(245, 158, 11, 0.25) 0%, transparent 50%)',
-                  'radial-gradient(circle at 70% 30%, rgba(139, 92, 246, 0.25) 0%, transparent 50%)',
-                  'radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.25) 0%, transparent 50%)',
+                  'radial-gradient(circle at 50% 50%, rgba(47, 143, 184, 0.2) 0%, transparent 50%)',
+                  'radial-gradient(circle at 30% 70%, rgba(244, 196, 48, 0.18) 0%, transparent 50%)',
+                  'radial-gradient(circle at 70% 30%, rgba(77, 182, 226, 0.2) 0%, transparent 50%)',
+                  'radial-gradient(circle at 50% 50%, rgba(47, 143, 184, 0.2) 0%, transparent 50%)',
                 ],
                 rotate: [0, 180, 360],
               }}
@@ -173,13 +173,13 @@ export default function AnimatedBackground({ variant = 'default', children }) {
               style={{ scale }}
               className="absolute top-0 left-0 w-full h-full dark:opacity-40"
             />
-            {/* Animated mesh gradient overlay */}
+            {/* Mesh gradient overlay, brand tint only */}
             <motion.div
               animate={{
                 opacity: [0.3, 0.5, 0.3],
               }}
               transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute inset-0 bg-gradient-to-br from-blue-400/10 via-purple-400/10 to-pink-400/10 dark:from-blue-600/5 dark:via-purple-600/5 dark:to-pink-600/5"
+              className="absolute inset-0 bg-gradient-to-br from-brand-primary/10 via-brand-primaryDark/5 to-brand-accent/10 dark:from-brand-primary/5 dark:via-brand-primaryDark/5 dark:to-brand-accent/5"
             />
           </>
         );
@@ -190,7 +190,7 @@ export default function AnimatedBackground({ variant = 'default', children }) {
             {/* Animated geometric shapes */}
             <motion.div
               style={{ rotate, y: y1 }}
-              className="absolute top-20 left-20 w-64 h-64 border-4 border-blue-400/30 dark:border-blue-600/20 rounded-3xl"
+              className="absolute top-20 left-20 w-64 h-64 border-4 border-blue-400/30 dark:border-brand-primaryDark/20 rounded-3xl"
             />
             <motion.div
               style={{ rotate: useTransform(scrollYProgress, [0, 1], [360, 0]), y: y2 }}
@@ -215,7 +215,7 @@ export default function AnimatedBackground({ variant = 'default', children }) {
             />
             <motion.div
               style={{ y: y2, scale }}
-              className="absolute top-1/4 right-0 w-96 h-96 bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl"
+              className="absolute top-1/4 right-0 w-96 h-96 bg-blue-400/20 dark:bg-brand-primaryDark/10 rounded-full blur-3xl"
             />
             <motion.div
               style={{ rotate }}

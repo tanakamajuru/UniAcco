@@ -168,17 +168,17 @@ export default function Portfolio() {
 
   const getColorClasses = (color) => {
     const colors = {
-      yellow: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400",
-      blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
-      purple: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+      yellow: "bg-warning/15 dark:bg-yellow-900/30 text-warning dark:text-brand-accent",
+      blue: "bg-brand-primary/15  text-brand-primaryDark",
+      purple: "bg-purple-100 dark:bg-purple-900/30 text-brand-accent dark:text-purple-400"
     };
     return colors[color] || colors.blue;
   };
 
   const getBorderClasses = (color) => {
     const colors = {
-      yellow: "border-yellow-200 dark:border-yellow-800",
-      blue: "border-blue-200 dark:border-blue-800",
+      yellow: "border-warning/30 dark:border-yellow-800",
+      blue: "border-brand-primary/30 dark:border-blue-800",
       purple: "border-purple-200 dark:border-purple-800"
     };
     return colors[color] || colors.blue;
@@ -195,13 +195,13 @@ export default function Portfolio() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold text-text-primary mb-6">
               Empowering Innovation with
-              <span className="block text-blue-600 dark:text-blue-400">
+              <span className="block text-brand-primaryDark">
                 Cutting-Edge Technology
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto mb-8">
+            <p className="text-xl md:text-2xl text-text-secondary max-w-4xl mx-auto mb-8">
               Discover our portfolio of successful projects spanning solar energy, power generation, 
               and custom container solutions across East Africa.
             </p>
@@ -214,39 +214,39 @@ export default function Portfolio() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid md:grid-cols-4 gap-6 mb-16"
           >
-            <Card className="text-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="text-4xl font-bold text-blue-600 dark:text-blue-400">850+</CardTitle>
+                <CardTitle className="text-4xl font-bold text-brand-primaryDark">850+</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Projects Delivered</p>
+                <p className="text-sm font-medium text-text-secondary">Projects Delivered</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="text-4xl font-bold text-blue-600 dark:text-blue-400">150MW+</CardTitle>
+                <CardTitle className="text-4xl font-bold text-brand-primaryDark">150MW+</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Solar Capacity Installed</p>
+                <p className="text-sm font-medium text-text-secondary">Solar Capacity Installed</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="text-4xl font-bold text-blue-600 dark:text-blue-400">300+</CardTitle>
+                <CardTitle className="text-4xl font-bold text-brand-primaryDark">300+</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Generators Installed</p>
+                <p className="text-sm font-medium text-text-secondary">Generators Installed</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="text-4xl font-bold text-blue-600 dark:text-blue-400">1500+</CardTitle>
+                <CardTitle className="text-4xl font-bold text-brand-primaryDark">1500+</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Containers Fabricated</p>
+                <p className="text-sm font-medium text-text-secondary">Containers Fabricated</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -268,16 +268,16 @@ export default function Portfolio() {
                     <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${getColorClasses(category.color)} mb-4`}>
                       <Icon className="h-8 w-8" />
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
                       {category.title}
                     </h2>
-                    <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    <p className="text-lg text-text-secondary max-w-2xl mx-auto">
                       {category.description}
                     </p>
                   </div>
 
                   {/* Project Images Slider */}
-                  <Card className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 ${getBorderClasses(category.color)} shadow-xl`}>
+                  <Card className={`bg-white/90 backdrop-blur-sm border-2 ${getBorderClasses(category.color)} shadow-xl`}>
                     <CardContent className="p-8">
                       <ImageSlider 
                         images={category.images} 
@@ -292,10 +292,10 @@ export default function Portfolio() {
                     {Object.entries(category.stats).map(([key, value], statIndex) => (
                       <Card key={key} className={`text-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border ${getBorderClasses(category.color)}`}>
                         <CardContent className="p-6">
-                          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                          <div className="text-2xl font-bold text-text-primary mb-2">
                             {value}
                           </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-300 capitalize">
+                          <div className="text-sm text-text-secondary capitalize">
                             {key.replace(/([A-Z])/g, ' $1').trim()}
                           </div>
                         </CardContent>
@@ -315,10 +315,10 @@ export default function Portfolio() {
             className="mt-20"
           >
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
                 Why Choose BlueStrike?
               </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              <p className="text-lg text-text-secondary max-w-2xl mx-auto">
                 Our commitment to excellence and innovation sets us apart in the industry
               </p>
             </div>
@@ -333,15 +333,15 @@ export default function Portfolio() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 1 + index * 0.1 }}
                   >
-                    <Card className="text-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow h-full">
+                    <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow h-full">
                       <CardContent className="p-8">
-                        <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                          <Icon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                        <div className="w-16 h-16 bg-brand-primary/15 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                          <Icon className="h-8 w-8 text-brand-primaryDark" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                        <h3 className="text-xl font-bold text-text-primary mb-4">
                           {achievement.title}
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-300">
+                        <p className="text-text-secondary">
                           {achievement.description}
                         </p>
                       </CardContent>

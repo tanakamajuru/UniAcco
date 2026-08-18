@@ -73,23 +73,23 @@ const PaymentReturn = () => {
       case 'loading':
         return (
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-700">Verifying Payment...</h2>
-            <p className="text-gray-600">Please wait while we confirm your payment.</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primaryDark mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-text-secondary">Verifying Payment...</h2>
+            <p className="text-text-secondary">Please wait while we confirm your payment.</p>
           </div>
         );
 
       case 'success':
         return (
           <div className="text-center">
-            <div className="text-green-600 text-6xl mb-4">✓</div>
-            <h2 className="text-2xl font-bold text-green-600 mb-2">Payment Successful!</h2>
-            <p className="text-gray-600 mb-6">{message}</p>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-green-800">
+            <div className="text-success text-6xl mb-4">✓</div>
+            <h2 className="text-2xl font-bold text-success mb-2">Payment Successful!</h2>
+            <p className="text-text-secondary mb-6">{message}</p>
+            <div className="bg-success/10 border border-success/30 rounded-lg p-4 mb-6">
+              <p className="text-sm text-success">
                 <strong>Reference:</strong> {reference}
               </p>
-              <p className="text-xs text-green-600 mt-2">
+              <p className="text-xs text-success mt-2">
                 You will receive a confirmation email shortly.
               </p>
             </div>
@@ -113,14 +113,14 @@ const PaymentReturn = () => {
       case 'pending':
         return (
           <div className="text-center">
-            <div className="animate-pulse text-blue-600 text-6xl mb-4">⏳</div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">Payment Processing</h2>
-            <p className="text-gray-600 mb-6">{message}</p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
+            <div className="animate-pulse text-brand-primaryDark text-6xl mb-4">⏳</div>
+            <h2 className="text-xl font-semibold text-text-secondary mb-2">Payment Processing</h2>
+            <p className="text-text-secondary mb-6">{message}</p>
+            <div className="bg-brand-primary/10 border border-brand-primary/30 rounded-lg p-4 mb-6">
+              <p className="text-sm text-brand-primaryDark">
                 <strong>Reference:</strong> {reference}
               </p>
-              <p className="text-xs text-blue-600 mt-2">
+              <p className="text-xs text-brand-primaryDark mt-2">
                 This page will automatically update when payment is confirmed.
               </p>
             </div>
@@ -144,14 +144,14 @@ const PaymentReturn = () => {
       case 'error':
         return (
           <div className="text-center">
-            <div className="text-red-600 text-6xl mb-4">✕</div>
-            <h2 className="text-2xl font-bold text-red-600 mb-2">Payment Failed</h2>
-            <p className="text-gray-600 mb-6">{message}</p>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-red-800">
+            <div className="text-error text-6xl mb-4">✕</div>
+            <h2 className="text-2xl font-bold text-error mb-2">Payment Failed</h2>
+            <p className="text-text-secondary mb-6">{message}</p>
+            <div className="bg-error/10 border border-error/30 rounded-lg p-4 mb-6">
+              <p className="text-sm text-error">
                 <strong>Reference:</strong> {reference}
               </p>
-              <p className="text-xs text-red-600 mt-2">
+              <p className="text-xs text-error mt-2">
                 If you believe this is an error, please contact support.
               </p>
             </div>
@@ -178,10 +178,10 @@ const PaymentReturn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-bg-surface-alt py-12 px-4">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Payment Status</h1>
+          <h1 className="text-2xl font-bold text-text-primary">Payment Status</h1>
         </div>
         {renderContent()}
       </div>
