@@ -122,7 +122,7 @@ export default function HostDashboard() {
         </div>
         <button
           onClick={() => navigate('list-your-property')}
-          className="flex items-center gap-2 rounded-[13px] bg-brand-primaryDark px-5 py-3 text-[15px] font-bold text-white shadow-md"
+          className="flex items-center gap-2 rounded-[13px] bg-brand-primary px-5 py-3 text-[15px] font-bold text-white shadow-md"
         >
           <Plus className="h-4 w-4" /> List a new place
         </button>
@@ -252,7 +252,7 @@ export default function HostDashboard() {
                   <div className="mt-2 flex gap-2">
                     <button
                       onClick={() => decide(a.application.id, 'accepted')}
-                      className="flex-1 rounded-[9px] bg-brand-primaryDark py-2.5 text-[13px] font-bold text-white"
+                      className="flex-1 rounded-[9px] bg-brand-primary py-2.5 text-[13px] font-bold text-white"
                     >
                       Accept
                     </button>

@@ -86,7 +86,7 @@ export default function Messages() {
           </p>
           <button
             onClick={() => navigate('listings')}
-            className="rounded-xl bg-brand-primaryDark px-5 py-2.5 text-sm font-bold text-white"
+            className="rounded-xl bg-brand-primary px-5 py-2.5 text-sm font-bold text-white"
           >
             Browse homes
           </button>
@@ -175,7 +175,7 @@ export default function Messages() {
               <button
                 onClick={send}
                 disabled={sending}
-                className="flex items-center gap-1.5 rounded-xl bg-brand-primaryDark px-5 text-sm font-bold text-white disabled:opacity-60"
+                className="flex items-center gap-1.5 rounded-xl bg-brand-primary px-5 text-sm font-bold text-white disabled:opacity-60"
               >
                 <Send className="h-4 w-4" /> Send
               </button>

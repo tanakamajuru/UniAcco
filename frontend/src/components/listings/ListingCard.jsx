@@ -2,20 +2,8 @@ import { Heart, Star, Lock, Unlock } from 'lucide-react';
 import { imageUrl } from '../../services/api';
 import { ACCESS_FEE_LABEL } from '../../lib/fees';
 
-const GRADIENTS = [
-  'linear-gradient(135deg,#bcd6e8,#7da9c8)',
-  'linear-gradient(135deg,#c7dac9,#90b39a)',
-  'linear-gradient(135deg,#d6cebc,#b09b78)',
-  'linear-gradient(135deg,#c2cfe0,#94abc8)',
-  'linear-gradient(135deg,#cdd9c6,#9bb592)',
-  'linear-gradient(135deg,#d9d2c4,#b3a187)',
-];
-
-export const gradientFor = (id) => {
-  let h = 0;
-  for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % GRADIENTS.length;
-  return GRADIENTS[h];
-};
+// Brand green gradient used as the photo placeholder across the app.
+export const gradientFor = () => 'linear-gradient(135deg,#2F8FB8,#276E8C)';
 
 export const formatAvailable = (date) => {
   if (!date) return 'Available now';
@@ -32,12 +20,10 @@ export default function ListingCard({ acc, saved, onOpen, onToggleSave, onHover 
     <article
       onClick={() => onOpen?.(acc)}
       onMouseEnter={() => onHover?.(acc)}
-      className="group cursor-pointer overflow-hidden rounded-[18px] border border-border bg-bg-surface shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(47,143,184,0.14)]"
+      className="group cursor-pointer overflow-hidden rounded-2xl border border-border bg-bg-surface shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(47,143,184,0.14)]"
     >
-      <div className="relative h-[180px]" style={{ background: gradientFor(acc.id) }}>
-        {photo && (
-          <img src={photo} alt={acc.title} className="h-full w-full object-cover" loading="lazy" />
-        )}
+      <div className="relative h-40" style={{ background: gradientFor(acc.id) }}>
+        {photo && <img src={photo} alt={acc.title} className="h-full w-full object-cover" loading="lazy" />}
         {onToggleSave && (
           <button
             onClick={(e) => {
@@ -54,58 +40,44 @@ export default function ListingCard({ acc, saved, onOpen, onToggleSave, onHover 
           </button>
         )}
         {acc.walk_minutes != null && (
-          <span className="absolute bottom-3 left-3 rounded-lg bg-[rgba(15,23,42,0.8)] px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+          <span className="font-num absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] text-white">
             {acc.walk_minutes} min walk to campus
           </span>
         )}
       </div>
 
-      <div className="px-4 pb-4 pt-3.5">
-        <div className="flex items-center justify-between gap-2">
-          <span className="whitespace-nowrap text-[11.5px] font-bold uppercase tracking-wide text-brand-primaryDark">
+      <div className="p-4">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="font-num whitespace-nowrap text-[10px] uppercase tracking-wide text-brand-primary">
             {acc.type}
           </span>
-          <span className="flex items-center gap-1 text-[13px] font-bold text-text-primary">
-            <Star className="h-3.5 w-3.5 fill-brand-accent text-brand-accent" />
+          <span className="flex items-center gap-1 text-xs font-bold text-brand-accent">
+            <Star className="h-3 w-3 fill-current" />
             {acc.rating ? acc.rating.toFixed(1) : 'New'}
           </span>
         </div>
-        <h3 className="font-display mb-0.5 mt-1.5 text-[17px] font-bold tracking-tight text-text-primary">
-          {acc.title}
-        </h3>
-        <p className="mb-3 text-[13px] text-text-secondary">
+        <h3 className="mb-1 text-sm font-bold text-text-primary">{acc.title}</h3>
+        <p className="mb-3 text-xs text-text-secondary">
           {acc.suburb} · {acc.university?.short || acc.city}
         </p>
-        <div className="flex items-center gap-2.5 text-[13px] font-semibold text-text-secondary">
-          <span>{acc.bedrooms} bed</span>
-          <span className="text-border-strong">·</span>
-          <span>{acc.people_per_room}/room</span>
-          <span className="text-border-strong">·</span>
-          <span>{acc.bathrooms} bath</span>
+
+        <div
+          className={`mb-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold ${
+            unlocked
+              ? 'bg-success/15 text-success'
+              : 'bg-brand-accent/20 text-[#8A5A12] dark:text-brand-accentSoft'
+          }`}
+        >
+          {unlocked ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+          {unlocked ? 'Full access unlocked' : `Contact locked · ${ACCESS_FEE_LABEL} to unlock`}
         </div>
 
-        <div className="mt-2.5">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11.5px] font-bold"
-            style={
-              unlocked
-                ? { background: '#E8F7EE', color: '#15803D' }
-                : { background: '#FFF7E6', color: '#92660B' }
-            }
-          >
-            {unlocked ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-            {unlocked ? 'Full access unlocked' : `Contact locked · ${ACCESS_FEE_LABEL} to unlock`}
+        <div className="flex items-baseline justify-between border-t border-border pt-3">
+          <span className="text-lg font-extrabold text-text-primary">
+            ${acc.price_per_month}
+            <span className="text-xs font-medium text-text-secondary">/mo</span>
           </span>
-        </div>
-
-        <div className="mt-3 flex items-baseline justify-between border-t border-border pt-3">
-          <span>
-            <span className="font-display text-[20px] font-extrabold text-text-primary">
-              ${acc.price_per_month}
-            </span>
-            <span className="text-[13px] font-semibold text-text-secondary">/mo</span>
-          </span>
-          <span className="text-xs text-text-secondary">{formatAvailable(acc.available_from)}</span>
+          <span className="font-num text-[11px] text-text-muted">{formatAvailable(acc.available_from)}</span>
         </div>
       </div>
     </article>

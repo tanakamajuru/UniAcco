@@ -15,9 +15,9 @@ import {
   Compass,
   HelpCircle,
   ShieldCheck,
+  Home as HomeIcon,
 } from 'lucide-react';
 import { authApi, threadApi } from '../services/api';
-import logo from '../assets/logo.png';
 
 const initialsOf = (name) =>
   (name || '?')
@@ -134,24 +134,24 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 px-3 pt-3 sm:px-6">
-      <div className="mx-auto max-w-[1280px]">
+      <div className="mx-auto max-w-[1180px]">
         {/* The brand bar — solid primary with a gold accent underline */}
         <nav className="rounded-2xl border-b-[3px] border-brand-accent bg-brand-primaryDark shadow-lg">
-          <div className="flex items-center gap-5 px-3.5 py-2.5 sm:px-5 sm:py-3">
+          <div className="flex items-center gap-4 px-4 py-3 sm:gap-9">
             {/* Logo */}
             <button
               onClick={() => go(isHost ? 'host-dashboard' : 'home')}
               className="flex flex-shrink-0 items-center gap-2.5"
               aria-label="UniAcco home"
             >
-              <img src={logo} alt="" className="h-9 w-9 rounded-lg shadow-sm" />
-              <span className="font-display text-[21px] font-extrabold tracking-tight text-white">
-                Uni<span className="text-brand-accent">Acco</span>
+              <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brand-accent">
+                <HomeIcon className="h-4 w-4 text-brand-primaryDark" />
               </span>
+              <span className="font-display text-[23px] font-bold tracking-tight text-white">UniAcco</span>
             </button>
 
             {/* Desktop links */}
-            <div className="ml-2 hidden items-center gap-7 md:flex">
+            <div className="hidden items-center gap-6 md:flex">
               {navItems.map((item) => {
                 const active = currentPage === item.page;
                 return (

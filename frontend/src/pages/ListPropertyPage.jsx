@@ -300,7 +300,7 @@ export default function ListPropertyPage() {
         <button
           onClick={() => submit('pending')}
           disabled={loading}
-          className="flex items-center gap-2 rounded-xl bg-brand-primaryDark px-7 py-3 text-[15px] font-bold text-white shadow-md disabled:opacity-60"
+          className="flex items-center gap-2 rounded-xl bg-brand-primary px-7 py-3 text-[15px] font-bold text-white shadow-md disabled:opacity-60"
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           Publish listing →

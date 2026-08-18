@@ -152,7 +152,7 @@ export default function Account() {
               </p>
               <button
                 onClick={() => navigate('listings')}
-                className="rounded-[11px] bg-brand-primaryDark px-5 py-2.5 text-sm font-bold text-white"
+                className="rounded-[11px] bg-brand-primary px-5 py-2.5 text-sm font-bold text-white"
               >
                 Browse homes
               </button>

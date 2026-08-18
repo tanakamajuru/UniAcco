@@ -1,18 +1,17 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, GraduationCap, Loader2, RotateCw } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, GraduationCap, Loader2, RotateCw, MapPin } from 'lucide-react';
 import { useNavigation } from '../App';
 import { accommodationApi, universityApi, favouriteApi, currentRole } from '../services/api';
 import ListingCard from '../components/listings/ListingCard';
 import ListingMap from '../components/listings/ListingMap';
 import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
+import { Card, Chip } from '../components/kit';
 
 const TYPES = [
   { value: 'Ensuite room', label: 'Ensuite' },
   { value: 'Studio flat', label: 'Studio' },
   { value: 'Shared house', label: 'Shared' },
 ];
-
-
 
 export default function Listings() {
   const { navigate } = useNavigation();
@@ -39,17 +38,18 @@ export default function Listings() {
   const activeUni = universities[uniIdx];
 
   useEffect(() => {
-    universityApi.getAll().then((data) => {
-      setUniversities(data);
-      const savedUni = localStorage.getItem('searchUniversity');
-      if (savedUni) {
-        const idx = data.findIndex(u => u.short === savedUni || u.name === savedUni);
-        if (idx !== -1) {
-          setUniIdx(idx);
+    universityApi
+      .getAll()
+      .then((data) => {
+        setUniversities(data);
+        const savedUni = localStorage.getItem('searchUniversity');
+        if (savedUni) {
+          const idx = data.findIndex((u) => u.short === savedUni || u.name === savedUni);
+          if (idx !== -1) setUniIdx(idx);
+          localStorage.removeItem('searchUniversity');
         }
-        localStorage.removeItem('searchUniversity');
-      }
-    }).catch(() => {});
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -73,7 +73,6 @@ export default function Listings() {
       })
       .then((data) => {
         let list = data.results || [];
-        // client-side multi-type filter (API takes a single type)
         if (selectedTypes.length > 1) list = list.filter((a) => selectedTypes.includes(a.type));
         setResults(list);
       })
@@ -82,25 +81,17 @@ export default function Listings() {
   }, [activeUni, maxPrice, search, selectedTypes, selectedAmenities]);
 
   useEffect(() => {
-    const t = setTimeout(load, 250); // debounce search/price/amenities
+    const t = setTimeout(load, 250);
     return () => clearTimeout(t);
   }, [load]);
 
-  const toggleType = (value) =>
-    setSelectedTypes((prev) =>
-      prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]
-    );
-
-  const toggleAmenity = (aid) =>
-    setSelectedAmenities((prev) =>
-      prev.includes(aid) ? prev.filter((a) => a !== aid) : [...prev, aid]
-    );
+  const toggleType = (v) =>
+    setSelectedTypes((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
+  const toggleAmenity = (a) =>
+    setSelectedAmenities((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
 
   const toggleSave = async (acc) => {
-    if (!isStudent || !localStorage.getItem('token')) {
-      navigate('auth');
-      return;
-    }
+    if (!isStudent || !localStorage.getItem('token')) return navigate('auth');
     const isSaved = savedIds.has(acc.id);
     setSavedIds((prev) => {
       const next = new Set(prev);
@@ -112,134 +103,118 @@ export default function Listings() {
       if (isSaved) await favouriteApi.remove(acc.id);
       else await favouriteApi.add(acc.id);
     } catch {
-      load(); // revert on failure
+      load();
     }
   };
 
   const open = (acc) => navigate('property-details', { id: acc.id });
-
   const uniShort = activeUni?.short || 'UZ';
   const gridColsClass =
-    mapMode === 'split'
-      ? 'grid-cols-1 sm:grid-cols-2'
-      : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+    mapMode === 'split' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
 
   return (
-    <div className="ua-fade pt-4">
-      <div className="mx-auto max-w-[1280px] px-6 pb-1 pt-6">
-        <div className="flex flex-wrap items-end justify-between gap-5">
-          <div>
-            <h1 className="font-display text-[32px] font-extrabold tracking-tight text-text-primary">
-              Student homes near <span className="text-brand-primaryDark">{uniShort}</span>
-            </h1>
-            <p className="mt-1 text-[15px] text-text-secondary">
-              {results.length} verified rooms &amp; houses · {activeUni?.city || 'Harare'} · prices in USD/month
-            </p>
-          </div>
-          <div className="flex gap-1 rounded-xl border border-border bg-bg-surface p-1">
-            {['split', 'hidden'].map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setMapMode(mode)}
-                className={`whitespace-nowrap rounded-lg px-3.5 py-1.5 text-[13.5px] font-bold ${
-                  mapMode === mode ? 'bg-brand-primaryDark text-white' : 'text-text-secondary'
-                }`}
-              >
-                {mode === 'split' ? 'Map + list' : 'List'}
-              </button>
-            ))}
-          </div>
+    <div className="ua-fade mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      {/* header */}
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-[32px] font-bold text-text-primary">
+            Student homes near <span className="text-brand-primary">{uniShort}</span>
+          </h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            {results.length} verified rooms &amp; houses · {activeUni?.city || 'Harare'} · prices in USD/month
+          </p>
         </div>
-
-        {/* Filter bar */}
-        <div className="mt-[18px] flex flex-wrap items-center gap-2.5 rounded-2xl border border-border bg-bg-surface p-3 shadow-sm">
-          <div className="flex min-w-[190px] flex-1 items-center gap-2 rounded-[11px] bg-bg-surface-alt px-3 py-2.5">
-            <Search className="h-[17px] w-[17px] text-text-muted" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by property, suburb or street"
-              className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
-            />
-          </div>
-          <button
-            onClick={() => setUniIdx((i) => (universities.length ? (i + 1) % universities.length : 0))}
-            className="flex items-center gap-1.5 rounded-[11px] border border-border bg-bg-surface px-3.5 py-2.5 text-sm font-semibold text-text-secondary cursor-pointer"
-          >
-            <GraduationCap className="h-4 w-4" /> {uniShort}
-          </button>
-          {TYPES.map((t) => (
+        <div className="flex gap-1 rounded-lg bg-bg-surface-alt p-1">
+          {['split', 'hidden'].map((mode) => (
             <button
-              key={t.value}
-              onClick={() => toggleType(t.value)}
-              className={`rounded-[11px] border px-3.5 py-2.5 text-[13.5px] font-semibold transition-colors cursor-pointer ${
-                selectedTypes.includes(t.value)
-                  ? 'border-brand-primaryDark bg-brand-primaryDark text-white'
-                  : 'border-border bg-bg-surface text-text-secondary hover:bg-bg-surface-alt'
+              key={mode}
+              onClick={() => setMapMode(mode)}
+              className={`rounded-md px-3 py-1.5 text-xs font-bold ${
+                mapMode === mode ? 'bg-brand-primaryDark text-white' : 'text-text-secondary'
               }`}
             >
-              {t.label}
+              {mode === 'split' ? 'Map + list' : 'List'}
             </button>
           ))}
-          <div className="h-6 w-px bg-border" />
-          <div className="flex items-center gap-2.5 px-1">
-            <span className="whitespace-nowrap text-[13px] font-semibold text-text-secondary">
-              Max ${maxPrice}
-            </span>
-            <input
-              type="range"
-              min="100"
-              max="500"
-              step="20"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(+e.target.value)}
-              className="w-[110px] accent-brand-primaryDark cursor-pointer"
-            />
-          </div>
-        </div>
-
-        {/* Amenities Filters */}
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-bg-surface p-3 shadow-sm animate-fade-in">
-          <span className="text-[13px] font-bold text-text-secondary px-1 uppercase tracking-wider">Amenities:</span>
-          <div className="flex flex-wrap gap-2">
-            {ALL_AMENITIES.map((aid) => {
-              const active = selectedAmenities.includes(aid);
-              return (
-                <button
-                  key={aid}
-                  onClick={() => toggleAmenity(aid)}
-                  className={`flex items-center gap-1.5 rounded-[11px] border px-3.5 py-2 text-[13px] font-semibold transition-all duration-150 cursor-pointer ${
-                    active
-                      ? 'border-brand-primaryDark bg-brand-primary/10 text-brand-primaryDark ring-1 ring-brand-primaryDark font-bold'
-                      : 'border-border bg-bg-surface text-text-secondary hover:bg-bg-surface-alt'
-                  }`}
-                >
-                  <AmenityIcon id={aid} className="h-3.5 w-3.5" />
-                  {LABELS[aid]}
-                </button>
-              );
-            })}
-          </div>
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-[1280px] items-start gap-[22px] px-6 pb-14 pt-4">
+      {/* search bar */}
+      <Card className="mb-3 flex flex-wrap items-center gap-2.5 p-3.5">
+        <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-lg bg-bg-surface-alt px-3 py-2.5">
+          <Search className="h-4 w-4 text-text-muted" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by property, suburb or street"
+            className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
+          />
+        </div>
+        <div className="flex items-center gap-1.5 rounded-lg bg-bg-surface-alt px-3 py-2.5">
+          <GraduationCap className="h-4 w-4 flex-shrink-0 text-text-muted" />
+          <select
+            value={uniIdx}
+            onChange={(e) => setUniIdx(Number(e.target.value))}
+            className="cursor-pointer bg-transparent text-sm font-semibold text-text-primary outline-none"
+          >
+            {universities.map((u, i) => (
+              <option key={u.id} value={i}>
+                {u.short}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="font-num ml-auto flex items-center gap-2 text-xs font-semibold text-text-secondary">
+          Max ${maxPrice}
+          <input
+            type="range"
+            min={100}
+            max={500}
+            step={20}
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(+e.target.value)}
+            className="w-24 cursor-pointer accent-brand-primaryDark"
+          />
+        </div>
+      </Card>
+
+      {/* type & amenities */}
+      <Card className="mb-6 flex flex-wrap items-center gap-2 p-3.5">
+        <span className="font-display mr-1 text-xs font-bold tracking-wide text-text-secondary">
+          Type &amp; amenities:
+        </span>
+        {TYPES.map((tp) => (
+          <Chip key={tp.value} active={selectedTypes.includes(tp.value)} onClick={() => toggleType(tp.value)}>
+            <GraduationCap className="-mt-0.5 mr-1 inline h-3.5 w-3.5" />
+            {tp.label}
+          </Chip>
+        ))}
+        {ALL_AMENITIES.map((aid) => (
+          <Chip key={aid} active={selectedAmenities.includes(aid)} onClick={() => toggleAmenity(aid)}>
+            <AmenityIcon id={aid} className="-mt-0.5 mr-1 inline h-3.5 w-3.5" />
+            {LABELS[aid]}
+          </Chip>
+        ))}
+      </Card>
+
+      {/* list + map */}
+      <div className="flex items-start gap-5">
         <div className={mapMode === 'split' ? 'min-w-0 flex-1' : 'w-full'}>
           {loading ? (
             <div className="flex justify-center py-24 text-text-secondary">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-border bg-bg-surface py-16 text-center">
+            <Card className="py-16 text-center">
               <p className="font-bold text-text-primary">Couldn't load listings</p>
               <p className="mt-1 text-sm text-text-secondary">{error}</p>
               <button
                 onClick={load}
-                className="mx-auto mt-4 flex items-center gap-2 rounded-xl bg-brand-primaryDark px-4 py-2 text-sm font-semibold text-white"
+                className="mx-auto mt-4 flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white"
               >
                 <RotateCw className="h-4 w-4" /> Retry
               </button>
-            </div>
+            </Card>
           ) : results.length === 0 ? (
             <div className="py-16 text-center text-text-secondary">
               <div className="mb-2 text-4xl">🔍</div>
@@ -263,15 +238,19 @@ export default function Listings() {
         </div>
 
         {mapMode === 'split' && (
-          <div className="hidden w-[42%] flex-shrink-0 lg:block">
-            <div className="sticky top-[100px] h-[calc(100vh-124px)] overflow-hidden rounded-[20px] border border-border shadow-md bg-bg-surface">
-              <ListingMap
-                results={results}
-                selectedId={selectedId}
-                activeUni={activeUni}
-                onSelect={open}
-              />
-            </div>
+          <div className="hidden w-[40%] flex-shrink-0 lg:block">
+            <Card className="sticky top-[100px] h-[calc(100vh-140px)] overflow-hidden p-0">
+              {results.length ? (
+                <ListingMap results={results} selectedId={selectedId} activeUni={activeUni} onSelect={open} />
+              ) : (
+                <div className="flex h-full items-center justify-center text-center text-text-muted">
+                  <div>
+                    <MapPin className="mx-auto mb-2 h-6 w-6" />
+                    <p className="text-xs">Map view · sticky while you scroll</p>
+                  </div>
+                </div>
+              )}
+            </Card>
           </div>
         )}
       </div>

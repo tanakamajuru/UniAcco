@@ -12,6 +12,7 @@ import Account from './pages/Account.jsx';
 import MyListings from './pages/MyListings.jsx';
 import Messages from './pages/Messages.jsx';
 import HostDashboard from './pages/HostDashboard.jsx';
+import MorphBg from './components/MorphBg.jsx';
 import { currentRole } from './services/api';
 
 // URL <-> page mapping
@@ -130,13 +131,16 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-bg-page text-text-primary">
-      <NavigationContext.Provider
-        value={{ currentPage, navigate, selectedId, setSelectedId, role, setRole }}
-      >
-        <Navbar />
-        <main className="w-full">{renderPage()}</main>
-      </NavigationContext.Provider>
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-bg-page text-text-primary">
+      <MorphBg />
+      <div className="relative z-10">
+        <NavigationContext.Provider
+          value={{ currentPage, navigate, selectedId, setSelectedId, role, setRole }}
+        >
+          <Navbar />
+          <main className="w-full">{renderPage()}</main>
+        </NavigationContext.Provider>
+      </div>
     </div>
   );
 }

@@ -410,7 +410,7 @@ export default function ApplyModal({ accommodation, unlocked, onClose, onUnlocke
               )}
               <button
                 onClick={onDone}
-                className="rounded-xl bg-brand-primaryDark px-7 py-3 text-[15px] font-bold text-white"
+                className="rounded-xl bg-brand-primary px-7 py-3 text-[15px] font-bold text-white"
               >
                 View in Messages
               </button>
@@ -429,7 +429,7 @@ export default function ApplyModal({ accommodation, unlocked, onClose, onUnlocke
             </button>
             <button
               onClick={handleNext}
-              className="rounded-xl bg-brand-primaryDark px-7 py-3 text-[15px] font-bold text-white shadow-md"
+              className="rounded-xl bg-brand-primary px-7 py-3 text-[15px] font-bold text-white shadow-md"
             >
               {unlocked
                 ? 'Submit application'
