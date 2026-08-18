@@ -270,6 +270,10 @@ button:focus-visible {
   from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
+@keyframes uaSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
 .ua-fade { animation: uaFade 0.4s ease both; }
 .ua-pop { animation: uaPop 0.3s ease both; }
 .font-display { font-family: 'Sora', 'Plus Jakarta Sans', system-ui, sans-serif; }

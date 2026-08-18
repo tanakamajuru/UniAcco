@@ -112,7 +112,7 @@ export default function HostDashboard() {
     : [];
 
   return (
-    <div className="ua-fade mx-auto max-w-[1180px] px-6 pb-[70px] pt-[100px]">
+    <div className="ua-fade mx-auto max-w-[1180px] px-4 pb-[70px] pt-6 sm:px-6">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3.5">
         <div>
           <h1 className="font-display text-[29px] font-extrabold tracking-tight text-text-primary">

@@ -62,7 +62,7 @@ export default function Account() {
   ];
 
   return (
-    <div className="ua-fade mx-auto max-w-[1080px] px-6 pb-[70px] pt-[100px]">
+    <div className="ua-fade mx-auto max-w-[1080px] px-4 pb-[70px] pt-6 sm:px-6">
       <div className="flex flex-wrap items-start gap-7">
         {/* profile card */}
         <div className="w-full flex-shrink-0 rounded-[20px] border border-border bg-bg-surface p-6 shadow-sm md:w-[290px]">

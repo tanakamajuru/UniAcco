@@ -102,7 +102,7 @@ export default function ListPropertyPage() {
   const label = 'mb-1.5 block text-sm font-bold text-text-primary';
 
   return (
-    <div className="ua-fade mx-auto max-w-[760px] px-6 pb-20 pt-[100px]">
+    <div className="ua-fade mx-auto max-w-[760px] px-4 pb-20 pt-6 sm:px-6">
       <button
         onClick={() => navigate('host-dashboard')}
         className="mb-2.5 flex items-center gap-1.5 py-1.5 text-sm font-semibold text-text-secondary"

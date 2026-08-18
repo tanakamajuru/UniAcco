@@ -133,7 +133,7 @@ export default function PropertyDetails() {
   const applyLabel = unlocked ? 'Apply now' : `Pay ${ACCESS_FEE_LABEL} to unlock & apply`;
 
   return (
-    <div className="ua-fade mx-auto max-w-[1080px] px-6 pb-20 pt-[92px]">
+    <div className="ua-fade mx-auto max-w-[1080px] px-4 pb-20 pt-6 sm:px-6">
       <button
         onClick={() => navigate('listings')}
         className="mb-3 flex items-center gap-1.5 py-1.5 text-sm font-semibold text-text-secondary"

@@ -125,7 +125,7 @@ export default function Listings() {
       : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
 
   return (
-    <div className="ua-fade pt-[78px]">
+    <div className="ua-fade pt-4">
       <div className="mx-auto max-w-[1280px] px-6 pb-1 pt-6">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div>

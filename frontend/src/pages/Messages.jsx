@@ -75,7 +75,7 @@ export default function Messages() {
   }
 
   return (
-    <div className="ua-fade mx-auto max-w-[1080px] px-6 pb-10 pt-[96px]">
+    <div className="ua-fade mx-auto max-w-[1080px] px-4 pb-10 pt-6 sm:px-6">
       <h1 className="font-display mb-[18px] text-[25px] font-extrabold text-text-primary">Messages</h1>
 
       {threads.length === 0 ? (
