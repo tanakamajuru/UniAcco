@@ -4,6 +4,19 @@ const pool = require('../config/database');
 
 const ACCESS_FEATURE = 'accommodation_details';
 
+// Great-circle distance (km) between two lat/lng points.
+function haversineKm(lat1, lng1, lat2, lng2) {
+  if ([lat1, lng1, lat2, lng2].some((v) => v == null || Number.isNaN(Number(v)))) return null;
+  const R = 6371;
+  const toRad = (d) => (Number(d) * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 /**
  * Returns the set of accommodation ids the given user has unlocked
  * (a paid, non-expired `accommodation_details` payment).
@@ -40,6 +53,8 @@ const ACC_SELECT = `
     a.*,
     u.short  AS uni_short,
     u.name   AS uni_name,
+    u.lat    AS uni_lat,
+    u.lng    AS uni_lng,
     l.full_name AS landlord_name,
     l.phone     AS landlord_phone,
     l.email     AS landlord_email,
@@ -69,6 +84,17 @@ const ACC_SELECT = `
  * @param {boolean} unlocked - whether the caller has paid access (reveals landlord).
  */
 function serializeAccommodation(row, unlocked = false) {
+  const lat = row.lat != null ? Number(row.lat) : null;
+  const lng = row.lng != null ? Number(row.lng) : null;
+  const uniLat = row.uni_lat != null ? Number(row.uni_lat) : null;
+  const uniLng = row.uni_lng != null ? Number(row.uni_lng) : null;
+
+  // Distance from the campus, computed from coordinates (falls back to any
+  // stored walk_minutes when coords are missing). Walking ~12 min per km.
+  const distanceKm = haversineKm(lat, lng, uniLat, uniLng);
+  const walkMinutes =
+    distanceKm != null ? Math.max(1, Math.round(distanceKm * 12)) : row.walk_minutes ?? null;
+
   return {
     id: row.id,
     title: row.title,
@@ -78,15 +104,16 @@ function serializeAccommodation(row, unlocked = false) {
     city: row.city,
     address: unlocked ? row.address : null,
     university: row.university_id
-      ? { id: row.university_id, name: row.uni_name, short: row.uni_short }
+      ? { id: row.university_id, name: row.uni_name, short: row.uni_short, lat: uniLat, lng: uniLng }
       : null,
     price_per_month: Number(row.price_per_month),
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
     people_per_room: row.people_per_room,
-    walk_minutes: row.walk_minutes,
-    lat: row.lat != null ? Number(row.lat) : null,
-    lng: row.lng != null ? Number(row.lng) : null,
+    walk_minutes: walkMinutes,
+    distance_km: distanceKm != null ? Math.round(distanceKm * 10) / 10 : null,
+    lat,
+    lng,
     rating: Number(row.rating) || 0,
     reviews_count: row.reviews_count || 0,
     available_from: row.available_from,

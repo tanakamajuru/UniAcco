@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronDown, Camera, Loader2 } from 'lucide-react';
 import { useNavigation } from '../App';
 import { accommodationApi, universityApi } from '../services/api';
 import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
+import LocationPicker from '../components/LocationPicker';
 
 const STEPS = ['Basics', 'Photos', 'Pricing', 'Review'];
 const TYPES = ['Ensuite room', 'Studio flat', 'Shared house'];
@@ -23,6 +24,7 @@ export default function ListPropertyPage() {
     leaseTerms: 'Per semester or 12 mo',
   });
   const [amenities, setAmenities] = useState(new Set(['wifi']));
+  const [latlng, setLatlng] = useState(null); // { lat, lng } — mandatory pin
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,6 +47,12 @@ export default function ListPropertyPage() {
   const selectedUni = universities.find((u) => u.id === form.universityId);
   const campuses = selectedUni?.campuses || [];
   const selectedCampus = campuses.find((c) => c.id === form.campusId);
+
+  // Red reference pin: campus coords if present, else the university's.
+  const ref =
+    selectedCampus?.lat != null && selectedCampus?.lng != null ? selectedCampus : selectedUni;
+  const campusCenter =
+    ref?.lat != null && ref?.lng != null ? [Number(ref.lat), Number(ref.lng)] : null;
   const toggleAmenity = (id) =>
     setAmenities((prev) => {
       const next = new Set(prev);
@@ -68,6 +76,10 @@ export default function ListPropertyPage() {
       setError('Please add a title and rent.');
       return;
     }
+    if (!latlng) {
+      setError('Please drop a pin on the map to set the property location.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -84,6 +96,8 @@ export default function ListPropertyPage() {
       fd.append('bedrooms', form.bedrooms);
       fd.append('peoplePerRoom', form.peoplePerRoom);
       fd.append('leaseTerms', form.leaseTerms);
+      fd.append('lat', latlng.lat);
+      fd.append('lng', latlng.lng);
       fd.append('status', status);
       fd.append('amenities', JSON.stringify([...amenities]));
       files.forEach((f) => fd.append('images', f));
@@ -200,6 +214,27 @@ export default function ListPropertyPage() {
         <div className="mb-4">
           <label className={label}>Suburb</label>
           <input value={form.suburb} onChange={set('suburb')} className={input} placeholder="Mount Pleasant" />
+        </div>
+
+        <div className="mb-4">
+          <label className={label}>
+            Pin the exact location <span className="text-error">*</span>
+          </label>
+          <p className="mb-2 text-[12.5px] text-text-muted">
+            Click on the map to drop a pin. This sets the distance from campus students see — required.
+          </p>
+          <div className="overflow-hidden rounded-[14px] border border-border">
+            <LocationPicker
+              value={latlng}
+              campus={campusCenter}
+              onChange={(lat, lng) => setLatlng({ lat, lng })}
+            />
+          </div>
+          <p className="mt-1.5 text-[12.5px] font-semibold text-text-secondary">
+            {latlng
+              ? `Pinned at ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`
+              : 'No pin dropped yet.'}
+          </p>
         </div>
 
         <div className="mb-4">

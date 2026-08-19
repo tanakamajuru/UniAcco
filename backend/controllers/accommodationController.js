@@ -10,7 +10,7 @@ const PAGE_SIZE = 12;
 // GET /api/accommodations?university=&type=&maxPrice=&amenities=wifi,kitchen&q=&page=
 exports.list = async (req, res) => {
   try {
-    const { university, type, maxPrice, amenities, q, peoplePerRoom, peoplePerRoomMin } = req.query;
+    const { university, campus, type, maxPrice, amenities, q, peoplePerRoom, peoplePerRoomMin } = req.query;
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 
     const where = [`a.status = 'active'`];
@@ -21,6 +21,11 @@ exports.list = async (req, res) => {
       // accept a university id (uuid) or a short code like "UZ"
       where.push(`(a.university_id::text = $${i} OR u.short ILIKE $${i})`);
       params.push(university);
+      i++;
+    }
+    if (campus) {
+      where.push(`a.campus_id IN (SELECT id FROM campuses WHERE id::text = $${i} OR name ILIKE $${i})`);
+      params.push(campus);
       i++;
     }
     if (type) {
@@ -43,7 +48,7 @@ exports.list = async (req, res) => {
       params.push(Number(maxPrice));
     }
     if (q) {
-      where.push(`(a.title ILIKE $${i} OR a.suburb ILIKE $${i})`);
+      where.push(`(a.title ILIKE $${i} OR a.suburb ILIKE $${i} OR a.city ILIKE $${i} OR u.name ILIKE $${i} OR u.short ILIKE $${i})`);
       params.push(`%${q}%`);
       i++;
     }
@@ -66,7 +71,7 @@ exports.list = async (req, res) => {
 
     const whereSql = `WHERE ${where.join(' AND ')}`;
     const filtered = Boolean(
-      type || maxPrice || q || amenities || university || peoplePerRoom || peoplePerRoomMin
+      type || maxPrice || q || amenities || university || campus || peoplePerRoom || peoplePerRoomMin
     );
     const orderSql = filtered
       ? 'ORDER BY a.created_at DESC, a.price_per_month ASC'
@@ -173,8 +178,15 @@ exports.create = async (req, res) => {
     const b = req.body;
     const title = b.title;
     const pricePerMonth = b.pricePerMonth || b.price_per_month;
+    const lat = b.lat != null && b.lat !== '' ? Number(b.lat) : null;
+    const lng = b.lng != null && b.lng !== '' ? Number(b.lng) : null;
     if (!title || !pricePerMonth) {
       return res.status(400).json({ error: 'title and pricePerMonth are required' });
+    }
+    // Coordinates are mandatory so the property can be placed on the map and its
+    // distance to campus computed.
+    if (lat == null || lng == null || Number.isNaN(lat) || Number.isNaN(lng)) {
+      return res.status(400).json({ error: 'Please drop a pin on the map — location (lat/lng) is required' });
     }
 
     await client.query('BEGIN');
@@ -187,8 +199,8 @@ exports.create = async (req, res) => {
       `INSERT INTO accommodations
         (landlord_id, title, description, type, suburb, city, university_id, campus_id,
          price_per_month, bedrooms, bathrooms, people_per_room, walk_minutes,
-         available_from, lease_terms, status, rooms_total)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+         available_from, lease_terms, status, rooms_total, lat, lng)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
        RETURNING id`,
       [
         req.user.id,
@@ -208,6 +220,8 @@ exports.create = async (req, res) => {
         b.leaseTerms || b.lease_terms || null,
         status,
         bedrooms,
+        lat,
+        lng,
       ]
     );
     const accId = accRes.rows[0].id;
