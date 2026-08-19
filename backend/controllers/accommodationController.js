@@ -245,25 +245,50 @@ exports.create = async (req, res) => {
       }
     }
 
-    // images: uploaded files take priority, else JSON urls
+    // images: uploaded files take priority, else JSON urls.
+    // imageKinds is a JSON array of 'interior'|'exterior' parallel to the files.
     const files = req.files || [];
+    let imageKinds = b.imageKinds;
+    if (typeof imageKinds === 'string') {
+      try {
+        imageKinds = JSON.parse(imageKinds);
+      } catch {
+        imageKinds = imageKinds.split(',').map((s) => s.trim());
+      }
+    }
+    if (!Array.isArray(imageKinds)) imageKinds = [];
+
+    // A published listing must show the place inside and out.
+    if (status !== 'draft') {
+      const hasInterior = imageKinds.includes('interior');
+      const hasExterior = imageKinds.includes('exterior');
+      if (!files.length || !hasInterior || !hasExterior) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          error: 'Please add at least one interior photo and one exterior photo of the property.',
+        });
+      }
+    }
+
     if (files.length) {
       let pos = 0;
       for (const f of files) {
         await client.query(
-          `INSERT INTO accommodation_images (accommodation_id, image_url, position)
-           VALUES ($1,$2,$3)`,
-          [accId, `/uploads/user/${f.filename}`, pos++]
+          `INSERT INTO accommodation_images (accommodation_id, image_url, position, kind)
+           VALUES ($1,$2,$3,$4)`,
+          [accId, `/uploads/user/${f.filename}`, pos, imageKinds[pos] || null]
         );
+        pos++;
       }
     } else if (Array.isArray(b.images)) {
       let pos = 0;
       for (const url of b.images) {
         await client.query(
-          `INSERT INTO accommodation_images (accommodation_id, image_url, position)
-           VALUES ($1,$2,$3)`,
-          [accId, url, pos++]
+          `INSERT INTO accommodation_images (accommodation_id, image_url, position, kind)
+           VALUES ($1,$2,$3,$4)`,
+          [accId, url, pos, imageKinds[pos] || null]
         );
+        pos++;
       }
     }
 

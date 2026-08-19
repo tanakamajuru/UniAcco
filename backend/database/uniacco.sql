@@ -102,7 +102,8 @@ CREATE TABLE accommodation_images (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   accommodation_id  UUID NOT NULL REFERENCES accommodations(id) ON DELETE CASCADE,
   image_url         TEXT NOT NULL,
-  position          INT NOT NULL DEFAULT 0
+  position          INT NOT NULL DEFAULT 0,
+  kind              TEXT   -- 'interior' | 'exterior' | NULL
 );
 
 CREATE TABLE accommodation_amenities (

@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Heart, Star, Check, Lock, Unlock, Loader2, MapPin, Phone, MessageCircle,
-  BedDouble, Bath, Users,
+  BedDouble, Bath, Users, Maximize2,
 } from 'lucide-react';
 import { useNavigation } from '../App';
 import { accommodationApi, favouriteApi, imageUrl, currentRole } from '../services/api';
 import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
 import { formatAvailable } from '../components/listings/ListingCard';
 import UnlockModal from '../components/UnlockModal';
+import Lightbox from '../components/Lightbox';
 import { getUnlock, saveUnlock } from '../lib/unlocks';
 import { telLink, whatsappLink } from '../lib/contact';
 import { ACCESS_FEE_LABEL } from '../lib/fees';
@@ -31,6 +32,7 @@ export default function PropertyDetails() {
   const [saved, setSaved] = useState(false);
   const [unlockOpen, setUnlockOpen] = useState(false);
   const [localContact, setLocalContact] = useState(null); // from a prior anonymous unlock
+  const [lightbox, setLightbox] = useState(null); // photo index open in fullscreen, or null
 
   const load = useCallback(() => {
     if (!id) {
@@ -83,6 +85,8 @@ export default function PropertyDetails() {
   const contact = acc.landlord || localContact;
   const unlocked = Boolean(acc.access?.unlocked || localContact);
   const photos = (acc.images || []).map(imageUrl);
+  // Fullscreen photos are a paid perk: unlock to view, otherwise nudge to pay.
+  const openPhoto = (i) => (unlocked ? setLightbox(i) : setUnlockOpen(true));
   const tel = contact?.phone ? telLink(contact.phone) : null;
   const wa = contact?.phone
     ? whatsappLink(contact.phone, `Hi, I saw your listing "${acc.title}" on UniAcco.`)
@@ -114,21 +118,41 @@ export default function PropertyDetails() {
 
         {/* gallery */}
         <div className="mb-6 grid h-[300px] grid-cols-4 grid-rows-2 gap-1.5 overflow-hidden rounded-2xl md:h-[360px]">
-          <div className="col-span-2 row-span-2" style={{ background: `linear-gradient(135deg, ${GREEN}, ${GREEN_SOFT})` }}>
+          <button
+            type="button"
+            onClick={() => openPhoto(0)}
+            className="group relative col-span-2 row-span-2 block"
+            style={{ background: `linear-gradient(135deg, ${GREEN}, ${GREEN_SOFT})` }}
+          >
             {photos[0] && <img src={photos[0]} alt="" className="h-full w-full object-cover" />}
-          </div>
+            <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
+              <span className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[13px] font-bold text-slate-900">
+                {unlocked ? (<><Maximize2 className="h-3.5 w-3.5" /> View photos</>) : (<><Lock className="h-3.5 w-3.5" /> Unlock to view</>)}
+              </span>
+            </span>
+          </button>
           {[1, 2, 3].map((i) => (
-            <div key={i} className="hidden sm:block" style={{ background: GALLERY_BG[i - 1] }}>
+            <button
+              key={i}
+              type="button"
+              onClick={() => openPhoto(i)}
+              className="hidden sm:block"
+              style={{ background: GALLERY_BG[i - 1] }}
+            >
               {photos[i] && <img src={photos[i]} alt="" className="h-full w-full object-cover" />}
-            </div>
+            </button>
           ))}
-          <div className="hidden items-center justify-center bg-bg-surface-alt sm:flex">
+          <button
+            type="button"
+            onClick={() => openPhoto(Math.min(4, photos.length - 1))}
+            className="hidden items-center justify-center bg-bg-surface-alt sm:flex"
+          >
             {photos[4] ? (
               <img src={photos[4]} alt="" className="h-full w-full object-cover" />
             ) : (
               <span className="font-num text-xs text-text-muted">+{Math.max(photos.length - 4, 6)} photos</span>
             )}
-          </div>
+          </button>
         </div>
 
         {/* title + price */}
@@ -353,6 +377,15 @@ export default function PropertyDetails() {
           accommodation={acc}
           onClose={() => setUnlockOpen(false)}
           onUnlocked={onUnlocked}
+        />
+      )}
+
+      {lightbox !== null && photos.length > 0 && (
+        <Lightbox
+          images={photos}
+          index={lightbox}
+          onIndex={setLightbox}
+          onClose={() => setLightbox(null)}
         />
       )}
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronDown, Camera, Loader2, Check } from 'lucide-react';
+import { ChevronLeft, ChevronDown, Camera, Loader2, Check, X } from 'lucide-react';
 import { useNavigation } from '../App';
 import { accommodationApi, universityApi } from '../services/api';
 import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
@@ -7,6 +7,44 @@ import LocationPicker from '../components/LocationPicker';
 
 const STEPS = ['Basics', 'Photos', 'Pricing', 'Review'];
 const TYPES = ['Ensuite room', 'Studio flat', 'Shared house'];
+
+// A required photo group (interior / exterior) with thumbnail previews.
+function PhotoGroup({ id, title, hint, files, setFiles, onPick }) {
+  const remove = (idx) => setFiles((prev) => prev.filter((_, i) => i !== idx));
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-bold text-text-primary">
+        {title} <span className="text-error">*</span>
+      </label>
+      <label
+        htmlFor={id}
+        className="block cursor-pointer rounded-[14px] border-2 border-dashed border-border-strong bg-bg-page p-6 text-center"
+      >
+        <Camera className="mx-auto mb-2 h-7 w-7 text-text-muted" />
+        <p className="mb-1 text-sm font-bold text-text-primary">Click to upload</p>
+        <p className="text-[12.5px] text-text-muted">{hint}</p>
+        <input id={id} type="file" multiple accept="image/*" className="sr-only" onChange={onPick(setFiles)} />
+      </label>
+      {files.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {files.map((f, i) => (
+            <div key={i} className="relative">
+              <img src={URL.createObjectURL(f)} alt="" className="h-16 w-16 rounded-lg object-cover" />
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-error text-white shadow"
+                aria-label="Remove photo"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ListPropertyPage() {
   const { navigate } = useNavigation();
@@ -25,7 +63,8 @@ export default function ListPropertyPage() {
   });
   const [amenities, setAmenities] = useState(new Set(['wifi']));
   const [latlng, setLatlng] = useState(null); // { lat, lng } — mandatory pin
-  const [files, setFiles] = useState([]);
+  const [interior, setInterior] = useState([]); // interior photos (required)
+  const [exterior, setExterior] = useState([]); // exterior photos (required)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -60,7 +99,7 @@ export default function ListPropertyPage() {
       return next;
     });
 
-  const onFiles = (e) => {
+  const onFiles = (setter) => (e) => {
     const picked = Array.from(e.target.files || []).filter((f) => {
       if (f.size > 5 * 1024 * 1024) {
         setError(`${f.name} is larger than 5MB`);
@@ -68,7 +107,8 @@ export default function ListPropertyPage() {
       }
       return true;
     });
-    setFiles((prev) => [...prev, ...picked].slice(0, 5));
+    setter((prev) => [...prev, ...picked].slice(0, 6));
+    e.target.value = ''; // allow re-selecting the same file
   };
 
   const submit = async (status) => {
@@ -78,6 +118,11 @@ export default function ListPropertyPage() {
     }
     if (!latlng) {
       setError('Please drop a pin on the map to set the property location.');
+      return;
+    }
+    // Publishing requires showing the place inside and out.
+    if (status !== 'draft' && (!interior.length || !exterior.length)) {
+      setError('Please add at least one interior photo and one exterior photo.');
       return;
     }
     setLoading(true);
@@ -100,7 +145,11 @@ export default function ListPropertyPage() {
       fd.append('lng', latlng.lng);
       fd.append('status', status);
       fd.append('amenities', JSON.stringify([...amenities]));
-      files.forEach((f) => fd.append('images', f));
+      // Interior first, then exterior — kinds array stays parallel to the files.
+      const kinds = [];
+      interior.forEach((f) => { fd.append('images', f); kinds.push('interior'); });
+      exterior.forEach((f) => { fd.append('images', f); kinds.push('exterior'); });
+      fd.append('imageKinds', JSON.stringify(kinds));
 
       await accommodationApi.create(fd);
       navigate('host-dashboard');
@@ -305,28 +354,28 @@ export default function ListPropertyPage() {
           })}
         </div>
 
-        <label className={`${label} mb-2.5`}>Photos</label>
-        <label
-          htmlFor="photo-input"
-          className="block cursor-pointer rounded-[14px] border-2 border-dashed border-border-strong bg-bg-page p-8 text-center"
-        >
-          <Camera className="mx-auto mb-2 h-8 w-8 text-text-muted" />
-          <p className="mb-1 text-sm font-bold text-text-primary">Drag photos here or click to upload</p>
-          <p className="text-[12.5px] text-text-muted">PNG or JPG up to 5MB each · add at least 3</p>
-          <input id="photo-input" type="file" multiple accept="image/*" className="sr-only" onChange={onFiles} />
-        </label>
-        {files.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {files.map((f, i) => (
-              <span
-                key={i}
-                className="rounded-lg bg-bg-surface-alt px-2.5 py-1 text-xs font-medium text-text-secondary"
-              >
-                {f.name}
-              </span>
-            ))}
-          </div>
-        )}
+        <label className={`${label} mb-1`}>Photos</label>
+        <p className="mb-2.5 text-[12.5px] text-text-muted">
+          PNG or JPG up to 5MB each. Both interior and exterior photos are required to publish.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <PhotoGroup
+            id="interior-input"
+            title="Interior photos"
+            hint="Bedroom, kitchen, bathroom…"
+            files={interior}
+            setFiles={setInterior}
+            onPick={onFiles}
+          />
+          <PhotoGroup
+            id="exterior-input"
+            title="Exterior photos"
+            hint="Front, yard, street view…"
+            files={exterior}
+            setFiles={setExterior}
+            onPick={onFiles}
+          />
+        </div>
       </div>
 
       <div className="mt-[22px] flex justify-between">

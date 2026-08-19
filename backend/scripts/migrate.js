@@ -17,6 +17,7 @@ const dir = path.join(__dirname, '..', 'database', 'migrations');
 const MIGRATIONS = [
   '005_drop_unused_profile_columns.sql',
   '006_anonymous_payments.sql',
+  '007_image_kind.sql',
 ];
 
 const useUrl = Boolean(process.env.DATABASE_URL);
