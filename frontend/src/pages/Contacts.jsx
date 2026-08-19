@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
-import AnimatedBackground from '@/components/AnimatedBackground';
 import { motion } from 'framer-motion';
 
 export default function Contacts() {
@@ -33,7 +32,7 @@ export default function Contacts() {
   };
 
   return (
-    <AnimatedBackground variant="morphing">
+    <div className="relative">
       <div className="min-h-screen bg-gradient-to-b from-[#F5F7FA]/80 to-white/80 dark:from-[#0F1419]/80 dark:to-[#1A1F2E]/80 backdrop-blur-sm pt-24 pb-12 px-6">
       <div className="container mx-auto max-w-7xl">
         {/* Header */}
@@ -296,6 +295,6 @@ export default function Contacts() {
         </motion.div>
       </div>
       </div>
-    </AnimatedBackground>
+    </div>
   );
 }

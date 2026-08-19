@@ -1,7 +1,6 @@
 // src/pages/Auth.jsx
 import { useState } from 'react';
 import { Mail, Lock, User, LogIn, ArrowLeft } from 'lucide-react';
-import AnimatedBackground from '@/components/AnimatedBackground';
 import { motion } from 'framer-motion';
 
 import { authApi } from '../services/api';
@@ -71,7 +70,7 @@ const Auth = () => {
 
   return (
     <div className="w-full max-w-[100vw] overflow-x-hidden">
-      <AnimatedBackground variant="morphing">
+      <div className="relative">
         <div className="min-h-screen w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 mx-auto">
           <div className="w-full max-w-md">
             <motion.div
@@ -287,7 +286,7 @@ const Auth = () => {
             </motion.div>
           </div>
         </div>
-      </AnimatedBackground>
+      </div>
     </div>
   );
 };

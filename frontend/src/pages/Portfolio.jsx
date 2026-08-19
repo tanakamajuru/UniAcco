@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sun, Zap, Box, Building2, Factory, Home, ArrowRight, Award, Users, Calendar } from 'lucide-react';
-import AnimatedBackground from '@/components/AnimatedBackground';
 import ImageSlider from '@/components/ImageSlider';
 import { motion } from 'framer-motion';
 
@@ -185,7 +184,7 @@ export default function Portfolio() {
   };
 
   return (
-    <AnimatedBackground variant="morphing">
+    <div className="relative">
       <div className="min-h-screen bg-gradient-to-b from-blue-50/80 to-white/80 dark:from-gray-900/80 dark:to-gray-800/80 backdrop-blur-sm pt-24 pb-12 px-6">
         <div className="container mx-auto max-w-7xl">
           {/* Hero Section */}
@@ -402,6 +401,6 @@ export default function Portfolio() {
           </motion.div>
         </div>
       </div>
-    </AnimatedBackground>
+    </div>
   );
 }
