@@ -345,8 +345,10 @@ export default function Navbar() {
           />
 
           <div
-            className="fixed bottom-0 right-0 top-0 z-[61] flex w-[84%] max-w-[340px] flex-col overflow-y-auto bg-bg-surface p-4 shadow-2xl md:hidden"
+            className="fixed bottom-0 right-0 top-0 z-[61] flex w-[84%] max-w-[340px] flex-col overflow-y-auto p-4 shadow-2xl md:hidden"
             style={{
+              backgroundColor: 'var(--bg-surface)',
+              opacity: 1,
               animation:
                 'uaSlideIn 0.26s cubic-bezier(.32,.72,0,1) both',
             }}
