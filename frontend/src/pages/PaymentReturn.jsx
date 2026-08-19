@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../App';
+import { saveUnlock } from '../lib/unlocks';
 
 const PaymentReturn = () => {
   const { navigate } = useNavigation();
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
   const [reference, setReference] = useState('');
+  const [accId, setAccId] = useState('');
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -41,13 +43,15 @@ const PaymentReturn = () => {
       if (data.success) {
         if (data.status === 'paid') {
           setStatus('success');
-          setMessage('Payment successful! Your booking has been confirmed.');
-          
-          // Store payment success in localStorage for feature unlocking
-          localStorage.setItem('paymentSuccess', 'true');
-          localStorage.setItem('paymentReference', reference);
-          localStorage.setItem('paidAccommodationId', data.accommodationId || '');
-          
+          setMessage('Payment successful — the host contact is now unlocked.');
+          setAccId(data.accommodationId || '');
+
+          // Persist the unlock locally (anonymous — no account needed) so the
+          // property page reveals the Call / WhatsApp buttons.
+          if (data.accommodationId && data.contact) {
+            saveUnlock(data.accommodationId, data.contact);
+          }
+
           // Trigger custom event for other components to listen
           window.dispatchEvent(new CustomEvent('paymentSuccessful', {
             detail: { reference, data }
@@ -95,10 +99,10 @@ const PaymentReturn = () => {
             </div>
             <div className="space-y-3">
               <button
-                onClick={() => navigate('bookings')}
+                onClick={() => (accId ? navigate('property-details', { id: accId }) : navigate('listings'))}
                 className="w-full bg-btn-primary text-text-inverse py-3 px-4 rounded-lg hover:bg-btn-primary-hover"
               >
-                View My Bookings
+                View host contact
               </button>
               <button
                 onClick={() => navigate('home')}

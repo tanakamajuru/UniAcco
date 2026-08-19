@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const PesepayService = require('../services/pesepayService');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, optionalAuth } = require('../middleware/auth');
 
 const pesepay = new PesepayService();
 
@@ -30,7 +30,8 @@ const isPaid = (tx) =>
   Boolean(tx && (tx.paid === true || tx.transactionStatus === 'SUCCESS'));
 
 // POST /api/payments/initiate
-router.post('/initiate', authenticateToken, async (req, res) => {
+// optionalAuth: anonymous visitors can pay to unlock a contact without an account.
+router.post('/initiate', optionalAuth, async (req, res) => {
   const client = await pool.connect();
   try {
     const {
@@ -115,7 +116,7 @@ router.post('/initiate', authenticateToken, async (req, res) => {
         (user_id, accommodation_id, feature, amount, method, mobile_provider, email, phone, gateway_reference, poll_url, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending')`,
       [
-        req.user.id,
+        req.user?.id || null,
         accommodationId,
         feature,
         paymentAmount,
@@ -137,20 +138,38 @@ router.post('/initiate', authenticateToken, async (req, res) => {
   }
 });
 
+// Landlord contact for an accommodation — revealed only after payment.
+async function contactFor(client, accommodationId) {
+  const { rows } = await client.query(
+    `SELECT l.full_name AS name, l.phone, l.email
+       FROM accommodations a JOIN users l ON l.id = a.landlord_id
+      WHERE a.id = $1`,
+    [accommodationId]
+  );
+  return rows[0] || null;
+}
+
 // GET /api/payments/status/:reference  (reference = Pesepay reference number)
-router.get('/status/:reference', authenticateToken, async (req, res) => {
+// The reference is the capability: whoever holds it (the anonymous payer's
+// browser) may check status and, once paid, receive the host contact.
+router.get('/status/:reference', optionalAuth, async (req, res) => {
   const client = await pool.connect();
   try {
     const { reference } = req.params;
     const payRes = await client.query(
-      'SELECT * FROM payments WHERE gateway_reference = $1 AND user_id = $2',
-      [reference, req.user.id]
+      'SELECT * FROM payments WHERE gateway_reference = $1',
+      [reference]
     );
     if (payRes.rows.length === 0) return res.status(404).json({ error: 'Payment not found' });
 
     const payment = payRes.rows[0];
     if (payment.status === 'paid') {
-      return res.json({ success: true, status: 'paid', accommodationId: payment.accommodation_id });
+      return res.json({
+        success: true,
+        status: 'paid',
+        accommodationId: payment.accommodation_id,
+        contact: await contactFor(client, payment.accommodation_id),
+      });
     }
 
     let paid = false;
@@ -173,6 +192,7 @@ router.get('/status/:reference', authenticateToken, async (req, res) => {
       success: true,
       status: paid ? 'paid' : 'pending',
       accommodationId: payment.accommodation_id,
+      contact: paid ? await contactFor(client, payment.accommodation_id) : null,
     });
   } catch (error) {
     console.error('Payment status check error:', error);

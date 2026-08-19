@@ -257,14 +257,8 @@ export default function HostDashboard() {
                       Accept
                     </button>
                     <button
-                      onClick={() => navigate('messages')}
-                      className="flex-1 rounded-[9px] border border-border bg-bg-surface py-2.5 text-[13px] font-bold text-text-secondary"
-                    >
-                      Message
-                    </button>
-                    <button
                       onClick={() => decide(a.application.id, 'declined')}
-                      className="rounded-[9px] border border-border bg-bg-surface px-3 py-2.5 text-[13px] font-bold text-text-muted"
+                      className="flex-1 rounded-[9px] border border-border bg-bg-surface py-2.5 text-[13px] font-bold text-text-muted"
                     >
                       Decline
                     </button>

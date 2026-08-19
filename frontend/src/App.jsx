@@ -10,7 +10,6 @@ import PremiumFeatures from './components/PremiumFeatures.jsx';
 import PropertyDetails from './pages/PropertyDetails.jsx';
 import Account from './pages/Account.jsx';
 import MyListings from './pages/MyListings.jsx';
-import Messages from './pages/Messages.jsx';
 import HostDashboard from './pages/HostDashboard.jsx';
 import MorphBg from './components/MorphBg.jsx';
 import { currentRole } from './services/api';
@@ -27,7 +26,6 @@ const urlToPageMap = {
   '/property-details': 'property-details',
   '/profile': 'profile',
   '/saved': 'profile',
-  '/messages': 'messages',
   '/host-dashboard': 'host-dashboard',
   '/my-listings': 'my-listings',
 };
@@ -42,7 +40,6 @@ const pageToUrlMap = {
   'premium-features': '/premium-features',
   'property-details': '/property-details',
   profile: '/profile',
-  messages: '/messages',
   'host-dashboard': '/host-dashboard',
   'my-listings': '/my-listings',
 };
@@ -67,11 +64,6 @@ function App() {
     document.body.style.placeItems = 'unset';
     document.body.className = 'bg-bg-page text-text-primary';
 
-    const savedTheme =
-      localStorage.getItem('theme') ||
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.dataset.theme = savedTheme;
-    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
   }, []);
 
   useEffect(() => {
@@ -119,8 +111,6 @@ function App() {
         return <PropertyDetails />;
       case 'profile':
         return <Account />;
-      case 'messages':
-        return <Messages />;
       case 'host-dashboard':
         return <HostDashboard />;
       case 'my-listings':

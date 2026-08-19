@@ -133,7 +133,8 @@ CREATE TABLE favourites (
 -- ---------- Payments (Pesepay, 30-day validity) ----------
 CREATE TABLE payments (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id           UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- Nullable: anonymous unlocks (pay -> reveal contact) create no account.
+  user_id           UUID REFERENCES users(id) ON DELETE CASCADE,
   accommodation_id  UUID REFERENCES accommodations(id) ON DELETE SET NULL,
   feature           TEXT NOT NULL,
   amount            NUMERIC(10,2) NOT NULL DEFAULT 2.00,

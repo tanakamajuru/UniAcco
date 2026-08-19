@@ -154,16 +154,6 @@ export const applicationApi = {
     request(`/api/applications/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 };
 
-// ---------------- Messaging ----------------
-export const threadApi = {
-  list: () => request('/api/threads'),
-  messages: (id) => request(`/api/threads/${id}/messages`),
-  send: (id, body) =>
-    request(`/api/threads/${id}/messages`, { method: 'POST', body: JSON.stringify({ body }) }),
-  start: (accommodationId) =>
-    request('/api/threads', { method: 'POST', body: JSON.stringify({ accommodationId }) }),
-};
-
 // ---------------- Payments ----------------
 export const paymentApi = {
   initiate: (body) => request('/api/payments/initiate', { method: 'POST', body: JSON.stringify(body) }),
@@ -194,7 +184,6 @@ export default {
   accommodation: accommodationApi,
   favourite: favouriteApi,
   application: applicationApi,
-  thread: threadApi,
   payment: paymentApi,
   host: hostApi,
 };

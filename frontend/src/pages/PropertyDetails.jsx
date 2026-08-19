@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Heart, Star, Check, Lock, Unlock, Loader2, MapPin, MessageCircle,
+  Heart, Star, Check, Lock, Unlock, Loader2, MapPin, Phone, MessageCircle,
   BedDouble, Bath, Users,
 } from 'lucide-react';
 import { useNavigation } from '../App';
-import { accommodationApi, favouriteApi, threadApi, imageUrl, currentRole } from '../services/api';
+import { accommodationApi, favouriteApi, imageUrl, currentRole } from '../services/api';
 import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
 import { formatAvailable } from '../components/listings/ListingCard';
-import ApplyModal from '../components/ApplyModal';
+import UnlockModal from '../components/UnlockModal';
+import { getUnlock, saveUnlock } from '../lib/unlocks';
+import { telLink, whatsappLink } from '../lib/contact';
 import { ACCESS_FEE_LABEL } from '../lib/fees';
-import { Card, PrimaryBtn, OutlineBtn } from '../components/kit';
+import { Card, PrimaryBtn } from '../components/kit';
 
 const GREEN = '#2F8FB8', GREEN_SOFT = '#276E8C', BRICK = '#4DB6E2', YELLOW = '#F4C430', MINT = '#22C55E';
 const GALLERY_BG = [
@@ -27,7 +29,8 @@ export default function PropertyDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
-  const [applyOpen, setApplyOpen] = useState(false);
+  const [unlockOpen, setUnlockOpen] = useState(false);
+  const [localContact, setLocalContact] = useState(null); // from a prior anonymous unlock
 
   const load = useCallback(() => {
     if (!id) {
@@ -46,6 +49,7 @@ export default function PropertyDetails() {
   useEffect(() => {
     if (!id) return;
     setSaved(favouriteApi.has(id));
+    setLocalContact(getUnlock(id));
   }, [id]);
 
   const toggleSave = () => {
@@ -53,17 +57,12 @@ export default function PropertyDetails() {
     favouriteApi.has(id) ? favouriteApi.remove(id) : favouriteApi.add(id);
   };
 
-  const messageHost = async () => {
-    if (!localStorage.getItem('token')) return navigate('auth');
-    try {
-      await threadApi.start(id);
-    } catch {
-      /* thread may already exist */
+  const onUnlocked = (contact) => {
+    if (contact) {
+      saveUnlock(id, contact);
+      setLocalContact(contact);
     }
-    navigate('messages');
   };
-
-  const openApply = () => (localStorage.getItem('token') ? setApplyOpen(true) : navigate('auth'));
 
   if (loading) {
     return (
@@ -81,9 +80,13 @@ export default function PropertyDetails() {
     );
   }
 
-  const unlocked = acc.access?.unlocked;
+  const contact = acc.landlord || localContact;
+  const unlocked = Boolean(acc.access?.unlocked || localContact);
   const photos = (acc.images || []).map(imageUrl);
-  const applyLabel = unlocked ? 'Apply now' : 'Unlock Contact';
+  const tel = contact?.phone ? telLink(contact.phone) : null;
+  const wa = contact?.phone
+    ? whatsappLink(contact.phone, `Hi, I saw your listing "${acc.title}" on UniAcco.`)
+    : null;
   const specs = [
     [BedDouble, `${acc.bedrooms} bed`],
     [Bath, `${acc.bathrooms} bath`],
@@ -162,11 +165,11 @@ export default function PropertyDetails() {
             {/* host */}
             <div className="mb-6 flex items-center gap-3 rounded-xl bg-bg-surface-alt p-4">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-accent text-sm font-extrabold text-brand-primaryDark">
-                {(acc.landlord?.name || 'Host').split(' ').map((p) => p[0]).slice(0, 2).join('')}
+                {(contact?.name || 'Host').split(' ').map((p) => p[0]).slice(0, 2).join('')}
               </div>
               <div className="flex-1">
                 <div className="text-sm font-bold text-text-primary">
-                  Hosted by {unlocked ? acc.landlord?.name : 'a verified host'}
+                  Hosted by {unlocked ? contact?.name : 'a verified host'}
                 </div>
                 <div className="text-xs text-text-secondary">Replies quickly · UniAcco verified</div>
               </div>
@@ -233,42 +236,56 @@ export default function PropertyDetails() {
               </p>
 
               {unlocked ? (
-                <div className="mb-4 rounded-lg border border-success/30 bg-success/10 p-3">
-                  <div className="mb-1.5 flex items-center gap-2 text-[13px] font-bold text-success">
-                    <Unlock className="h-3.5 w-3.5" /> Contact unlocked
-                  </div>
-                  <div className="text-[13px] leading-relaxed text-text-secondary">
-                    <strong className="text-text-primary">{acc.landlord?.name}</strong>
-                    <br />
-                    {acc.landlord?.phone}
-                    <br />
-                    {acc.landlord?.email}
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-4 flex items-center gap-2 rounded-lg bg-brand-accent/20 px-3 py-2 text-xs font-semibold text-[#8A5A12] dark:text-brand-accentSoft">
-                  <Lock className="h-3.5 w-3.5" /> Contact locked · {ACCESS_FEE_LABEL} to unlock
-                </div>
-              )}
-
-              {isStudent ? (
                 <>
-                  <PrimaryBtn
-                    className="mb-2 w-full"
-                    onClick={openApply}
-                    aria-label={applyLabel}
-                  >
-                    {applyLabel}
-                  </PrimaryBtn>
-                  <OutlineBtn className="w-full" onClick={messageHost}>
-                    Message host
-                  </OutlineBtn>
-                  <p className="mt-3 text-center text-[11px] text-text-muted">One tap unlocks phone &amp; email</p>
+                  <div className="mb-4 rounded-lg border border-success/30 bg-success/10 p-3">
+                    <div className="mb-1.5 flex items-center gap-2 text-[13px] font-bold text-success">
+                      <Unlock className="h-3.5 w-3.5" /> Contact unlocked
+                    </div>
+                    <div className="text-[13px] leading-relaxed text-text-secondary">
+                      <strong className="text-text-primary">{contact?.name}</strong>
+                      <br />
+                      {contact?.phone}
+                      {contact?.email && (
+                        <>
+                          <br />
+                          {contact.email}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {tel && (
+                      <a
+                        href={tel}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-bg-surface py-3 text-sm font-bold text-text-primary"
+                      >
+                        <Phone className="h-4 w-4" /> Call
+                      </a>
+                    )}
+                    {wa && (
+                      <a
+                        href={wa}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 text-sm font-bold text-white"
+                      >
+                        <MessageCircle className="h-4 w-4" /> WhatsApp
+                      </a>
+                    )}
+                  </div>
                 </>
               ) : (
-                <p className="rounded-lg bg-bg-surface-alt px-3 py-3 text-center text-[13px] text-text-secondary">
-                  Switch to a student account to apply.
-                </p>
+                <>
+                  <div className="mb-4 flex items-center gap-2 rounded-lg bg-brand-accent/20 px-3 py-2 text-xs font-semibold text-[#8A5A12] dark:text-brand-accentSoft">
+                    <Lock className="h-3.5 w-3.5" /> Contact locked · {ACCESS_FEE_LABEL} to unlock
+                  </div>
+                  <PrimaryBtn className="w-full" onClick={() => setUnlockOpen(true)}>
+                    Unlock contact · {ACCESS_FEE_LABEL}
+                  </PrimaryBtn>
+                  <p className="mt-3 text-center text-[11px] text-text-muted">
+                    No account needed · call or WhatsApp the host directly
+                  </p>
+                </>
               )}
             </Card>
           </div>
@@ -276,32 +293,40 @@ export default function PropertyDetails() {
       </div>
 
       {/* mobile bottom bar */}
-      {isStudent && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-bg-surface p-3 lg:hidden">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <div className="text-lg font-extrabold leading-none text-text-primary">
-                ${acc.price_per_month}
-                <span className="text-xs font-medium text-text-secondary">/mo</span>
-              </div>
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-bg-surface p-3 lg:hidden">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <div className="text-lg font-extrabold leading-none text-text-primary">
+              ${acc.price_per_month}
+              <span className="text-xs font-medium text-text-secondary">/mo</span>
             </div>
-            <PrimaryBtn className="flex-1" onClick={openApply}>
-              <MessageCircle className="h-4 w-4" /> {applyLabel}
-            </PrimaryBtn>
           </div>
+          {unlocked ? (
+            <>
+              {tel && (
+                <a href={tel} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-bg-surface py-3 text-sm font-bold text-text-primary">
+                  <Phone className="h-4 w-4" /> Call
+                </a>
+              )}
+              {wa && (
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 text-sm font-bold text-white">
+                  <MessageCircle className="h-4 w-4" /> WhatsApp
+                </a>
+              )}
+            </>
+          ) : (
+            <PrimaryBtn className="flex-1" onClick={() => setUnlockOpen(true)}>
+              <Lock className="h-4 w-4" /> Unlock · {ACCESS_FEE_LABEL}
+            </PrimaryBtn>
+          )}
         </div>
-      )}
+      </div>
 
-      {applyOpen && (
-        <ApplyModal
+      {unlockOpen && (
+        <UnlockModal
           accommodation={acc}
-          unlocked={unlocked}
-          onClose={() => setApplyOpen(false)}
-          onUnlocked={load}
-          onDone={() => {
-            setApplyOpen(false);
-            navigate('messages');
-          }}
+          onClose={() => setUnlockOpen(false)}
+          onUnlocked={onUnlocked}
         />
       )}
     </div>
