@@ -157,7 +157,9 @@ export const applicationApi = {
 // ---------------- Payments ----------------
 export const paymentApi = {
   initiate: (body) => request('/api/payments/initiate', { method: 'POST', body: JSON.stringify(body) }),
-  status: (reference) => request(`/api/payments/status/${reference}`),
+  // Cache-buster + no-store so each poll sees the live status (never a 304).
+  status: (reference) =>
+    request(`/api/payments/status/${reference}?t=${Date.now()}`, { cache: 'no-store' }),
   history: () => request('/api/payments/history'),
 };
 

@@ -72,7 +72,11 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
         window.open(init.redirectUrl, '_blank', 'noopener'); // hosted card/bank checkout
       }
 
-      settle(await waitForPayment(init.reference));
+      // Mobile money (EcoCash/InnBucks) approval can take well over a minute, so
+      // poll longer before falling back to the "still confirming" screen.
+      const window_ =
+        payMethod === 'mobile' ? { tries: 60, interval: 2500 } : { tries: 40, interval: 2000 };
+      settle(await waitForPayment(init.reference, window_));
     } catch (e) {
       setError(e.message || 'We could not start the payment. Please try again.');
       setPhase('form');

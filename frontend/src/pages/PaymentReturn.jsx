@@ -32,7 +32,8 @@ const PaymentReturn = () => {
     const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/payments/status/${reference}`, {
+      const response = await fetch(`${API_BASE_URL}/api/payments/status/${reference}?t=${Date.now()}`, {
+        cache: 'no-store',
         headers: {
           'Authorization': `Bearer ${token}`
         }

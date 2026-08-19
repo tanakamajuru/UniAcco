@@ -161,6 +161,8 @@ async function contactFor(client, accommodationId) {
 // The reference is the capability: whoever holds it (the anonymous payer's
 // browser) may check status and, once paid, receive the host contact.
 router.get('/status/:reference', optionalAuth, async (req, res) => {
+  // Never cache a payment status — polling must always see the live value.
+  res.set('Cache-Control', 'no-store');
   const client = await pool.connect();
   try {
     const { reference } = req.params;
