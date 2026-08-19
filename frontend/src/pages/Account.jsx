@@ -56,8 +56,7 @@ export default function Account() {
 
   const profileRows = [
     { k: 'University', v: user?.universityId ? 'UZ' : '—' },
-    { k: 'Budget', v: user?.budget || '$120–260' },
-    { k: 'Move-in', v: user?.moveIn || 'Aug 2026' },
+    { k: 'Saved homes', v: `${saved.length}` },
     { k: 'Applications', v: `${activeApps} active` },
   ];
 
@@ -76,7 +75,7 @@ export default function Account() {
             {user?.fullName || 'Student'}
           </h2>
           <p className="mb-3.5 text-[13px] text-text-secondary">
-            {[user?.year, user?.course].filter(Boolean).join(' · ') || 'Student'}
+            {user?.email || 'Student'}
           </p>
           {user?.isVerified && (
             <div className="mb-[18px] flex items-center gap-2 rounded-[10px] bg-[#E8F7EE] px-3 py-2.5">

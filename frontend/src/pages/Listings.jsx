@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, GraduationCap, Loader2, RotateCw, MapPin, Users } from 'lucide-react';
+import { Search, GraduationCap, Loader2, RotateCw, MapPin, Users, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigation } from '../App';
 import { accommodationApi, universityApi, favouriteApi, currentRole } from '../services/api';
 import ListingCard from '../components/listings/ListingCard';
@@ -22,15 +22,23 @@ const ROOMMATES = [
   { label: '3+ roommates', query: { peoplePerRoomMin: 4 } },
 ];
 
+const PAGE_SIZE = 12;
+
 export default function Listings() {
   const { navigate } = useNavigation();
   const isStudent = currentRole() !== 'landlord';
 
   const [universities, setUniversities] = useState([]);
-  const [uniIdx, setUniIdx] = useState(0);
+  const [uniIdx, setUniIdx] = useState(-1);
+  const [universityMenuOpen, setUniversityMenuOpen] = useState(false);
   const [search, setSearch] = useState(() => {
     const saved = localStorage.getItem('searchQuery') || '';
     localStorage.removeItem('searchQuery');
+    return saved;
+  });
+  const [campus, setCampus] = useState(() => {
+    const saved = localStorage.getItem('searchCampus') || '';
+    localStorage.removeItem('searchCampus');
     return saved;
   });
   const [selectedTypes, setSelectedTypes] = useState([]);
@@ -39,6 +47,8 @@ export default function Listings() {
   const [maxPrice, setMaxPrice] = useState(320);
   const [mapMode, setMapMode] = useState('split');
   const [selectedId, setSelectedId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,13 +72,10 @@ export default function Listings() {
       .catch(() => {});
   }, []);
 
+  // Favourites are stored locally (no account needed).
   useEffect(() => {
-    if (!isStudent) return;
-    favouriteApi
-      .list()
-      .then((items) => setSavedIds(new Set(items.map((a) => a.id))))
-      .catch(() => {});
-  }, [isStudent]);
+    setSavedIds(new Set(favouriteApi.ids()));
+  }, []);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -77,8 +84,10 @@ export default function Listings() {
     accommodationApi
       .getAll({
         university: activeUni?.short,
+        campus,
         maxPrice,
         q: search,
+        page,
         type: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
         amenities: selectedAmenities.length ? selectedAmenities.join(',') : undefined,
         ...roommateQuery,
@@ -87,23 +96,31 @@ export default function Listings() {
         let list = data.results || [];
         if (selectedTypes.length > 1) list = list.filter((a) => selectedTypes.includes(a.type));
         setResults(list);
+        setTotal(data.total || 0);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [activeUni, maxPrice, search, selectedTypes, selectedAmenities, roommates]);
+  }, [activeUni, campus, maxPrice, search, selectedTypes, selectedAmenities, roommates, page]);
 
   useEffect(() => {
     const t = setTimeout(load, 250);
     return () => clearTimeout(t);
   }, [load]);
 
-  const toggleType = (v) =>
-    setSelectedTypes((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
-  const toggleAmenity = (a) =>
-    setSelectedAmenities((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
+  useEffect(() => {
+    setPage(1);
+  }, [activeUni, campus, maxPrice, search, selectedTypes, selectedAmenities, roommates]);
 
-  const toggleSave = async (acc) => {
-    if (!isStudent || !localStorage.getItem('token')) return navigate('auth');
+  const toggleType = (v) => {
+    setPage(1);
+    setSelectedTypes((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
+  };
+  const toggleAmenity = (a) => {
+    setPage(1);
+    setSelectedAmenities((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
+  };
+
+  const toggleSave = (acc) => {
     const isSaved = savedIds.has(acc.id);
     setSavedIds((prev) => {
       const next = new Set(prev);
@@ -111,18 +128,20 @@ export default function Listings() {
       else next.add(acc.id);
       return next;
     });
-    try {
-      if (isSaved) await favouriteApi.remove(acc.id);
-      else await favouriteApi.add(acc.id);
-    } catch {
-      load();
-    }
+    if (isSaved) favouriteApi.remove(acc.id);
+    else favouriteApi.add(acc.id);
   };
 
   const open = (acc) => navigate('property-details', { id: acc.id });
   const uniShort = activeUni?.short || 'UZ';
   const gridColsClass =
     mapMode === 'split' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const firstPage = Math.max(1, Math.min(page - 2, totalPages - 4));
+  const pageNumbers = Array.from(
+    { length: Math.min(5, totalPages) },
+    (_, pageIndex) => firstPage + pageIndex
+  );
 
   return (
     <div className="ua-fade mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -133,7 +152,7 @@ export default function Listings() {
             Student homes near <span className="text-brand-primary">{uniShort}</span>
           </h1>
           <p className="mt-1 text-sm text-text-secondary">
-            {results.length} verified rooms &amp; houses · {activeUni?.city || 'Harare'} · prices in USD/month
+            {total} verified rooms &amp; houses · {activeUni?.city || 'Harare'} · prices in USD/month
           </p>
         </div>
         <div className="flex gap-1 rounded-lg bg-bg-surface-alt p-1">
@@ -158,23 +177,65 @@ export default function Listings() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by property, suburb or street"
+            placeholder="Search property, suburb or university"
             className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
           />
         </div>
-        <div className="flex items-center gap-1.5 rounded-lg bg-bg-surface-alt px-3 py-2.5">
+        <div className="relative flex items-center gap-1.5 rounded-lg bg-bg-surface-alt px-3 py-2.5">
           <GraduationCap className="h-4 w-4 flex-shrink-0 text-text-muted" />
-          <select
-            value={uniIdx}
-            onChange={(e) => setUniIdx(Number(e.target.value))}
-            className="cursor-pointer bg-transparent text-sm font-semibold text-text-primary outline-none"
+          <button
+            type="button"
+            onClick={() => setUniversityMenuOpen((open) => !open)}
+            aria-haspopup="listbox"
+            aria-expanded={universityMenuOpen}
+            className="flex min-w-[112px] items-center justify-between gap-2 bg-transparent text-left text-sm font-semibold text-text-primary"
           >
-            {universities.map((u, i) => (
-              <option key={u.id} value={i}>
-                {u.short}
-              </option>
-            ))}
-          </select>
+            <span>{activeUni?.short || 'All universities'}</span>
+            <ChevronDown className="h-4 w-4 flex-shrink-0 text-text-muted" />
+          </button>
+          {universityMenuOpen && (
+            <div
+              role="listbox"
+              aria-label="Select university"
+              className="absolute right-0 top-[calc(100%+8px)] z-[70] grid max-h-[280px] min-w-[320px] grid-cols-3 gap-1 overflow-y-auto rounded-xl border border-border p-2 shadow-xl"
+              style={{ backgroundColor: 'var(--bg-surface)', opacity: 1 }}
+            >
+              <button
+                type="button"
+                role="option"
+                aria-selected={uniIdx === -1}
+                onClick={() => {
+                  setUniIdx(-1);
+                  setCampus('');
+                  setUniversityMenuOpen(false);
+                }}
+                className={`rounded-lg px-2 py-2 text-left text-xs font-semibold ${
+                  uniIdx === -1 ? 'bg-brand-primaryDark text-white' : 'text-text-primary hover:bg-bg-surface-alt'
+                }`}
+              >
+                All universities
+              </button>
+              {universities.map((u, i) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  role="option"
+                  aria-selected={uniIdx === i}
+                  onClick={() => {
+                    setUniIdx(i);
+                    setCampus('');
+                    setUniversityMenuOpen(false);
+                  }}
+                  className={`rounded-lg px-2 py-2 text-left text-xs font-semibold ${
+                    uniIdx === i ? 'bg-brand-primaryDark text-white' : 'text-text-primary hover:bg-bg-surface-alt'
+                  }`}
+                  title={u.name}
+                >
+                  {u.short}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="font-num ml-auto flex items-center gap-2 text-xs font-semibold text-text-secondary">
           Max ${maxPrice}
@@ -194,7 +255,12 @@ export default function Listings() {
       <Card className="mb-3 flex flex-wrap items-center gap-2 p-3.5">
         <span className="font-display mr-1 text-xs font-bold tracking-wide text-text-secondary">Roommates:</span>
         {ROOMMATES.map((r) => (
-          <Chip key={r.label} active={roommates === r.label} onClick={() => setRoommates(r.label)}>
+          <Chip
+            key={r.label}
+            active={roommates === r.label}
+            onClick={() => setRoommates(r.label)}
+            style={r.label === 'Any' ? { color: 'var(--text-primary)' } : undefined}
+          >
             <Users className="-mt-0.5 mr-1 inline h-3.5 w-3.5" />
             {r.label}
           </Chip>
@@ -245,18 +311,59 @@ export default function Listings() {
               <p className="text-sm">Try raising the price or clearing a filter.</p>
             </div>
           ) : (
-            <div className={`grid gap-5 ${gridColsClass}`}>
-              {results.map((acc) => (
-                <ListingCard
-                  key={acc.id}
-                  acc={acc}
-                  saved={savedIds.has(acc.id)}
-                  onOpen={open}
-                  onHover={(a) => setSelectedId(a.id)}
-                  onToggleSave={isStudent ? toggleSave : undefined}
-                />
-              ))}
-            </div>
+            <>
+              <div className={`grid gap-5 ${gridColsClass}`}>
+                {results.map((acc) => (
+                  <ListingCard
+                    key={acc.id}
+                    acc={acc}
+                    saved={savedIds.has(acc.id)}
+                    onOpen={open}
+                    onHover={(a) => setSelectedId(a.id)}
+                    onToggleSave={isStudent ? toggleSave : undefined}
+                  />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <nav className="mt-8 flex items-center justify-center gap-1.5" aria-label="Listings pagination">
+                  <button
+                    type="button"
+                    aria-label="Previous page"
+                    disabled={page === 1}
+                    onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-primary transition-colors hover:bg-bg-surface-alt disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  {pageNumbers.map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      aria-label={`Page ${pageNumber}`}
+                      aria-current={page === pageNumber ? 'page' : undefined}
+                      onClick={() => setPage(pageNumber)}
+                      className={`flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-semibold transition-colors ${
+                        page === pageNumber
+                          ? 'border-brand-primaryDark bg-brand-primaryDark text-white'
+                          : 'border-border text-text-primary hover:bg-bg-surface-alt'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    aria-label="Next page"
+                    disabled={page === totalPages}
+                    onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-primary transition-colors hover:bg-bg-surface-alt disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </nav>
+              )}
+            </>
           )}
         </div>
 

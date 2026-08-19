@@ -61,10 +61,6 @@ CREATE TABLE users (
   role            TEXT NOT NULL DEFAULT 'student'
                   CHECK (role IN ('student','landlord')),
   university_id   UUID REFERENCES universities(id),
-  year_of_study   TEXT,
-  course          TEXT,
-  budget          TEXT,
-  move_in         TEXT,
   is_verified     BOOLEAN NOT NULL DEFAULT FALSE,
   avatar_url      TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()

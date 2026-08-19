@@ -44,18 +44,13 @@ export default function PropertyDetails() {
   }, [load]);
 
   useEffect(() => {
-    if (!isStudent || !id || !localStorage.getItem('token')) return;
-    favouriteApi.list().then((items) => setSaved(items.some((a) => a.id === id))).catch(() => {});
-  }, [isStudent, id]);
+    if (!id) return;
+    setSaved(favouriteApi.has(id));
+  }, [id]);
 
-  const toggleSave = async () => {
-    if (!localStorage.getItem('token')) return navigate('auth');
+  const toggleSave = () => {
     setSaved((s) => !s);
-    try {
-      saved ? await favouriteApi.remove(id) : await favouriteApi.add(id);
-    } catch {
-      setSaved((s) => !s);
-    }
+    favouriteApi.has(id) ? favouriteApi.remove(id) : favouriteApi.add(id);
   };
 
   const messageHost = async () => {
@@ -258,7 +253,11 @@ export default function PropertyDetails() {
 
               {isStudent ? (
                 <>
-                  <PrimaryBtn className="mb-2 w-full" onClick={openApply}>
+                  <PrimaryBtn
+                    className="mb-2 w-full"
+                    onClick={openApply}
+                    aria-label={applyLabel}
+                  >
                     {applyLabel}
                   </PrimaryBtn>
                   <OutlineBtn className="w-full" onClick={messageHost}>

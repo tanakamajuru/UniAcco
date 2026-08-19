@@ -71,6 +71,8 @@ const qs = (params = {}) => {
 export const authApi = {
   register: (body) => request('/api/auth/register', { method: 'POST', body: JSON.stringify(body) }),
   login: (body) => request('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+  forgotPassword: (body) => request('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify(body) }),
+  resetPassword: (body) => request('/api/auth/reset-password', { method: 'POST', body: JSON.stringify(body) }),
   me: () => request('/api/auth/me'),
 };
 
@@ -102,11 +104,45 @@ export const accommodationApi = {
   landlord: () => request('/api/accommodations/landlord'),
 };
 
-// ---------------- Favourites ----------------
+// ---------------- Favourites (local-only, no account or server) ----------------
+// Saved listings live in the browser so we never store this preference
+// server-side. `list()` hydrates the saved ids into full accommodation objects.
+const FAV_KEY = 'uniacco.favourites';
+
+const readFavIds = () => {
+  try {
+    const v = JSON.parse(localStorage.getItem(FAV_KEY));
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+};
+const writeFavIds = (ids) => {
+  try {
+    localStorage.setItem(FAV_KEY, JSON.stringify([...new Set(ids)]));
+  } catch {
+    /* storage unavailable (private mode) — favourites just won't persist */
+  }
+};
+
 export const favouriteApi = {
-  list: () => request('/api/favourites'),
-  add: (id) => request(`/api/favourites/${id}`, { method: 'POST' }),
-  remove: (id) => request(`/api/favourites/${id}`, { method: 'DELETE' }),
+  ids: () => readFavIds(),
+  has: (id) => readFavIds().includes(id),
+  add: (id) => {
+    writeFavIds([...readFavIds(), id]);
+    return Promise.resolve({ ok: true });
+  },
+  remove: (id) => {
+    writeFavIds(readFavIds().filter((x) => x !== id));
+    return Promise.resolve({ ok: true });
+  },
+  // Hydrate saved ids into accommodation objects; drop any that no longer exist.
+  list: async () => {
+    const results = await Promise.all(
+      readFavIds().map((id) => accommodationApi.getById(id).catch(() => null))
+    );
+    return results.filter(Boolean);
+  },
 };
 
 // ---------------- Applications ----------------

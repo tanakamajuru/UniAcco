@@ -14,10 +14,6 @@ const serializeUser = (u) => ({
   phone: u.phone,
   role: u.role,
   universityId: u.university_id || null,
-  year: u.year_of_study || null,
-  course: u.course || null,
-  budget: u.budget || null,
-  moveIn: u.move_in || null,
   isVerified: u.is_verified,
   avatarUrl: u.avatar_url || null,
   createdAt: u.created_at,
@@ -25,7 +21,8 @@ const serializeUser = (u) => ({
 
 // POST /api/auth/register
 exports.register = async (req, res) => {
-  const { fullName, email, phone, password, role = 'student' } = req.body;
+  const { fullName, phone, password, role = 'student' } = req.body;
+  const email = String(req.body.email || '').trim().toLowerCase();
 
   if (!fullName || !email || !password) {
     return res.status(400).json({ error: 'fullName, email and password are required' });
@@ -60,13 +57,14 @@ exports.register = async (req, res) => {
 
 // POST /api/auth/login
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const { password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' });
   }
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await pool.query('SELECT * FROM users WHERE lower(email) = $1', [email]);
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -81,6 +79,62 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Error logging in' });
+  }
+};
+
+// POST /api/auth/forgot-password
+exports.forgotPassword = async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: 'email is required' });
+
+  try {
+    const result = await pool.query('SELECT id, email FROM users WHERE lower(email) = $1', [email]);
+    // Keep the response generic so account existence is not disclosed.
+    if (result.rows.length === 0) return res.json({ message: 'If an account exists, reset instructions were created.' });
+
+    const resetToken = jwt.sign(
+      { id: result.rows[0].id, email: result.rows[0].email, purpose: 'password-reset' },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    // Email delivery is not configured in this project yet. The token is returned for local development.
+    res.json({
+      message: 'Reset instructions created. Use the reset token to choose a new password.',
+      resetToken,
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Unable to create password reset instructions' });
+  }
+};
+
+// POST /api/auth/reset-password
+exports.resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'token and password are required' });
+  if (String(password).length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (payload.purpose !== 'password-reset' || !payload.id) {
+      return res.status(400).json({ error: 'Invalid password reset token' });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING *',
+      [hashed, payload.id]
+    );
+    if (result.rows.length === 0) return res.status(400).json({ error: 'Invalid password reset token' });
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
+      return res.status(400).json({ error: 'This password reset link is invalid or expired' });
+    }
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Unable to reset password' });
   }
 };
 
@@ -102,10 +156,6 @@ exports.updateMe = async (req, res) => {
     fullName: 'full_name',
     phone: 'phone',
     universityId: 'university_id',
-    year: 'year_of_study',
-    course: 'course',
-    budget: 'budget',
-    moveIn: 'move_in',
     avatarUrl: 'avatar_url',
   };
 

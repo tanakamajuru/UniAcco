@@ -124,7 +124,6 @@ exports.forLandlord = async (req, res) => {
       `SELECT app.*,
               a.title AS acc_title,
               s.full_name AS student_name, s.is_verified AS student_verified,
-              s.year_of_study AS student_year, s.course AS student_course,
               u.short AS student_uni
          FROM applications app
          JOIN accommodations a ON a.id = app.accommodation_id
@@ -138,7 +137,7 @@ exports.forLandlord = async (req, res) => {
 
     res.json(
       rows.map((r) => {
-        const metaParts = [r.student_year, r.student_course, r.student_uni].filter(Boolean);
+        const metaParts = [r.student_uni].filter(Boolean);
         return {
           application: {
             id: r.id,
