@@ -29,6 +29,14 @@ const validUntil = () => {
 const isPaid = (tx) =>
   Boolean(tx && (tx.paid === true || tx.transactionStatus === 'SUCCESS'));
 
+// Terminal failure states: the payment will not complete, so we stop polling.
+const FAILED_STATUSES = new Set([
+  'FAILED', 'CANCELLED', 'DECLINED', 'INSUFFICIENT_FUNDS', 'TERMINATED',
+  'CLOSED', 'AUTHORIZATION_FAILED', 'TIME_OUT', 'ERROR', 'SERVICE_UNAVAILABLE',
+]);
+const isFailed = (tx) =>
+  Boolean(tx && FAILED_STATUSES.has(String(tx.transactionStatus || '').toUpperCase()));
+
 // POST /api/payments/initiate
 // optionalAuth: anonymous visitors can pay to unlock a contact without an account.
 router.post('/initiate', optionalAuth, async (req, res) => {
@@ -138,10 +146,10 @@ router.post('/initiate', optionalAuth, async (req, res) => {
   }
 });
 
-// Landlord contact for an accommodation — revealed only after payment.
+// Host contact + exact address for an accommodation — revealed only after payment.
 async function contactFor(client, accommodationId) {
   const { rows } = await client.query(
-    `SELECT l.full_name AS name, l.phone, l.email
+    `SELECT l.full_name AS name, l.phone, l.email, a.address
        FROM accommodations a JOIN users l ON l.id = a.landlord_id
       WHERE a.id = $1`,
     [accommodationId]
@@ -172,27 +180,34 @@ router.get('/status/:reference', optionalAuth, async (req, res) => {
       });
     }
 
-    let paid = false;
+    let outcome = 'pending';
     if (payment.poll_url === SIMULATED) {
-      paid = true; // dev mode: confirm immediately on first poll
+      outcome = 'paid'; // dev mode: confirm immediately on first poll
     } else {
       const result = await pesepay.checkStatus(reference);
       if (!result.success) return res.status(502).json({ error: 'Status check failed' });
-      paid = isPaid(result.data);
+      if (isPaid(result.data)) outcome = 'paid';
+      else if (isFailed(result.data)) outcome = 'failed';
     }
 
-    if (paid) {
+    if (outcome === 'paid') {
       await client.query(
         'UPDATE payments SET status = $1, paid_at = now(), valid_until = $2 WHERE id = $3',
         ['paid', validUntil(), payment.id]
+      );
+    } else if (outcome === 'failed') {
+      // Don't clobber a payment that was already reconciled as paid elsewhere.
+      await client.query(
+        "UPDATE payments SET status = 'failed' WHERE id = $1 AND status <> 'paid'",
+        [payment.id]
       );
     }
 
     res.json({
       success: true,
-      status: paid ? 'paid' : 'pending',
+      status: outcome,
       accommodationId: payment.accommodation_id,
-      contact: paid ? await contactFor(client, payment.accommodation_id) : null,
+      contact: outcome === 'paid' ? await contactFor(client, payment.accommodation_id) : null,
     });
   } catch (error) {
     console.error('Payment status check error:', error);

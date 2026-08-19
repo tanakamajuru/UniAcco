@@ -178,6 +178,24 @@ export default function PropertyDetails() {
               </span>
             </div>
 
+            {/* unlocked contact — shown inline for mobile (desktop uses the sticky card) */}
+            {unlocked && (
+              <div className="mb-6 rounded-xl border border-success/30 bg-success/10 p-4 lg:hidden">
+                <div className="mb-1.5 flex items-center gap-2 text-[13px] font-bold text-success">
+                  <Unlock className="h-3.5 w-3.5" /> Contact unlocked
+                </div>
+                <div className="text-[13px] leading-relaxed text-text-secondary">
+                  <strong className="text-text-primary">{contact?.name}</strong>
+                  <br />
+                  {contact?.phone}
+                  {contact?.email && (<><br />{contact.email}</>)}
+                  {(acc.address || contact?.address) && (
+                    <><br /><span className="inline-flex items-start gap-1"><MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" /> {acc.address || contact.address}</span></>
+                  )}
+                </div>
+              </div>
+            )}
+
             <h2 className="font-display mb-3 text-lg font-bold text-text-primary">Amenities</h2>
             <div className="mb-6 grid grid-cols-2 gap-3">
               {ALL_AMENITIES.map((aid) => {
@@ -249,6 +267,14 @@ export default function PropertyDetails() {
                         <>
                           <br />
                           {contact.email}
+                        </>
+                      )}
+                      {(acc.address || contact?.address) && (
+                        <>
+                          <br />
+                          <span className="inline-flex items-start gap-1">
+                            <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" /> {acc.address || contact.address}
+                          </span>
                         </>
                       )}
                     </div>

@@ -56,6 +56,9 @@ const PaymentReturn = () => {
           window.dispatchEvent(new CustomEvent('paymentSuccessful', {
             detail: { reference, data }
           }));
+        } else if (data.status === 'failed') {
+          setStatus('error');
+          setMessage('Your payment was declined or cancelled — nothing was charged for access. You can try again.');
         } else {
           setStatus('pending');
           setMessage('Payment is being processed. Please wait...');

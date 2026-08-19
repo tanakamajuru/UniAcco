@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronDown, Camera, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronDown, Camera, Loader2, Check } from 'lucide-react';
 import { useNavigation } from '../App';
 import { accommodationApi, universityApi } from '../services/api';
 import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
@@ -294,7 +294,12 @@ export default function ListPropertyPage() {
                   color: active ? '#2F8FB8' : '#475569',
                 }}
               >
-                <AmenityIcon id={id} className="h-3.5 w-3.5" /> {LABELS[id]}
+                {active ? (
+                  <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                ) : (
+                  <AmenityIcon id={id} className="h-3.5 w-3.5" />
+                )}
+                {LABELS[id]}
               </button>
             );
           })}

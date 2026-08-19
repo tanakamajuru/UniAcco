@@ -1,44 +1,60 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, Check, Lock, Smartphone, CreditCard, Phone, MessageCircle } from 'lucide-react';
+import {
+  X, Loader2, Check, Lock, Smartphone, CreditCard, Phone, MessageCircle, AlertTriangle, Clock,
+} from 'lucide-react';
 import { paymentApi } from '../services/api';
 import { ACCESS_FEE, ACCESS_FEE_LABEL } from '../lib/fees';
 import { telLink, whatsappLink } from '../lib/contact';
 
-// Poll payment status until paid/failed or timeout. Returns the contact on success.
+// Poll payment status until settled or timeout.
+// Returns { status: 'paid' | 'failed' | 'timeout', contact }.
 async function waitForPayment(reference, { tries = 20, interval = 1500 } = {}) {
   for (let i = 0; i < tries; i++) {
-    const res = await paymentApi.status(reference);
-    if (res.status === 'paid') return res.contact || {};
-    if (res.status === 'failed') return null;
+    try {
+      const res = await paymentApi.status(reference);
+      if (res.status === 'paid') return { status: 'paid', contact: res.contact || {} };
+      if (res.status === 'failed' || res.status === 'cancelled') return { status: 'failed' };
+    } catch {
+      /* transient network/gateway hiccup — keep polling */
+    }
     await new Promise((r) => setTimeout(r, interval));
   }
-  return null;
+  return { status: 'timeout' };
 }
 
 // Anonymous unlock: pay the access fee, then reveal the host's phone so the
 // visitor can call / WhatsApp them directly. No account, no application row.
 export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
-  const [phase, setPhase] = useState('form'); // form | processing | done
+  const [phase, setPhase] = useState('form'); // form | processing | done | pending | failed
   const [payMethod, setPayMethod] = useState('mobile');
   const [provider, setProvider] = useState('ecocash');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState(null);
   const [contact, setContact] = useState(null);
+  const [reference, setReference] = useState(null);
+  const [rechecking, setRechecking] = useState(false);
 
   const providerName = provider === 'ecocash' ? 'EcoCash' : 'InnBucks';
 
+  const settle = (result) => {
+    if (result.status === 'paid') {
+      setContact(result.contact);
+      onUnlocked?.(result.contact);
+      setPhase('done');
+    } else if (result.status === 'failed') {
+      setPhase('failed');
+    } else {
+      setPhase('pending'); // timeout — money may have moved; keep the reference
+    }
+  };
+
   const pay = async () => {
     setError(null);
-    if (!email) {
-      setError('Enter an email for your receipt.');
-      return;
-    }
-    if (payMethod === 'mobile' && !phone) {
-      setError(`Enter the ${providerName} number to charge.`);
-      return;
-    }
+    if (!email) return setError('Enter an email for your receipt.');
+    if (payMethod === 'mobile' && !phone) return setError(`Enter the ${providerName} number to charge.`);
+
     setPhase('processing');
     try {
       const init = await paymentApi.initiate({
@@ -50,27 +66,49 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
         phone: payMethod === 'mobile' ? phone : undefined,
         method: payMethod === 'mobile' ? provider : undefined,
       });
+      setReference(init.reference);
 
       if (payMethod === 'web' && init.redirectUrl && init.pollUrl !== 'SIMULATED') {
-        // Hosted card/bank checkout in a new tab; keep polling here.
-        window.open(init.redirectUrl, '_blank', 'noopener');
+        window.open(init.redirectUrl, '_blank', 'noopener'); // hosted card/bank checkout
       }
 
-      const paidContact = await waitForPayment(init.reference);
-      if (!paidContact) throw new Error('Payment was not completed. Please try again.');
-
-      setContact(paidContact);
-      onUnlocked?.(paidContact);
-      setPhase('done');
+      settle(await waitForPayment(init.reference));
     } catch (e) {
-      setError(e.message);
+      setError(e.message || 'We could not start the payment. Please try again.');
       setPhase('form');
+    }
+  };
+
+  // Re-check a payment we have a reference for (used from the pending screen).
+  const recheck = async () => {
+    if (!reference) return;
+    setRechecking(true);
+    try {
+      const res = await paymentApi.status(reference);
+      if (res.status === 'paid') {
+        setContact(res.contact || {});
+        onUnlocked?.(res.contact || {});
+        setPhase('done');
+      } else if (res.status === 'failed' || res.status === 'cancelled') {
+        setPhase('failed');
+      }
+    } catch {
+      /* leave the user on the pending screen to try again */
+    } finally {
+      setRechecking(false);
     }
   };
 
   const input =
     'w-full rounded-[11px] border border-input-border bg-bg-surface px-3.5 py-3 text-sm text-text-primary outline-none focus:border-brand-primary';
   const label = 'mb-1.5 block text-sm font-bold text-text-primary';
+  // Theme-aware selectable chip (readable in light and dark).
+  const chip = (active) =>
+    `transition-colors ${
+      active
+        ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
+        : 'border-border bg-bg-surface text-text-secondary'
+    }`;
 
   const tel = contact?.phone ? telLink(contact.phone) : null;
   const wa = contact?.phone
@@ -82,9 +120,9 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
       className="fixed inset-0 z-[80] flex items-center justify-center bg-[rgba(15,23,42,0.6)] p-3 backdrop-blur-sm sm:p-6"
       style={{ animation: 'uaFade 0.25s ease both' }}
     >
-      <div className="ua-pop flex max-h-[94vh] w-[520px] max-w-full flex-col overflow-hidden rounded-[22px] bg-[#F8FAFC] shadow-2xl dark:bg-[#0B1220]">
+      <div className="ua-pop flex max-h-[94vh] w-[520px] max-w-full flex-col overflow-hidden rounded-[22px] bg-bg-page shadow-2xl">
         {/* header */}
-        <div className="flex items-center justify-between border-b border-border bg-[#F8FAFC] px-6 py-5 dark:bg-[#0B1220]">
+        <div className="flex items-center justify-between border-b border-border bg-bg-page px-6 py-5">
           <div>
             <div className="font-display text-[19px] font-extrabold text-text-primary">
               {phase === 'done' ? 'Contact unlocked ✓' : 'Unlock host contact'}
@@ -95,7 +133,8 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-bg-surface text-text-secondary"
+            aria-label="Close"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-bg-surface text-text-secondary hover:text-text-primary"
           >
             <X className="h-[18px] w-[18px]" />
           </button>
@@ -125,17 +164,15 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
                   { key: 'web', icon: CreditCard, title: 'Card or bank', sub: 'Visa · Mastercard' },
                 ].map((m) => {
                   const Icon = m.icon;
-                  const active = payMethod === m.key;
                   return (
                     <button
                       key={m.key}
                       onClick={() => setPayMethod(m.key)}
-                      className="flex-1 rounded-[13px] border-2 p-3.5 text-center transition-colors"
-                      style={{ borderColor: active ? '#2F8FB8' : '#E2E8F0', background: active ? '#EAF6FB' : 'transparent' }}
+                      className={`flex-1 rounded-[13px] border-2 p-3.5 text-center ${chip(payMethod === m.key)}`}
                     >
-                      <Icon className="mx-auto mb-1 h-5 w-5 text-text-primary" />
-                      <div className="text-sm font-bold text-text-primary">{m.title}</div>
-                      <div className="text-xs text-text-secondary">{m.sub}</div>
+                      <Icon className="mx-auto mb-1 h-5 w-5" />
+                      <div className="text-sm font-bold">{m.title}</div>
+                      <div className="text-xs opacity-80">{m.sub}</div>
                     </button>
                   );
                 })}
@@ -145,23 +182,15 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
                 <div className="ua-fade">
                   <label className={label}>Mobile money provider</label>
                   <div className="mb-3.5 flex gap-2">
-                    {['ecocash', 'innbucks'].map((p) => {
-                      const active = provider === p;
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => setProvider(p)}
-                          className="flex-1 rounded-[10px] border-[1.5px] p-2.5 text-[13.5px] font-bold transition-colors"
-                          style={{
-                            borderColor: active ? '#2F8FB8' : '#E2E8F0',
-                            background: active ? '#EAF6FB' : 'transparent',
-                            color: active ? '#2F8FB8' : '#475569',
-                          }}
-                        >
-                          {p === 'ecocash' ? 'EcoCash' : 'InnBucks'}
-                        </button>
-                      );
-                    })}
+                    {['ecocash', 'innbucks'].map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setProvider(p)}
+                        className={`flex-1 rounded-[10px] border-[1.5px] p-2.5 text-[13.5px] font-bold ${chip(provider === p)}`}
+                      >
+                        {p === 'ecocash' ? 'EcoCash' : 'InnBucks'}
+                      </button>
+                    ))}
                   </div>
                   <label className={label}>{providerName} number</label>
                   <input value={phone} onChange={(e) => setPhone(e.target.value)} className={`${input} mb-3.5`} placeholder="077X XXX XXX or 071X XXX XXX" />
@@ -181,9 +210,9 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
                 </div>
               )}
 
-              <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-brand-accent bg-[#FFF7E6] px-4 py-3.5">
-                <Lock className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#92660B]" />
-                <p className="text-[12.5px] leading-relaxed text-[#92660B]">
+              <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-brand-accent bg-brand-accent/10 px-4 py-3.5">
+                <Lock className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-accent" />
+                <p className="text-[12.5px] leading-relaxed text-text-secondary">
                   No account needed. Only the {ACCESS_FEE_LABEL} access fee is charged now — rent is arranged
                   directly with the verified host.
                 </p>
@@ -205,9 +234,58 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
             </div>
           )}
 
+          {phase === 'pending' && (
+            <div className="px-8 py-10 text-center">
+              <div className="mx-auto mb-4 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-brand-accent/15">
+                <Clock className="h-9 w-9 text-brand-accent" />
+              </div>
+              <h3 className="font-display mb-2 text-[20px] font-extrabold text-text-primary">Still confirming…</h3>
+              <p className="mb-4 text-[14px] leading-relaxed text-text-secondary">
+                We haven't had confirmation from Pesepay yet. If you were charged, don't pay again — your
+                access unlocks automatically once the payment clears. Check again in a moment.
+              </p>
+              {reference && (
+                <div className="mb-5 rounded-lg border border-border bg-bg-surface px-3 py-2 text-[12.5px] text-text-secondary">
+                  Keep this reference for support: <strong className="text-text-primary">{reference}</strong>
+                </div>
+              )}
+              <button
+                onClick={recheck}
+                disabled={rechecking}
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-6 py-3 text-[15px] font-bold text-white disabled:opacity-60"
+              >
+                {rechecking && <Loader2 className="h-4 w-4 animate-spin" />}
+                {rechecking ? 'Checking…' : 'Check again'}
+              </button>
+            </div>
+          )}
+
+          {phase === 'failed' && (
+            <div className="px-8 py-10 text-center">
+              <div className="mx-auto mb-4 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-error/10">
+                <AlertTriangle className="h-9 w-9 text-error" />
+              </div>
+              <h3 className="font-display mb-2 text-[20px] font-extrabold text-text-primary">Payment not completed</h3>
+              <p className="mb-4 text-[14px] leading-relaxed text-text-secondary">
+                The payment was declined or cancelled, so nothing was charged for access. You can try again.
+              </p>
+              {reference && (
+                <div className="mb-5 rounded-lg border border-border bg-bg-surface px-3 py-2 text-[12.5px] text-text-secondary">
+                  Reference: <strong className="text-text-primary">{reference}</strong>
+                </div>
+              )}
+              <button
+                onClick={() => { setError(null); setPhase('form'); }}
+                className="rounded-xl bg-brand-primary px-6 py-3 text-[15px] font-bold text-white"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
           {phase === 'done' && (
-            <div className="ua-pop px-8 pb-9 pt-9 text-center">
-              <div className="mx-auto mb-4 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#E8F7EE]">
+            <div className="ua-pop px-8 pb-8 pt-9 text-center">
+              <div className="mx-auto mb-4 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-success/15">
                 <Check className="h-9 w-9 text-success" strokeWidth={2.6} />
               </div>
               <h3 className="font-display mb-2 text-[23px] font-extrabold text-text-primary">You're unlocked 🎉</h3>
@@ -215,18 +293,18 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
                 Reach {contact?.name || 'the host'} directly to arrange a viewing.
               </p>
 
-              <div className="mb-5 rounded-[13px] border border-[#86E0AB] bg-[#E8F7EE] p-4 text-left text-[13px] leading-relaxed">
-                <div className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#15803D]">
+              <div className="mb-5 rounded-[13px] border border-success/40 bg-success/10 p-4 text-left text-[13px] leading-relaxed">
+                <div className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-success">
                   <Check className="h-3 w-3" /> Host contact
                 </div>
-                <div className="mt-2 space-y-1 text-[#166534]">
+                <div className="mt-2 space-y-1 text-text-primary">
                   {contact?.name && <div><strong>{contact.name}</strong></div>}
                   {contact?.phone && <div>📞 {contact.phone}</div>}
                   {contact?.email && <div>✉️ {contact.email}</div>}
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="mb-3 flex gap-3">
                 {tel && (
                   <a
                     href={tel}
@@ -246,13 +324,20 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
                   </a>
                 )}
               </div>
+
+              <button
+                onClick={onClose}
+                className="w-full rounded-xl border border-border bg-bg-surface py-3 text-[15px] font-bold text-text-primary"
+              >
+                View property details
+              </button>
             </div>
           )}
         </div>
 
-        {/* footer */}
+        {/* footer (form only) */}
         {phase === 'form' && (
-          <div className="flex justify-between gap-3 border-t border-border bg-[#F8FAFC] px-6 py-4 dark:bg-[#0B1220]">
+          <div className="flex justify-between gap-3 border-t border-border bg-bg-page px-6 py-4">
             <button
               onClick={onClose}
               className="rounded-xl border border-border bg-bg-surface px-5 py-3 text-[15px] font-bold text-text-secondary"
