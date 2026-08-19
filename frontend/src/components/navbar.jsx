@@ -319,9 +319,9 @@ export default function Navbar() {
                 setDrawerOpen(true)
               }
               aria-label="Open menu"
-              className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[10px] border border-brand-primary/30 bg-brand-primary/10 text-text-primary md:hidden dark:border-white/20 dark:bg-white/10 dark:text-white"
+              className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[10px] bg-brand-primaryDark text-white shadow-sm md:hidden"
             >
-              <Menu className="h-[18px] w-[18px]" />
+              <Menu className="h-[20px] w-[20px]" strokeWidth={2.5} />
             </button>
           </div>
         </nav>
@@ -518,6 +518,14 @@ function MenuLink({
         </span>
       ) : null}
     </button>
+  );
+}
+
+function DrawerLabel({ children }) {
+  return (
+    <div className="mb-1 mt-4 text-[11px] font-bold uppercase tracking-wide text-text-muted">
+      {children}
+    </div>
   );
 }
 
