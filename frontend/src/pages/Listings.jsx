@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, GraduationCap, Loader2, RotateCw, MapPin } from 'lucide-react';
+import { Search, GraduationCap, Loader2, RotateCw, MapPin, Users } from 'lucide-react';
 import { useNavigation } from '../App';
 import { accommodationApi, universityApi, favouriteApi, currentRole } from '../services/api';
 import ListingCard from '../components/listings/ListingCard';
@@ -11,6 +11,15 @@ const TYPES = [
   { value: 'Ensuite room', label: 'Ensuite' },
   { value: 'Studio flat', label: 'Studio' },
   { value: 'Shared house', label: 'Shared' },
+];
+
+// Roommates → occupancy of the room (people_per_room). `query` becomes API params.
+const ROOMMATES = [
+  { label: 'Any', query: {} },
+  { label: 'Just me', query: { peoplePerRoom: 1 } },
+  { label: '1 roommate', query: { peoplePerRoom: 2 } },
+  { label: '2 roommates', query: { peoplePerRoom: 3 } },
+  { label: '3+ roommates', query: { peoplePerRoomMin: 4 } },
 ];
 
 export default function Listings() {
@@ -26,6 +35,7 @@ export default function Listings() {
   });
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedAmenities, setSelectedAmenities] = useState([]);
+  const [roommates, setRoommates] = useState('Any');
   const [maxPrice, setMaxPrice] = useState(320);
   const [mapMode, setMapMode] = useState('split');
   const [selectedId, setSelectedId] = useState(null);
@@ -63,6 +73,7 @@ export default function Listings() {
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
+    const roommateQuery = ROOMMATES.find((r) => r.label === roommates)?.query || {};
     accommodationApi
       .getAll({
         university: activeUni?.short,
@@ -70,6 +81,7 @@ export default function Listings() {
         q: search,
         type: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
         amenities: selectedAmenities.length ? selectedAmenities.join(',') : undefined,
+        ...roommateQuery,
       })
       .then((data) => {
         let list = data.results || [];
@@ -78,7 +90,7 @@ export default function Listings() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [activeUni, maxPrice, search, selectedTypes, selectedAmenities]);
+  }, [activeUni, maxPrice, search, selectedTypes, selectedAmenities, roommates]);
 
   useEffect(() => {
     const t = setTimeout(load, 250);
@@ -176,6 +188,17 @@ export default function Listings() {
             className="w-24 cursor-pointer accent-brand-primaryDark"
           />
         </div>
+      </Card>
+
+      {/* roommates */}
+      <Card className="mb-3 flex flex-wrap items-center gap-2 p-3.5">
+        <span className="font-display mr-1 text-xs font-bold tracking-wide text-text-secondary">Roommates:</span>
+        {ROOMMATES.map((r) => (
+          <Chip key={r.label} active={roommates === r.label} onClick={() => setRoommates(r.label)}>
+            <Users className="-mt-0.5 mr-1 inline h-3.5 w-3.5" />
+            {r.label}
+          </Chip>
+        ))}
       </Card>
 
       {/* type & amenities */}

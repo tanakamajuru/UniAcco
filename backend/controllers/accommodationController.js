@@ -10,7 +10,7 @@ const PAGE_SIZE = 12;
 // GET /api/accommodations?university=&type=&maxPrice=&amenities=wifi,kitchen&q=&page=
 exports.list = async (req, res) => {
   try {
-    const { university, type, maxPrice, amenities, q } = req.query;
+    const { university, type, maxPrice, amenities, q, peoplePerRoom, peoplePerRoomMin } = req.query;
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
 
     const where = [`a.status = 'active'`];
@@ -26,6 +26,17 @@ exports.list = async (req, res) => {
     if (type) {
       where.push(`a.type = $${i++}`);
       params.push(type);
+    }
+    // Roommates filter → occupancy of the room (people_per_room).
+    // peoplePerRoom = exact (1=just me, 2=1 roommate, 3=2 roommates);
+    // peoplePerRoomMin = at least (4 => "3+ roommates").
+    if (peoplePerRoom) {
+      where.push(`a.people_per_room = $${i++}`);
+      params.push(Number(peoplePerRoom));
+    }
+    if (peoplePerRoomMin) {
+      where.push(`a.people_per_room >= $${i++}`);
+      params.push(Number(peoplePerRoomMin));
     }
     if (maxPrice) {
       where.push(`a.price_per_month <= $${i++}`);
@@ -54,7 +65,9 @@ exports.list = async (req, res) => {
     }
 
     const whereSql = `WHERE ${where.join(' AND ')}`;
-    const filtered = Boolean(type || maxPrice || q || amenities || university);
+    const filtered = Boolean(
+      type || maxPrice || q || amenities || university || peoplePerRoom || peoplePerRoomMin
+    );
     const orderSql = filtered
       ? 'ORDER BY a.created_at DESC, a.price_per_month ASC'
       : 'ORDER BY a.created_at DESC';
