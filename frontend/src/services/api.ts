@@ -62,7 +62,12 @@ export const authApi = {
 export const accommodationApi = {
   // Get all accommodations with optional filters
   getAll: async (filters: Record<string, any> = {}) => {
-    const queryParams = new URLSearchParams(filters).toString();
+    const queryParams = new URLSearchParams(
+      Object.entries(filters).reduce<Record<string, string>>((params, [key, value]) => {
+        if (value !== undefined && value !== null && value !== '') params[key] = String(value);
+        return params;
+      }, {})
+    ).toString();
     const response = await fetch(`${API_URL}/accommodations?${queryParams}`);
     return handleResponse(response);
   },

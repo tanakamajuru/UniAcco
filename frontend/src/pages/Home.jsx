@@ -40,7 +40,11 @@ export default function Home() {
 
   const runSearch = () => {
     if (query) localStorage.setItem('searchQuery', query);
+    else localStorage.removeItem('searchQuery');
     if (university) localStorage.setItem('searchUniversity', university);
+    else localStorage.removeItem('searchUniversity');
+    if (campus) localStorage.setItem('searchCampus', campus);
+    else localStorage.removeItem('searchCampus');
     navigate('listings');
   };
 
@@ -73,10 +77,17 @@ export default function Home() {
                   setCampus('');
                 }}
                 className="w-full bg-transparent text-sm font-medium text-text-primary outline-none"
+                style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-surface)' }}
               >
-                <option value="">All Universities</option>
+                <option value="" style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-surface)' }}>
+                  All Universities
+                </option>
                 {universities.map((u) => (
-                  <option key={u.id} value={u.short}>
+                  <option
+                    key={u.id}
+                    value={u.short}
+                    style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-surface)' }}
+                  >
                     {u.name}
                   </option>
                 ))}
@@ -89,10 +100,17 @@ export default function Home() {
                 onChange={(e) => setCampus(e.target.value)}
                 disabled={!campuses.length}
                 className="w-full bg-transparent text-sm font-medium text-text-primary outline-none disabled:opacity-60"
+                style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-surface)' }}
               >
-                <option value="">All Campuses</option>
+                <option value="" style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-surface)' }}>
+                  All Campuses
+                </option>
                 {campuses.map((c) => (
-                  <option key={c.id} value={c.name}>
+                  <option
+                    key={c.id}
+                    value={c.name}
+                    style={{ color: 'var(--text-primary)', backgroundColor: 'var(--bg-surface)' }}
+                  >
                     {c.name}
                   </option>
                 ))}
@@ -108,6 +126,7 @@ export default function Home() {
                 onKeyDown={(e) => e.key === 'Enter' && runSearch()}
                 placeholder="Enter area, street name..."
                 className="w-full bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-muted"
+                style={{ color: 'var(--text-primary)' }}
               />
             </div>
             <button

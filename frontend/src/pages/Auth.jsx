@@ -1,14 +1,13 @@
 // src/pages/Auth.jsx
 import { useState } from 'react';
-import { Mail, Lock, User, LogIn, ArrowLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Mail, Lock, User, LogIn } from 'lucide-react';
 
 import { authApi } from '../services/api';
-import { useNavigation } from '../App';
 
 const Auth = () => {
-  const { navigate } = useNavigation();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(() => new URLSearchParams(window.location.search).get('mode') === 'signup');
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetToken, setResetToken] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -28,9 +27,59 @@ const Auth = () => {
     }));
   };
 
+  const switchToSignUp = () => {
+    setForgotMode(false);
+    setResetToken('');
+    setError('');
+    setIsSignUp(true);
+    window.history.replaceState({}, '', '/auth?mode=signup');
+  };
+
+  const switchToSignIn = () => {
+    setForgotMode(false);
+    setResetToken('');
+    setError('');
+    setIsSignUp(false);
+    window.history.replaceState({}, '', '/auth');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (forgotMode) {
+      setLoading(true);
+      try {
+        if (!resetToken) {
+          const res = await authApi.forgotPassword({ email: formData.email });
+          if (!res.resetToken) {
+            setError(res.message || 'If an account exists, reset instructions were created.');
+          } else {
+            setResetToken(res.resetToken);
+            setError('Reset request created. Choose a new password below.');
+          }
+        } else {
+          if (formData.password.length < 8) {
+            setError('Password must be at least 8 characters');
+            return;
+          }
+          if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match');
+            return;
+          }
+          await authApi.resetPassword({ token: resetToken, password: formData.password });
+          setForgotMode(false);
+          setResetToken('');
+          setFormData((current) => ({ ...current, password: '', confirmPassword: '' }));
+          setError('Password reset successfully. You can now sign in.');
+        }
+      } catch (err) {
+        setError(err?.message || 'Unable to reset password');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     if (isSignUp) {
       if (!formData.name.trim()) {
@@ -49,11 +98,11 @@ const Auth = () => {
       const res = isSignUp
         ? await authApi.register({
             fullName: formData.name.trim(),
-            email: formData.email,
+            email: formData.email.trim().toLowerCase(),
             password: formData.password,
             role: formData.role,
           })
-        : await authApi.login({ email: formData.email, password: formData.password });
+        : await authApi.login({ email: formData.email.trim().toLowerCase(), password: formData.password });
 
       if (res?.token) localStorage.setItem('token', res.token);
 
@@ -73,24 +122,19 @@ const Auth = () => {
       <div className="relative">
         <div className="min-h-screen w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 mx-auto">
           <div className="w-full max-w-md">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-white dark:bg-[#1A1F2E] rounded-2xl shadow-xl p-8"
-            >
+            <div className="bg-white dark:bg-[#1A1F2E] rounded-2xl shadow-xl p-8">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-text-primary">
-                  {isSignUp ? 'Create your account' : 'Welcome back'}
+                  {forgotMode ? (resetToken ? 'Choose a new password' : 'Reset your password') : isSignUp ? 'Create your account' : 'Welcome back'}
                 </h2>
                 <p className="mt-2 text-sm text-text-secondary">
-                  {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                  {forgotMode ? 'Remembered your password? ' : isSignUp ? 'Already have an account? ' : "Don't have an account? "}
                   <button
                     type="button"
-                    onClick={() => setIsSignUp(!isSignUp)}
-                    className="font-medium text-brand-primaryDark hover:text-brand-primary dark:hover:text-brand-primaryLight focus:outline-none"
+                    onClick={forgotMode || isSignUp ? switchToSignIn : switchToSignUp}
+                    className="font-semibold text-brand-primaryDark underline decoration-brand-primary/40 underline-offset-4 hover:text-brand-primary dark:hover:text-brand-primaryLight focus:outline-none"
                   >
-                    {isSignUp ? 'Sign in' : 'Sign up'}
+                    {forgotMode || isSignUp ? 'Sign in' : 'Create an account'}
                   </button>
                 </p>
               </div>
@@ -102,7 +146,7 @@ const Auth = () => {
               )}
 
               <form className="space-y-6" onSubmit={handleSubmit}>
-                {isSignUp && (
+                {isSignUp && !forgotMode && (
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-text-secondary">
                       Full Name
@@ -126,7 +170,7 @@ const Auth = () => {
                   </div>
                 )}
 
-                {isSignUp && (
+                {isSignUp && !forgotMode && (
                   <div>
                     <label htmlFor="role" className="block text-sm font-medium text-text-secondary">
                       Account Type
@@ -166,7 +210,7 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <div>
+                {(!forgotMode || resetToken) && <div>
                   <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
                     Password
                   </label>
@@ -186,9 +230,9 @@ const Auth = () => {
                       placeholder="••••••••"
                     />
                   </div>
-                </div>
+                </div>}
 
-                {isSignUp && (
+                {(isSignUp || (forgotMode && resetToken)) && (
                   <div>
                     <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary">
                       Confirm Password
@@ -212,7 +256,7 @@ const Auth = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between">
+                {!forgotMode && <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <input
                       id="remember-me"
@@ -227,63 +271,34 @@ const Auth = () => {
 
                   {!isSignUp && (
                     <div className="text-sm">
-                      <a href="#" className="font-medium text-brand-primaryDark hover:text-brand-primary dark:hover:text-brand-primaryLight">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotMode(true);
+                          setIsSignUp(false);
+                          setError('');
+                        }}
+                        className="font-medium text-brand-primaryDark hover:text-brand-primary dark:hover:text-brand-primaryLight"
+                      >
                         Forgot your password?
-                      </a>
+                      </button>
                     </div>
                   )}
-                </div>
+                </div>}
 
                 <div>
                   <button
                     type="submit"
                     disabled={loading}
                     className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primaryDark hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    style={{ backgroundColor: 'var(--brand-primary-dark)', color: 'var(--text-inverse)' }}
                   >
-                    {loading ? 'Please wait...' : (isSignUp ? 'Sign up' : 'Sign in')}
+                    {loading ? 'Please wait...' : forgotMode ? (resetToken ? 'Reset password' : 'Send reset instructions') : isSignUp ? 'Sign up' : 'Sign in'}
                   </button>
                 </div>
               </form>
 
-              <div className="mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white dark:bg-[#1A1F2E] text-text-muted">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    className="w-full inline-flex justify-center py-2 px-4 border border-border rounded-md shadow-sm bg-white dark:bg-[#2E4057] text-sm font-medium text-text-secondary hover:bg-bg-surface-alt dark:hover:bg-[#3a4d6a]"
-                  >
-                    <span className="sr-only">Sign in with Google</span>
-                    <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-                    </svg>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="w-full inline-flex justify-center py-2 px-4 border border-border rounded-md shadow-sm bg-white dark:bg-[#2E4057] text-sm font-medium text-text-secondary hover:bg-bg-surface-alt dark:hover:bg-[#3a4d6a]"
-                  >
-                    <span className="sr-only">Sign in with Facebook</span>
-                    <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M20 10c0-5.523-4.477-10-10-10S0 4.477 0 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V10h2.54V7.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V10h2.773l-.443 2.89h-2.33v6.988C16.343 19.128 20 14.991 20 10z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

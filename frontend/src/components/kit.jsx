@@ -10,10 +10,11 @@ export function Card({ className = '', children, ...rest }) {
   );
 }
 
-export function Chip({ active, children, onClick, className = '' }) {
+export function Chip({ active, children, onClick, className = '', style }) {
   return (
     <button
       onClick={onClick}
+      style={style}
       className={`whitespace-nowrap rounded-[11px] border px-3.5 py-2 text-[13px] font-semibold transition-colors ${
         active
           ? 'border-brand-primaryDark bg-brand-primaryDark text-white'
@@ -25,10 +26,11 @@ export function Chip({ active, children, onClick, className = '' }) {
   );
 }
 
-export function PrimaryBtn({ children, className = '', ...props }) {
+export function PrimaryBtn({ children, className = '', style, ...props }) {
   return (
     <button
       {...props}
+      style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--text-inverse)', ...style }}
       className={`font-display inline-flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-5 py-3 text-sm font-bold tracking-[0.02em] text-white transition-opacity hover:opacity-90 ${className}`}
     >
       {children}
