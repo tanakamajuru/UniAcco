@@ -13,7 +13,6 @@ const PremiumFeatures = ({ accommodationId = null }) => {
 
   // Check payment status for different features
   const { hasPaid: hasBooked, isLoading: bookingLoading } = usePaymentVerification('booking');
-  const { hasPaid: canMessage, isLoading: messagingLoading } = usePaymentVerification('messaging');
   const { hasPaid: hasAdvancedSearch, isLoading: searchLoading } = usePaymentVerification('advanced_search');
   const { hasPaid: hasPremiumSupport, isLoading: supportLoading } = usePaymentVerification('premium_support');
   const { hasPaid: hasAccommodationDetails, isLoading: detailsLoading } = usePaymentVerification('accommodation_details', accommodationId);
@@ -35,7 +34,7 @@ const PremiumFeatures = ({ accommodationId = null }) => {
     setSelectedFeature('');
   };
 
-  if (bookingLoading || messagingLoading || searchLoading || supportLoading || detailsLoading) {
+  if (bookingLoading || searchLoading || supportLoading || detailsLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primaryDark"></div>
@@ -46,7 +45,7 @@ const PremiumFeatures = ({ accommodationId = null }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="bg-bg-surface rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold mb-6 text-center">Premium Features</h2>
         
         <div className="grid md:grid-cols-2 gap-6">
@@ -75,40 +74,7 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               ) : (
                 <button
                   onClick={() => handleUpgrade('Accommodation Booking')}
-                  className="text-brand-primaryDark hover:text-brand-primaryDark font-medium"
-                >
-                  Unlock →
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Messaging Feature */}
-          <div className={`border rounded-lg p-4 ${canMessage ? 'border-success bg-success/10' : 'border-border bg-bg-surface-alt'}`}>
-            <div className="flex items-center mb-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${canMessage ? 'bg-success' : 'bg-border-strong'}`}>
-                {canMessage ? (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                )}
-              </div>
-              <h3 className="text-lg font-semibold">Direct Messaging</h3>
-            </div>
-            <p className="text-text-secondary text-sm mb-3">
-              Message landlords and other students directly
-            </p>
-            <div className="text-sm">
-              {canMessage ? (
-                <span className="text-success font-medium">✓ Unlocked</span>
-              ) : (
-                <button
-                  onClick={() => handleUpgrade('Direct Messaging')}
-                  className="text-brand-primaryDark hover:text-brand-primaryDark font-medium"
+                  className="text-brand-primaryDark dark:text-brand-primaryLight hover:text-brand-primaryDark dark:text-brand-primaryLight font-medium"
                 >
                   Unlock →
                 </button>
@@ -141,7 +107,7 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               ) : (
                 <button
                   onClick={() => handleUpgrade('Advanced Search')}
-                  className="text-brand-primaryDark hover:text-brand-primaryDark font-medium"
+                  className="text-brand-primaryDark dark:text-brand-primaryLight hover:text-brand-primaryDark dark:text-brand-primaryLight font-medium"
                 >
                   Unlock →
                 </button>
@@ -174,7 +140,7 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               ) : (
                 <button
                   onClick={() => handleUpgrade('Premium Support')}
-                  className="text-brand-primaryDark hover:text-brand-primaryDark font-medium"
+                  className="text-brand-primaryDark dark:text-brand-primaryLight hover:text-brand-primaryDark dark:text-brand-primaryLight font-medium"
                 >
                   Unlock →
                 </button>
@@ -195,7 +161,7 @@ const PremiumFeatures = ({ accommodationId = null }) => {
                 ) : (
                   <button
                     onClick={() => handleUpgrade('Accommodation Details')}
-                    className="text-brand-primaryDark hover:text-brand-primaryDark text-sm font-medium"
+                    className="text-brand-primaryDark dark:text-brand-primaryLight hover:text-brand-primaryDark dark:text-brand-primaryLight text-sm font-medium"
                   >
                     Pay to Unlock →
                   </button>
@@ -213,12 +179,6 @@ const PremiumFeatures = ({ accommodationId = null }) => {
               <span className="text-text-secondary">Booking Access:</span>
               <span className={`ml-2 font-medium ${hasBooked ? 'text-success' : 'text-text-muted'}`}>
                 {hasBooked ? 'Active' : 'Locked'}
-              </span>
-            </div>
-            <div>
-              <span className="text-text-secondary">Messaging:</span>
-              <span className={`ml-2 font-medium ${canMessage ? 'text-success' : 'text-text-muted'}`}>
-                {canMessage ? 'Active' : 'Locked'}
               </span>
             </div>
             <div>
@@ -240,7 +200,7 @@ const PremiumFeatures = ({ accommodationId = null }) => {
       {/* Payment Form Modal */}
       {showPaymentForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-bg-surface rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Unlock {selectedFeature}</h3>
               <button

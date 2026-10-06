@@ -14,7 +14,7 @@ function PhotoGroup({ id, title, hint, files, setFiles, onPick }) {
   return (
     <div>
       <label className="mb-1.5 block text-sm font-bold text-text-primary">
-        {title} <span className="text-error">*</span>
+        {title} <span className="text-error dark:text-red-400">*</span>
       </label>
       <label
         htmlFor={id}
@@ -200,7 +200,7 @@ export default function ListPropertyPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+        <div className="mb-4 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error dark:text-red-400">
           {error}
         </div>
       )}
@@ -267,7 +267,7 @@ export default function ListPropertyPage() {
 
         <div className="mb-4">
           <label className={label}>
-            Pin the exact location <span className="text-error">*</span>
+            Pin the exact location <span className="text-error dark:text-red-400">*</span>
           </label>
           <p className="mb-2 text-[12.5px] text-text-muted">
             Click on the map to drop a pin. This sets the distance from campus students see — required.
@@ -338,9 +338,9 @@ export default function ListPropertyPage() {
                 onClick={() => toggleAmenity(id)}
                 className="flex items-center gap-1.5 rounded-[10px] border px-3 py-2 text-[13px] font-semibold transition-colors"
                 style={{
-                  borderColor: active ? '#2F8FB8' : '#E2E8F0',
-                  background: active ? '#EAF6FB' : 'transparent',
-                  color: active ? '#2F8FB8' : '#475569',
+                  borderColor: active ? 'var(--brand-primary-dark)' : 'var(--border-default)',
+                  background: active ? 'color-mix(in srgb, var(--brand-primary) 18%, transparent)' : 'transparent',
+                  color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
                 }}
               >
                 {active ? (
@@ -389,7 +389,7 @@ export default function ListPropertyPage() {
         <button
           onClick={() => submit('pending')}
           disabled={loading}
-          className="flex items-center gap-2 rounded-xl bg-brand-primary px-7 py-3 text-[15px] font-bold text-white shadow-md disabled:opacity-60"
+          className="flex items-center gap-2 rounded-xl bg-brand-primaryDark px-7 py-3 text-[15px] font-bold text-white shadow-md disabled:opacity-60"
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           Publish listing →

@@ -13,13 +13,14 @@ import {
 import { useNavigation } from '../App';
 import { hostApi, accommodationApi, applicationApi, authApi, imageUrl } from '../services/api';
 import { gradientFor } from '../components/listings/ListingCard';
+import ViewingRequests from '../components/ViewingRequests';
 
 const STATUS_BADGE = {
   active: 'bg-[#E8F7EE] text-[#15803D]',
   pending: 'bg-[#FEF3C7] text-[#92660B]',
   rented: 'bg-[#E0F2FE] text-[#0369A1]',
   draft: 'bg-bg-surface-alt text-text-secondary',
-  rejected: 'bg-error/10 text-error',
+  rejected: 'bg-error/10 text-error dark:text-red-400',
 };
 
 const AVATAR_BGS = [
@@ -122,7 +123,7 @@ export default function HostDashboard() {
         </div>
         <button
           onClick={() => navigate('list-your-property')}
-          className="flex items-center gap-2 rounded-[13px] bg-brand-primary px-5 py-3 text-[15px] font-bold text-white shadow-md"
+          className="flex items-center gap-2 rounded-[13px] bg-brand-primaryDark px-5 py-3 text-[15px] font-bold text-white shadow-md"
         >
           <Plus className="h-4 w-4" /> List a new place
         </button>
@@ -214,6 +215,9 @@ export default function HostDashboard() {
           )}
         </div>
 
+        {/* viewing requests */}
+        <ViewingRequests />
+
         {/* applicants */}
         <div className="overflow-hidden rounded-[18px] border border-border bg-bg-surface shadow-sm">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
@@ -252,7 +256,7 @@ export default function HostDashboard() {
                   <div className="mt-2 flex gap-2">
                     <button
                       onClick={() => decide(a.application.id, 'accepted')}
-                      className="flex-1 rounded-[9px] bg-brand-primary py-2.5 text-[13px] font-bold text-white"
+                      className="flex-1 rounded-[9px] bg-brand-primaryDark py-2.5 text-[13px] font-bold text-white"
                     >
                       Accept
                     </button>

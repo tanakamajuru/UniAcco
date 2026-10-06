@@ -79,7 +79,7 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
             disabled={!interactive}
           >
             <Star
-              className={`w-5 h-5 ${ star <= rating ? 'fill-yellow-400 text-brand-accent' : 'text-text-muted' }`}
+              className={`w-5 h-5 ${ star <= rating ? 'fill-yellow-400 text-brand-accentText dark:text-brand-accent' : 'text-text-muted' }`}
             />
           </button>
         ))}
@@ -89,13 +89,13 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
 
   if (!hasPremiumAccess) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-8 text-center">
         <Lock className="w-12 h-12 text-text-muted mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
         <p className="text-text-secondary mb-4">
           Share your experience and help other students make informed decisions about their accommodation.
         </p>
-        <button className="bg-brand-primaryDark text-white px-6 py-2 rounded-lg hover:bg-brand-primary transition-colors">
+        <button className="bg-brand-primaryDark text-white px-6 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors">
           Upgrade to Premium
         </button>
       </div>
@@ -104,7 +104,7 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-8">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primaryDark mx-auto"></div>
       </div>
     );
@@ -113,7 +113,7 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
   return (
     <div className="space-y-6">
       {/* Pending Reviews */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Clock className="w-5 h-5" />
           Pending Reviews
@@ -134,7 +134,7 @@ const ReviewsSection = ({ hasPremiumAccess }) => {
       </div>
 
       {/* Written Reviews */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <CheckCircle className="w-5 h-5" />
           Reviews Written
@@ -232,7 +232,7 @@ const ReviewForm = ({ booking, onSubmit }) => {
         <button
           onClick={handleSubmit}
           disabled={submitting || rating === 0}
-          className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors disabled:bg-border-strong disabled:cursor-not-allowed"
+          className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors disabled:bg-border-strong disabled:cursor-not-allowed"
         >
           {submitting ? 'Submitting...' : 'Submit Review'}
         </button>

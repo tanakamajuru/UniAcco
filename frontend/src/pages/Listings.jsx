@@ -149,7 +149,7 @@ export default function Listings() {
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-[32px] font-bold text-text-primary">
-            Student homes near <span className="text-brand-primary">{uniShort}</span>
+            Student homes near <span className="text-brand-primaryDark dark:text-brand-primaryLight">{uniShort}</span>
           </h1>
           <p className="mt-1 text-sm text-text-secondary">
             {total} verified rooms &amp; houses · {activeUni?.city || 'Harare'} · prices in USD/month
@@ -259,7 +259,6 @@ export default function Listings() {
             key={r.label}
             active={roommates === r.label}
             onClick={() => setRoommates(r.label)}
-            style={r.label === 'Any' ? { color: 'var(--text-primary)' } : undefined}
           >
             <Users className="-mt-0.5 mr-1 inline h-3.5 w-3.5" />
             {r.label}
@@ -287,7 +286,7 @@ export default function Listings() {
       </Card>
 
       {/* list + map */}
-      <div className="flex items-start gap-5">
+      <div className="flex flex-col items-stretch gap-5 lg:flex-row lg:items-start">
         <div className={mapMode === 'split' ? 'min-w-0 flex-1' : 'w-full'}>
           {loading ? (
             <div className="flex justify-center py-24 text-text-secondary">
@@ -299,7 +298,7 @@ export default function Listings() {
               <p className="mt-1 text-sm text-text-secondary">{error}</p>
               <button
                 onClick={load}
-                className="mx-auto mt-4 flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white"
+                className="mx-auto mt-4 flex items-center gap-2 rounded-xl bg-brand-primaryDark px-4 py-2 text-sm font-semibold text-white"
               >
                 <RotateCw className="h-4 w-4" /> Retry
               </button>
@@ -368,8 +367,8 @@ export default function Listings() {
         </div>
 
         {mapMode === 'split' && (
-          <div className="hidden w-[40%] flex-shrink-0 lg:block">
-            <Card className="sticky top-[100px] h-[calc(100vh-140px)] overflow-hidden p-0">
+          <div className="w-full flex-shrink-0 lg:w-[40%]">
+            <Card className="h-[360px] overflow-hidden p-0 lg:sticky lg:top-[100px] lg:h-[calc(100vh-140px)]">
               {results.length ? (
                 <ListingMap results={results} selectedId={selectedId} activeUni={activeUni} onSelect={open} />
               ) : (

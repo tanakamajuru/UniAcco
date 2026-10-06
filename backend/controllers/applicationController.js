@@ -1,6 +1,5 @@
 const pool = require('../config/database');
 const { hasUnlocked } = require('../utils/accommodation');
-const { ensureThread } = require('../utils/messaging');
 
 const initials = (name) =>
   (name || '?')
@@ -27,6 +26,19 @@ exports.create = async (req, res) => {
       return res.status(400).json({ error: 'accommodationId, fullName and email are required' });
     }
 
+    // An anonymous payer unlocked first and signed up afterwards: attach their
+    // paid, still-valid payment (identified by its reference) to this account.
+    const { paymentReference } = req.body;
+    if (paymentReference) {
+      await pool.query(
+        `UPDATE payments SET user_id = $1
+          WHERE gateway_reference = $2 AND accommodation_id = $3
+            AND user_id IS NULL AND feature = 'accommodation_details'
+            AND status = 'paid' AND (valid_until IS NULL OR valid_until > now())`,
+        [req.user.id, paymentReference, accommodationId]
+      );
+    }
+
     const unlocked = await hasUnlocked(req.user.id, accommodationId);
     if (!unlocked) {
       return res.status(402).json({ error: 'Payment required to apply for this accommodation' });
@@ -49,28 +61,19 @@ exports.create = async (req, res) => {
 
     const { rows } = await pool.query(
       `INSERT INTO applications
-        (accommodation_id, student_id, full_name, email, phone, year_of_study, move_in_date, message, payment_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        (accommodation_id, student_id, full_name, email, phone, move_in_date, message, payment_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
       [
         accommodationId,
         req.user.id,
         fullName,
         email,
         phone || null,
-        yearOfStudy || null,
         moveInDate || null,
         message || null,
         pay.rows[0] ? pay.rows[0].id : null,
       ]
     );
-
-    // open a thread with an enquiry message so the host sees it
-    await ensureThread({
-      studentId: req.user.id,
-      landlordId: acc.rows[0].landlord_id,
-      accommodationId,
-      seed: message ? { senderId: req.user.id, body: message } : undefined,
-    });
 
     res.status(201).json({ application: rows[0] });
   } catch (error) {
@@ -189,19 +192,6 @@ exports.updateStatus = async (req, res) => {
       'UPDATE applications SET status = $1 WHERE id = $2 RETURNING *',
       [status, req.params.id]
     );
-
-    // On accept, ensure a thread exists and seed a host welcome message.
-    if (status === 'accepted') {
-      await ensureThread({
-        studentId: application.student_id,
-        landlordId: application.landlord_id,
-        accommodationId: application.accommodation_id,
-        seed: {
-          senderId: application.landlord_id,
-          body: `Great news — your application for "${application.title}" has been accepted! Let's arrange a viewing.`,
-        },
-      });
-    }
 
     res.json({ application: updated.rows[0] });
   } catch (error) {

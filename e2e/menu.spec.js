@@ -1,0 +1,22 @@
+const { test, expect } = require('playwright/test');
+test.use({ viewport: { width: 390, height: 844 } });
+test('mobile menu opens, closes, and shows links', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const btn = page.locator('button[aria-controls="ua-mobile-menu"]');
+  const nav = page.locator('#ua-mobile-menu');
+  await expect(btn).toBeVisible();
+  const iconW = await btn.locator('span').boundingBox();
+  await expect(nav).toBeHidden();
+  await btn.click();
+  await page.waitForTimeout(800);
+  await expect(nav).toBeVisible();
+  await expect(btn).toHaveAttribute('aria-expanded', 'true');
+  await page.screenshot({ path: 'results/menu-open.png' });
+  await btn.click();
+  await page.waitForTimeout(800);
+  await expect(btn).toHaveAttribute('aria-expanded', 'false');
+  await btn.click(); await page.waitForTimeout(800);
+  await page.keyboard.press('Escape'); await page.waitForTimeout(800);
+  await expect(nav).toBeHidden();
+  console.log('icon', JSON.stringify(iconW));
+});

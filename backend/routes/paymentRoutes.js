@@ -10,7 +10,9 @@ const ACCESS_DAYS = 30;
 const SIMULATED = 'SIMULATED'; // sentinel poll_url used when Pesepay isn't configured
 
 // TEMP: access fee stubbed to 1 cent for live testing. Revert to 2.00 for launch.
-const ACCESS_FEE_AMOUNT = 0.01;
+const ACCESS_FEE_AMOUNT = 2.0;
+// Landlord verification: $1 for 30 days.
+const LANDLORD_VERIFY_AMOUNT = 1.0;
 
 // Mobile-money / card provider -> Pesepay payment method code (USD).
 const METHOD_CODES = {
@@ -51,21 +53,32 @@ router.post('/initiate', optionalAuth, async (req, res) => {
       method, // 'ecocash' | 'innbucks' for mobile
     } = req.body;
 
-    if (!accommodationId || !email) {
+    // Landlord verification: a logged-in landlord pays for a month of the verified badge.
+    const isVerification = feature === 'landlord_verification';
+    if (isVerification && (!req.user || req.user.role !== 'landlord')) {
+      return res.status(403).json({ error: 'Only landlords can pay for verification' });
+    }
+    if (!email || (!isVerification && !accommodationId)) {
       return res.status(400).json({ error: 'accommodationId and email are required' });
     }
     // Amount is enforced server-side (ignore any client value).
-    const paymentAmount = ACCESS_FEE_AMOUNT;
+    const paymentAmount = isVerification ? LANDLORD_VERIFY_AMOUNT : ACCESS_FEE_AMOUNT;
 
-    const accRes = await client.query('SELECT title FROM accommodations WHERE id = $1', [
-      accommodationId,
-    ]);
-    if (accRes.rows.length === 0) {
-      return res.status(404).json({ error: 'Accommodation not found' });
+    let itemTitle = 'Landlord verification (1 month)';
+    if (!isVerification) {
+      const accRes = await client.query('SELECT title FROM accommodations WHERE id = $1', [
+        accommodationId,
+      ]);
+      if (accRes.rows.length === 0) {
+        return res.status(404).json({ error: 'Accommodation not found' });
+      }
+      itemTitle = accRes.rows[0].title;
     }
 
     const merchantReference = `UNIACCO-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-    const reasonForPayment = `UniAcco access fee — ${accRes.rows[0].title}`;
+    const reasonForPayment = isVerification
+      ? `UniAcco landlord verification — 1 month`
+      : `UniAcco access fee — ${itemTitle}`;
 
     let reference; // Pesepay reference we poll on
     let pollUrl = null;
@@ -125,7 +138,7 @@ router.post('/initiate', optionalAuth, async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending')`,
       [
         req.user?.id || null,
-        accommodationId,
+        isVerification ? null : accommodationId,
         feature,
         paymentAmount,
         paymentMethod,
@@ -173,11 +186,23 @@ router.get('/status/:reference', optionalAuth, async (req, res) => {
     if (payRes.rows.length === 0) return res.status(404).json({ error: 'Payment not found' });
 
     const payment = payRes.rows[0];
+    // A paid unlock lapses at valid_until. Past that date the contact is withheld,
+    // so a copied reference or edited browser date reveals nothing.
+    if (payment.status === 'paid' && payment.valid_until && new Date(payment.valid_until) <= new Date()) {
+      return res.json({
+        success: true,
+        status: 'expired',
+        accommodationId: payment.accommodation_id,
+        validUntil: payment.valid_until,
+        contact: null,
+      });
+    }
     if (payment.status === 'paid') {
       return res.json({
         success: true,
         status: 'paid',
         accommodationId: payment.accommodation_id,
+        validUntil: payment.valid_until,
         contact: await contactFor(client, payment.accommodation_id),
       });
     }
@@ -194,13 +219,14 @@ router.get('/status/:reference', optionalAuth, async (req, res) => {
 
     if (outcome === 'paid') {
       await client.query(
-        'UPDATE payments SET status = $1, paid_at = now(), valid_until = $2 WHERE id = $3',
+        // Payer email/phone are no longer needed once paid, so clear them.
+        'UPDATE payments SET status = $1, paid_at = now(), valid_until = $2, email = NULL, phone = NULL WHERE id = $3',
         ['paid', validUntil(), payment.id]
       );
     } else if (outcome === 'failed') {
       // Don't clobber a payment that was already reconciled as paid elsewhere.
       await client.query(
-        "UPDATE payments SET status = 'failed' WHERE id = $1 AND status <> 'paid'",
+        "UPDATE payments SET status = 'failed', email = NULL, phone = NULL WHERE id = $1 AND status <> 'paid'",
         [payment.id]
       );
     }
@@ -209,6 +235,9 @@ router.get('/status/:reference', optionalAuth, async (req, res) => {
       success: true,
       status: outcome,
       accommodationId: payment.accommodation_id,
+      // A payment that settles on this call has no valid_until on the row we loaded,
+      // so use the same 30-day date the UPDATE just stored.
+      validUntil: outcome === 'paid' ? payment.valid_until || validUntil() : null,
       contact: outcome === 'paid' ? await contactFor(client, payment.accommodation_id) : null,
     });
   } catch (error) {
@@ -242,7 +271,7 @@ router.post('/webhook', async (req, res) => {
 
     if (paid) {
       await client.query(
-        `UPDATE payments SET status='paid', paid_at=now(), valid_until=$1
+        `UPDATE payments SET status='paid', paid_at=now(), valid_until=$1, email=NULL, phone=NULL
           WHERE gateway_reference=$2 AND status<>'paid'`,
         [validUntil(), reference]
       );

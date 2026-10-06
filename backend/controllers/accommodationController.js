@@ -7,6 +7,14 @@ const {
 
 const PAGE_SIZE = 12;
 
+// Recomputes a listing's distance to its campus (metres). Runs after every
+// create and update, so the stored distance never goes stale.
+const DISTANCE_SQL = `
+  UPDATE accommodations a SET distance_to_campus_m = haversine_m(a.lat, a.lng, c.lat, c.lng)
+    FROM campuses c
+   WHERE a.id = $1 AND c.id = a.campus_id
+     AND c.lat IS NOT NULL AND a.lat IS NOT NULL`;
+
 // GET /api/accommodations?university=&type=&maxPrice=&amenities=wifi,kitchen&q=&page=
 exports.list = async (req, res) => {
   try {
@@ -109,17 +117,8 @@ exports.landlordListings = async (req, res) => {
       [req.user.id]
     );
 
-    // enquiries = distinct message threads per accommodation
-    const enqRes = await pool.query(
-      `SELECT accommodation_id, count(*)::int AS enquiries
-         FROM message_threads
-        WHERE landlord_id = $1 AND accommodation_id IS NOT NULL
-        GROUP BY accommodation_id`,
-      [req.user.id]
-    );
-    const enquiriesByAcc = Object.fromEntries(
-      enqRes.rows.map((r) => [r.accommodation_id, r.enquiries])
-    );
+    // Enquiries (messaging) were retired for privacy, so there are none to count.
+    const enquiriesByAcc = {};
 
     const results = rows.map((r) => ({
       ...serializeAccommodation(r, true),
@@ -225,6 +224,7 @@ exports.create = async (req, res) => {
       ]
     );
     const accId = accRes.rows[0].id;
+    await client.query(DISTANCE_SQL, [accId]);
 
     // amenities
     let amenityIds = b.amenities;
@@ -345,6 +345,7 @@ exports.update = async (req, res) => {
     if (sets.length === 0) return res.status(400).json({ error: 'No valid fields to update' });
     params.push(id);
     await pool.query(`UPDATE accommodations SET ${sets.join(', ')} WHERE id = $${i}`, params);
+    await pool.query(DISTANCE_SQL, [id]);
 
     const { rows } = await pool.query(`${ACC_SELECT} WHERE a.id = $1`, [id]);
     res.json(serializeAccommodation(rows[0], true));

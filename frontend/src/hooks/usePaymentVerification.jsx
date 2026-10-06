@@ -171,7 +171,7 @@ export const PaymentRequired = ({ featureName, onUpgrade, message = null }) => {
           </p>
           <button
             onClick={onUpgrade}
-            className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors"
+            className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors"
           >
             Upgrade Now
           </button>

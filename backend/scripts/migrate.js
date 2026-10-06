@@ -18,6 +18,11 @@ const MIGRATIONS = [
   '005_drop_unused_profile_columns.sql',
   '006_anonymous_payments.sql',
   '007_image_kind.sql',
+  '008_application_retention.sql',
+  '009_drop_messaging.sql',
+  '010_campus_corrections.sql',
+  '011_campus_distance.sql',
+  '012_viewing_requests.sql',
 ];
 
 const useUrl = Boolean(process.env.DATABASE_URL);

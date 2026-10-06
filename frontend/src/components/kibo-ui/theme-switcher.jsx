@@ -28,7 +28,7 @@ export function ThemeSwitcher({ className = '' }) {
         aria-haspopup="menu"
         aria-expanded={open}
         style={{ color: 'var(--text-primary)' }}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-primary/30 transition-colors hover:bg-brand-primary/10 hover:text-brand-primaryDark dark:border-white/20 dark:hover:bg-white/10 dark:hover:text-white"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-primary/30 transition-colors hover:bg-brand-primaryDark/10 hover:text-brand-primaryDark dark:text-brand-primaryLight dark:border-white/20 dark:hover:bg-white/10 dark:hover:text-white"
       >
         <ActiveIcon
           aria-hidden="true"
@@ -58,7 +58,7 @@ export function ThemeSwitcher({ className = '' }) {
                   setTheme(item.value);
                   setOpen(false);
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-brand-primary/10 hover:text-brand-primaryDark dark:hover:text-brand-primaryLight"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-brand-primary/10 hover:text-brand-primaryDark dark:text-brand-primaryLight dark:hover:text-brand-primaryLight"
               >
                 <ThemeIcon className="h-4 w-4 stroke-current" />
                 <span className="flex-1">{item.label}</span>

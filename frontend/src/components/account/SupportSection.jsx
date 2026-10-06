@@ -61,7 +61,7 @@ const SupportSection = () => {
     },
     {
       question: 'How do premium features work?',
-      answer: 'Premium features unlock unlimited messaging, reviews, price alerts, and priority support. Upgrade anytime from your account settings.'
+      answer: 'Premium features unlock reviews, price alerts, and priority support. Upgrade anytime from your account settings.'
     },
     {
       question: 'Is my personal information secure?',
@@ -91,7 +91,7 @@ const SupportSection = () => {
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-6">
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => setActiveTab('help')}
@@ -133,7 +133,7 @@ const SupportSection = () => {
                     <h4 className="font-medium mb-3">{category.title}</h4>
                     <ul className="space-y-2">
                       {category.items.map((item, itemIndex) => (
-                        <li key={itemIndex} className="text-sm text-text-secondary hover:text-brand-primaryDark cursor-pointer">
+                        <li key={itemIndex} className="text-sm text-text-secondary hover:text-brand-primaryDark dark:text-brand-primaryLight cursor-pointer">
                           • {item}
                         </li>
                       ))}
@@ -148,7 +148,7 @@ const SupportSection = () => {
                 <div className="space-y-3">
                   {faqs.map((faq, index) => (
                     <details key={index} className="border rounded-lg p-4">
-                      <summary className="font-medium cursor-pointer hover:text-brand-primaryDark">
+                      <summary className="font-medium cursor-pointer hover:text-brand-primaryDark dark:text-brand-primaryLight">
                         {faq.question}
                       </summary>
                       <p className="text-text-secondary mt-2 text-sm">{faq.answer}</p>
@@ -163,7 +163,7 @@ const SupportSection = () => {
               <h4 className="font-medium mb-4">Still need help?</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 border rounded-lg">
-                  <Mail className="w-8 h-8 mx-auto mb-2 text-brand-primaryDark" />
+                  <Mail className="w-8 h-8 mx-auto mb-2 text-brand-primaryDark dark:text-brand-primaryLight" />
                   <h5 className="font-medium">Email Support</h5>
                   <p className="text-sm text-text-secondary">support@uniacco.com</p>
                   <p className="text-xs text-text-muted">24-48 hour response</p>
@@ -175,7 +175,7 @@ const SupportSection = () => {
                   <p className="text-xs text-text-muted">Mon-Fri, 9AM-6PM</p>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <MessageSquare className="w-8 h-8 mx-auto mb-2 text-brand-accent" />
+                  <MessageSquare className="w-8 h-8 mx-auto mb-2 text-brand-accentText dark:text-brand-accent" />
                   <h5 className="font-medium">Live Chat</h5>
                   <p className="text-sm text-text-secondary">Available now</p>
                   <p className="text-xs text-text-muted">Instant response</p>
@@ -264,7 +264,7 @@ const SupportSection = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-brand-primaryDark text-white px-6 py-2 rounded-lg hover:bg-brand-primary transition-colors disabled:bg-border-strong disabled:cursor-not-allowed flex items-center gap-2"
+                className="bg-brand-primaryDark text-white px-6 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors disabled:bg-border-strong disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 {submitting ? 'Submitting...' : 'Submit Issue'}
@@ -298,7 +298,7 @@ const SupportSection = () => {
                     <li>User responsibilities</li>
                     <li>Platform usage guidelines</li>
                   </ul>
-                  <button className="text-brand-primaryDark hover:text-brand-primaryDark font-medium">
+                  <button className="text-brand-primaryDark dark:text-brand-primaryLight hover:text-brand-primaryDark dark:text-brand-primaryLight font-medium">
                     Read Full Terms →
                   </button>
                 </div>
@@ -321,7 +321,7 @@ const SupportSection = () => {
                     <li>Usage data</li>
                     <li>Communication records</li>
                   </ul>
-                  <button className="text-brand-primaryDark hover:text-brand-primaryDark font-medium">
+                  <button className="text-brand-primaryDark dark:text-brand-primaryLight hover:text-brand-primaryDark dark:text-brand-primaryLight font-medium">
                     Read Full Privacy Policy →
                   </button>
                 </div>

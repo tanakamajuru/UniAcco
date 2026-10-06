@@ -174,26 +174,6 @@ CREATE TABLE applications (
 CREATE INDEX idx_app_accommodation ON applications(accommodation_id);
 CREATE INDEX idx_app_student       ON applications(student_id);
 
--- ---------- Messaging ----------
-CREATE TABLE message_threads (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  accommodation_id  UUID REFERENCES accommodations(id) ON DELETE SET NULL,
-  student_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  landlord_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (accommodation_id, student_id, landlord_id)
-);
-
-CREATE TABLE messages (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  thread_id    UUID NOT NULL REFERENCES message_threads(id) ON DELETE CASCADE,
-  sender_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  body         TEXT NOT NULL,
-  read_at      TIMESTAMPTZ,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_msg_thread ON messages(thread_id, created_at);
-
 -- ============================================================
 -- Seed lookups
 -- ============================================================
@@ -227,17 +207,19 @@ INSERT INTO users (id, full_name, email, phone, password_hash, role, is_verified
   ('33333333-3333-3333-3333-333333333333','Grace Madziva','grace@uniacco.test','+263 78 905 1123','$2b$10$I.gftAd3E/n7TEc45BDfzu/yZRHdMRybgJaJJdMxrIGIVJVxBaibW','landlord',true);
 
 -- Students
-INSERT INTO users (id, full_name, email, phone, password_hash, role, university_id, year_of_study, course, budget, move_in, is_verified)
+-- Student profile fields (year, course, budget, move-in) were removed for data
+-- minimisation (see migration 005), so the seed no longer sets them.
+INSERT INTO users (id, full_name, email, phone, password_hash, role, university_id, is_verified)
 SELECT
   '44444444-4444-4444-4444-444444444444','Tariro Moyo','tariro@students.uz.ac.zw','+263 77 555 0101',
   '$2b$10$I.gftAd3E/n7TEc45BDfzu/yZRHdMRybgJaJJdMxrIGIVJVxBaibW','student',
-  (SELECT id FROM universities WHERE short='UZ'),'2nd year','BSc Computer Science','$120–260','Aug 2026',true;
+  (SELECT id FROM universities WHERE short='UZ'),true;
 
-INSERT INTO users (id, full_name, email, phone, password_hash, role, university_id, year_of_study, course, is_verified)
+INSERT INTO users (id, full_name, email, phone, password_hash, role, university_id, is_verified)
 SELECT
   '55555555-5555-5555-5555-555555555555','Panashe Kuda','panashe@students.uz.ac.zw','+263 77 555 0202',
   '$2b$10$I.gftAd3E/n7TEc45BDfzu/yZRHdMRybgJaJJdMxrIGIVJVxBaibW','student',
-  (SELECT id FROM universities WHERE short='UZ'),'3rd year','LLB Law',true;
+  (SELECT id FROM universities WHERE short='UZ'),true;
 
 -- ============================================================
 -- Seed accommodations (mirrors the prototype's six homes)

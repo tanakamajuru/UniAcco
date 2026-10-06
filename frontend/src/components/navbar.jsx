@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../App';
 import {
-  Menu,
-  X,
   ChevronDown,
   ArrowLeftRight,
   Plus,
@@ -79,6 +77,14 @@ export default function Navbar() {
       document.removeEventListener('keydown', onKey);
     };
   }, [menuOpen]);
+
+  // Escape closes the mobile menu.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e) => e.key === 'Escape' && setDrawerOpen(false);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [drawerOpen]);
 
   const go = (page) => {
     setMenuOpen(false);
@@ -163,13 +169,13 @@ export default function Navbar() {
                     : 'home'
                 )
               }
-              className="relative z-10 flex h-16 w-[220px] flex-shrink-0 items-center"
+              className="relative z-10 flex h-16 w-[160px] flex-shrink-0 items-center md:w-[220px]"
               aria-label="UniAcco home"
             >
               <img
                 src={logo}
                 alt="UniAcco"
-                className="absolute left-0 top-1/2 h-[100px] w-[220px] -translate-y-1/2 object-contain"
+                className="absolute left-0 top-1/2 h-12 w-auto max-w-[160px] -translate-y-1/2 object-contain md:h-[100px] md:max-w-none md:w-[220px]"
               />
             </button>
 
@@ -189,7 +195,7 @@ export default function Navbar() {
                     className={`relative py-1 text-[14.5px] transition-colors ${
                       active
                         ? 'font-semibold text-text-primary dark:text-white'
-                        : 'font-medium text-text-secondary hover:text-brand-primaryDark dark:text-white/70 dark:hover:text-brand-primaryLight'
+                        : 'font-medium text-text-secondary hover:text-brand-primaryDark dark:text-brand-primaryLight dark:text-white/70 dark:hover:text-brand-primaryLight'
                     }`}
                   >
                     {item.label}
@@ -215,13 +221,13 @@ export default function Navbar() {
                 onClick={() =>
                   go('list-your-property')
                 }
-                className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-text-primary transition-opacity hover:text-brand-primaryDark dark:text-white dark:hover:text-brand-primaryLight"
+                className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-text-primary transition-opacity hover:text-brand-primaryDark dark:text-brand-primaryLight dark:text-white dark:hover:text-brand-primaryLight"
               >
                 <Plus className="h-4 w-4" />
                 List your place
               </button>
 
-              <div className="h-5 w-px bg-white/20" />
+              <div className="h-5 w-px bg-bg-surface/20" />
 
               {isAuthenticated ? (
                 <div
@@ -232,11 +238,11 @@ export default function Navbar() {
                     onClick={() =>
                       setMenuOpen((o) => !o)
                     }
-                    className="flex items-center gap-2 rounded-full border border-transparent py-1 pl-1 pr-2.5 text-text-primary transition-colors hover:border-brand-primary/30 hover:bg-brand-primary/10 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/5"
+                    className="flex items-center gap-2 rounded-full border border-transparent py-1 pl-1 pr-2.5 text-text-primary transition-colors hover:border-brand-primary/30 hover:bg-brand-primaryDark/10 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/5"
                     aria-haspopup="true"
                     aria-expanded={menuOpen}
                   >
-                    <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-brand-accent text-[12px] font-extrabold text-brand-primaryDark">
+                    <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-brand-accent text-[12px] font-extrabold text-slate-900">
                       {initialsOf(displayName)}
                     </span>
 
@@ -299,7 +305,7 @@ export default function Navbar() {
               ) : (
                 <button
                   onClick={() => go('auth')}
-                  className="flex items-center gap-2 rounded-full bg-brand-accent px-4 py-2 text-sm font-bold text-brand-primaryDark"
+                  className="flex items-center gap-2 rounded-full bg-brand-accent px-4 py-2 text-sm font-bold text-slate-900"
                 >
                   <LogIn className="h-4 w-4" />
                   Sign in
@@ -314,15 +320,6 @@ export default function Navbar() {
             {/* MOBILE HAMBURGER */}
             {/* ========================= */}
 
-            <button
-              onClick={() =>
-                setDrawerOpen(true)
-              }
-              aria-label="Open menu"
-              className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[10px] bg-brand-primaryDark text-white shadow-sm md:hidden"
-            >
-              <Menu className="h-[20px] w-[20px]" strokeWidth={2.5} />
-            </button>
           </div>
         </nav>
       </div>
@@ -331,28 +328,23 @@ export default function Navbar() {
       {/* MOBILE DRAWER */}
       {/* ========================================= */}
 
-      {drawerOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[60] bg-[rgba(15,23,42,0.5)] md:hidden"
-            style={{
-              animation:
-                'uaFade 0.2s ease both',
-            }}
-            onClick={() =>
-              setDrawerOpen(false)
-            }
-          />
-
-          <div
-            className="fixed bottom-0 right-0 top-0 z-[61] flex w-[84%] max-w-[340px] flex-col overflow-y-auto p-4 shadow-2xl md:hidden"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              opacity: 1,
-              animation:
-                'uaSlideIn 0.26s cubic-bezier(.32,.72,0,1) both',
-            }}
-          >
+      {/* Clip-path circle reveal from the top-right button (thb-01 pattern). */}
+      <div data-open={drawerOpen || undefined} className="group md:hidden">
+        <nav
+          id="ua-mobile-menu"
+          aria-label="Site"
+          className="invisible fixed inset-0 z-[61] overflow-y-auto group-data-open:visible"
+          style={{
+            background: 'var(--bg-surface)',
+            clipPath: drawerOpen
+              ? 'circle(150% at calc(100% - 52px) 44px)'
+              : 'circle(0px at calc(100% - 52px) 44px)',
+            transition: drawerOpen
+              ? 'clip-path .65s cubic-bezier(.65,0,.35,1), visibility 0s 0s'
+              : 'clip-path .65s cubic-bezier(.65,0,.35,1), visibility 0s .65s',
+          }}
+        >
+          <div className="flex min-h-full flex-col p-4 pt-[72px] opacity-0 transition-opacity duration-300 group-data-open:opacity-100">
 
             {/* Drawer header */}
             <div className="mb-4 flex items-center gap-2.5">
@@ -382,15 +374,6 @@ export default function Navbar() {
                 </div>
               </div>
 
-              <button
-                onClick={() =>
-                  setDrawerOpen(false)
-                }
-                aria-label="Close menu"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface-alt text-text-primary"
-              >
-                <X className="h-4 w-4" />
-              </button>
             </div>
 
             {/* Role switch */}
@@ -473,7 +456,7 @@ export default function Navbar() {
             {isAuthenticated ? (
               <button
                 onClick={logout}
-                className="mt-3 flex items-center gap-3 py-3 text-[14.5px] font-bold text-error"
+                className="mt-3 flex items-center gap-3 py-3 text-[14.5px] font-bold text-error dark:text-red-400"
               >
                 <LogOut className="h-[18px] w-[18px]" />
                 Log out
@@ -481,15 +464,31 @@ export default function Navbar() {
             ) : (
               <button
                 onClick={() => go('auth')}
-                className="mt-3 flex items-center gap-3 py-3 text-[14.5px] font-bold text-brand-primaryDark"
+                className="mt-3 flex items-center gap-3 py-3 text-[14.5px] font-bold text-brand-primaryDark dark:text-brand-primaryLight"
               >
                 <LogIn className="h-[18px] w-[18px]" />
                 Sign in
               </button>
             )}
           </div>
-        </>
-      )}
+        </nav>
+
+        <button
+          type="button"
+          aria-expanded={drawerOpen}
+          aria-controls="ua-mobile-menu"
+          aria-label={drawerOpen ? 'Close menu' : 'Open menu'}
+          onClick={() => setDrawerOpen((o) => !o)}
+          style={{ padding: 0 }}
+          className="fixed right-7 top-5 z-[70] grid h-12 w-12 cursor-pointer place-items-center rounded-full border-0 bg-brand-primaryDark transition-[background,scale] duration-300 hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand-primary group-data-open:bg-text-primary motion-reduce:transition-none"
+        >
+          <span className="relative block h-3.5 w-5" aria-hidden="true">
+            <i className="absolute left-0 top-0 h-0.5 w-5 rounded-sm bg-bg-surface transition-[translate,rotate] duration-300 group-data-open:translate-y-1.5 group-data-open:rotate-45 motion-reduce:transition-none" />
+            <i className="absolute left-0 top-1.5 h-0.5 w-5 rounded-sm bg-bg-surface transition-[opacity,translate] duration-200 group-data-open:-translate-x-1.5 group-data-open:opacity-0 motion-reduce:transition-none" />
+            <i className="absolute left-0 top-3 h-0.5 w-5 rounded-sm bg-bg-surface transition-[translate,rotate] duration-300 group-data-open:-translate-y-1.5 group-data-open:-rotate-45 motion-reduce:transition-none" />
+          </span>
+        </button>
+      </div>
     </header>
   );
 }
@@ -515,7 +514,7 @@ function MenuLink({
     >
       {label}
       {badge ? (
-        <span className="rounded bg-brand-accent px-1.5 py-0.5 text-[10px] font-bold text-brand-primaryDark">
+        <span className="rounded bg-brand-accent px-1.5 py-0.5 text-[10px] font-bold text-slate-900">
           {badge}
         </span>
       ) : null}
@@ -543,7 +542,7 @@ function DrawerLink({
       onClick={onClick}
       className={`flex w-full items-center justify-between border-b border-border py-3.5 text-left text-[14.5px] transition-colors ${
         active
-          ? 'font-bold text-brand-primaryDark'
+          ? 'font-bold text-brand-primaryDark dark:text-brand-primaryLight'
           : 'font-medium text-text-primary'
       }`}
     >
@@ -556,7 +555,7 @@ function DrawerLink({
       </span>
 
       {badge ? (
-        <span className="rounded bg-brand-accent px-1.5 py-0.5 text-[10px] font-bold text-brand-primaryDark">
+        <span className="rounded bg-brand-accent px-1.5 py-0.5 text-[10px] font-bold text-slate-900">
           {badge}
         </span>
       ) : null}

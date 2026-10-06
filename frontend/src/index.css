@@ -11,7 +11,7 @@
      Brand
   ========================= */
   --brand-primary: #4DB6E2;
-  --brand-primary-dark: #2F8FB8;
+  --brand-primary-dark: #1B6F96; /* 5.6:1 on white, so it is safe for text and white-on-blue buttons */
   --brand-primary-light: #8FD3EE;
   --brand-accent: #F4C430;
   --brand-accent-soft: #FFE08A;
@@ -29,7 +29,7 @@
   ========================= */
   --text-primary: #0F172A;
   --text-secondary: #475569;
-  --text-muted: #94A3B8;
+  --text-muted: #536176; /* was #94A3B8 (2.5:1 on white); this is ~5.5:1 on the grey surfaces too */
   --text-inverse: #FFFFFF;
   --text-link: #2F8FB8;
 
@@ -55,7 +55,7 @@
   ========================= */
   --color-success: #22C55E;
   --color-warning: #F59E0B;
-  --color-error: #EF4444;
+  --color-error: #DC2626;
   --color-info: #0EA5E9;
 
   /* Legacy variables for compatibility */
@@ -191,15 +191,19 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.25s;
+/* Inside @layer base so Tailwind utilities (p-0, p-2, border-*) can override it.
+   Unlayered, this rule beat every utility and squeezed icon-only buttons to 0px. */
+@layer base {
+  button {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.25s;
+  }
 }
 button:hover {
   border-color: var(--brand-primary);
@@ -207,6 +211,46 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Design tokens used across the components (brand-*, bg-*, text-*, border-*,
+   input-*, btn-*). Tailwind v4 ignores tailwind.config.js, so without these
+   mappings the classes generate no CSS. Values come from the :root vars above
+   so dark mode (redefined below) keeps working. */
+@theme {
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primaryDark: var(--brand-primary-dark);
+  --color-brand-primaryLight: var(--brand-primary-light);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accentSoft: var(--brand-accent-soft);
+  --color-brand-accentText: #8A5A00; /* amber text on white: 5.9:1 */
+
+  --color-bg-page: var(--bg-page);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-alt: var(--bg-surface-alt);
+  --color-bg-elevated: var(--bg-elevated);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+  --color-text-link: var(--text-link);
+
+  --color-border: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
+
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-input-focus: var(--input-border-focus);
+  --color-input-text: var(--input-text);
+  --color-input-placeholder: var(--input-placeholder);
+  --color-input-disabled: var(--input-disabled-bg);
+
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #DC2626;
+  --color-info: #0EA5E9;
 }
 
 @theme inline {

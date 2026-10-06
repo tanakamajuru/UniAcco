@@ -122,7 +122,7 @@ const Auth = () => {
       <div className="relative">
         <div className="min-h-screen w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 mx-auto">
           <div className="w-full max-w-md">
-            <div className="bg-white dark:bg-[#1A1F2E] rounded-2xl shadow-xl p-8">
+            <div className="bg-bg-surface dark:bg-[#1A1F2E] rounded-2xl shadow-xl p-8">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-text-primary">
                   {forgotMode ? (resetToken ? 'Choose a new password' : 'Reset your password') : isSignUp ? 'Create your account' : 'Welcome back'}
@@ -132,7 +132,7 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={forgotMode || isSignUp ? switchToSignIn : switchToSignUp}
-                    className="font-semibold text-brand-primaryDark underline decoration-brand-primary/40 underline-offset-4 hover:text-brand-primary dark:hover:text-brand-primaryLight focus:outline-none"
+                    className="font-semibold text-brand-primaryDark dark:text-brand-primaryLight underline decoration-brand-primary/40 underline-offset-4 hover:text-brand-primaryDark dark:text-brand-primaryLight dark:hover:text-brand-primaryLight focus:outline-none"
                   >
                     {forgotMode || isSignUp ? 'Sign in' : 'Create an account'}
                   </button>
@@ -140,7 +140,7 @@ const Auth = () => {
               </div>
 
               {error && (
-                <div className="rounded-md bg-error/10 border border-error/30 p-3 text-sm text-error">
+                <div className="rounded-md bg-error/10 border border-error/30 p-3 text-sm text-error dark:text-red-400">
                   {error}
                 </div>
               )}
@@ -262,7 +262,7 @@ const Auth = () => {
                       id="remember-me"
                       name="remember-me"
                       type="checkbox"
-                      className="h-4 w-4 rounded border-border text-brand-primaryDark focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-border text-brand-primaryDark dark:text-brand-primaryLight focus:ring-blue-500"
                     />
                     <label htmlFor="remember-me" className="ml-2 block text-sm text-text-secondary">
                       Remember me
@@ -278,7 +278,7 @@ const Auth = () => {
                           setIsSignUp(false);
                           setError('');
                         }}
-                        className="font-medium text-brand-primaryDark hover:text-brand-primary dark:hover:text-brand-primaryLight"
+                        className="font-medium text-brand-primaryDark dark:text-brand-primaryLight hover:text-brand-primaryDark dark:text-brand-primaryLight dark:hover:text-brand-primaryLight"
                       >
                         Forgot your password?
                       </button>
@@ -290,7 +290,7 @@ const Auth = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primaryDark hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primaryDark hover:bg-brand-primaryDark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     style={{ backgroundColor: 'var(--brand-primary-dark)', color: 'var(--text-inverse)' }}
                   >
                     {loading ? 'Please wait...' : forgotMode ? (resetToken ? 'Reset password' : 'Send reset instructions') : isSignUp ? 'Sign up' : 'Sign in'}

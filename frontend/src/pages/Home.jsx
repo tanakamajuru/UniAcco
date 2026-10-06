@@ -53,13 +53,13 @@ export default function Home() {
       {/* Hero + search board */}
       <section className="relative overflow-hidden px-6 pb-10 pt-14 text-center">
         <div className="relative z-10 mx-auto max-w-3xl">
-          <span className="font-num text-[11px] tracking-wide text-brand-primary">
+          <span className="font-num text-[11px] tracking-wide text-brand-primaryDark dark:text-brand-primaryLight">
             {universities.length ? `${universities.length} universities` : 'Verified student housing'} · Zimbabwe
           </span>
           <h1 className="font-display mb-5 mt-3 text-[38px] font-bold leading-[1.02] text-text-primary md:text-[58px]">
             Find Your Perfect
             <br />
-            <span className="text-brand-primary">Student Home</span>
+            <span className="text-brand-primaryDark dark:text-brand-primaryLight">Student Home</span>
           </h1>
           <p className="mx-auto mb-9 max-w-xl text-base text-text-secondary">
             Discover comfortable, affordable accommodation near your campus — every listing verified before it goes live.
@@ -131,7 +131,7 @@ export default function Home() {
             </div>
             <button
               onClick={runSearch}
-              className="flex items-center justify-center bg-brand-primary px-8 py-4 font-bold text-white transition-opacity hover:opacity-90"
+              className="flex items-center justify-center bg-brand-primaryDark px-8 py-4 font-bold text-white transition-opacity hover:opacity-90"
               aria-label="Search"
             >
               <Search className="h-5 w-5" />
@@ -142,11 +142,9 @@ export default function Home() {
 
       {/* Trust stats */}
       <section className="border-y border-border bg-bg-surface-alt px-6 py-14">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-5 md:grid-cols-4">
+        <div className="mx-auto grid max-w-3xl grid-cols-2 gap-5">
           <StatCard value="500+" label="Active Listings" />
-          <StatCard value="2,000+" label="Happy Students" />
           <StatCard value={universities.length ? `${universities.length}+` : '15+'} label="Universities" />
-          <StatCard value="4.7★" label="Average Rating" />
         </div>
       </section>
 
@@ -160,7 +158,7 @@ export default function Home() {
             </div>
             <button
               onClick={() => navigate('listings')}
-              className="flex items-center gap-1 text-sm font-bold text-brand-primary"
+              className="flex items-center gap-1 text-sm font-bold text-brand-primaryDark dark:text-brand-primaryLight"
             >
               View all <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -177,7 +175,7 @@ export default function Home() {
                   style={{ background: `linear-gradient(135deg, ${GREEN}, ${GREEN_SOFT})` }}
                 >
                   {p.image && <img src={p.image} alt="" className="h-full w-full object-cover" />}
-                  <span className="absolute left-2 top-2 rounded-md bg-brand-accent px-2 py-0.5 text-[10px] font-bold text-brand-primaryDark">
+                  <span className="absolute left-2 top-2 rounded-md bg-brand-accent px-2 py-0.5 text-[10px] font-bold text-slate-900">
                     Verified
                   </span>
                   <span className="font-num absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] text-white">
@@ -187,7 +185,7 @@ export default function Home() {
                 <div className="p-4">
                   <div className="mb-1 text-sm font-bold text-text-primary">{p.name}</div>
                   <div className="mb-2 text-xs text-text-secondary">{p.loc}</div>
-                  <div className="font-num text-sm font-bold text-brand-primary">${p.price}/mo</div>
+                  <div className="font-num text-sm font-bold text-brand-primaryDark dark:text-brand-primaryLight">${p.price}/mo</div>
                 </div>
               </Card>
             ))}
@@ -203,7 +201,7 @@ export default function Home() {
       {/* Host CTA */}
       <section className="bg-brand-primaryDark px-6 py-16 text-center">
         <h2 className="font-display mb-3 text-[28px] font-bold text-white">Own a Property Near Campus?</h2>
-        <p className="mx-auto mb-6 max-w-md text-sm text-white/80">
+        <p className="mx-auto mb-6 max-w-md text-sm text-white/90">
           List your accommodation and connect with verified students looking for their perfect home.
         </p>
         <PrimaryBtn onClick={() => navigate('list-your-property')}>List Your Property</PrimaryBtn>

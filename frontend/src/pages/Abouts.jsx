@@ -604,7 +604,7 @@ export default function ListPropertyPage() {
     return (
       <div className="min-h-screen pt-24 pb-16 w-full bg-gray-50">
         <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
+          <div className="bg-bg-surface rounded-2xl shadow-xl p-6">
             <h1 className="text-2xl font-bold text-gray-900">Landlord Access Required</h1>
             <p className="mt-2 text-gray-600">
               You must be logged in as a landlord to list a property.

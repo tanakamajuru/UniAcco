@@ -136,7 +136,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
 
   return (
     <div className="min-h-screen bg-bg-surface-alt py-12 px-4">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+      <div className="max-w-md mx-auto bg-bg-surface rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-text-primary">Complete Payment</h2>
           <button
@@ -150,13 +150,13 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-2">{accommodation.title}</h3>
           <p className="text-text-secondary mb-4">{accommodation.address}, {accommodation.city}</p>
-          <div className="text-2xl font-bold text-brand-primaryDark">
+          <div className="text-2xl font-bold text-brand-primaryDark dark:text-brand-primaryLight">
             ${accommodation.price_per_month} USD/month
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-error/15 border border-red-400 text-error rounded">
+          <div className="mb-4 p-3 bg-error/15 border border-red-400 text-error dark:text-red-400 rounded">
             {error}
           </div>
         )}
@@ -168,7 +168,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
             <p className="text-text-secondary">Your booking has been confirmed.</p>
             <button
               onClick={() => navigate('bookings')}
-              className="mt-4 w-full bg-brand-primaryDark text-white py-2 px-4 rounded-lg hover:bg-brand-primary"
+              className="mt-4 w-full bg-brand-primaryDark text-white py-2 px-4 rounded-lg hover:bg-brand-primaryDark"
             >
               View My Bookings
             </button>
@@ -187,7 +187,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
             <div className="flex space-x-4">
               <button
                 onClick={checkPaymentStatus}
-                className="flex-1 bg-brand-primaryDark text-white py-2 px-4 rounded hover:bg-brand-primary"
+                className="flex-1 bg-brand-primaryDark text-white py-2 px-4 rounded hover:bg-brand-primaryDark"
               >
                 Check Status
               </button>
@@ -209,7 +209,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('web')}
-                  className={`p-3 border rounded-lg ${ paymentMethod === 'web' ? 'border-brand-primary bg-brand-primary/10 text-brand-primaryDark' : 'border-border text-text-secondary' }`}
+                  className={`p-3 border rounded-lg ${ paymentMethod === 'web' ? 'border-brand-primary bg-brand-primary/10 text-brand-primaryDark dark:text-brand-primaryLight' : 'border-border text-text-secondary' }`}
                 >
                   <div className="text-sm font-medium">Web Payment</div>
                   <div className="text-xs text-text-muted">Pay with card/bank</div>
@@ -217,7 +217,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('mobile')}
-                  className={`p-3 border rounded-lg ${ paymentMethod === 'mobile' ? 'border-brand-primary bg-brand-primary/10 text-brand-primaryDark' : 'border-border text-text-secondary' }`}
+                  className={`p-3 border rounded-lg ${ paymentMethod === 'mobile' ? 'border-brand-primary bg-brand-primary/10 text-brand-primaryDark dark:text-brand-primaryLight' : 'border-border text-text-secondary' }`}
                 >
                   <div className="text-sm font-medium">Mobile Money</div>
                   <div className="text-xs text-text-muted">EcoCash/OneMoney</div>
@@ -277,7 +277,7 @@ const PaymentForm = ({ accommodation, onPaymentSuccess, onCancel }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-primaryDark text-white py-3 px-4 rounded-lg hover:bg-brand-primary disabled:bg-border-strong disabled:cursor-not-allowed"
+              className="w-full bg-brand-primaryDark text-white py-3 px-4 rounded-lg hover:bg-brand-primaryDark disabled:bg-border-strong disabled:cursor-not-allowed"
             >
               {loading ? 'Processing...' : `Pay ${formData.amount} USD`}
             </button>

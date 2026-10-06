@@ -103,7 +103,7 @@ const UserProfile = () => {
         return (
           <div className="space-y-6">
             {/* Profile Information */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-bg-surface rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
@@ -146,11 +146,11 @@ const UserProfile = () => {
             </div>
 
             {/* Account Statistics */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-bg-surface rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Account Statistics</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-brand-primary/10 rounded-lg">
-                  <div className="text-2xl font-bold text-brand-primaryDark">12</div>
+                  <div className="text-2xl font-bold text-brand-primaryDark dark:text-brand-primaryLight">12</div>
                   <div className="text-sm text-text-secondary">Properties Viewed</div>
                 </div>
                 <div className="text-center p-4 bg-success/10 rounded-lg">
@@ -158,7 +158,7 @@ const UserProfile = () => {
                   <div className="text-sm text-text-secondary">Applications Sent</div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-brand-accent">1</div>
+                  <div className="text-2xl font-bold text-brand-accentText dark:text-brand-accent">1</div>
                   <div className="text-sm text-text-secondary">Active Bookings</div>
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
@@ -174,13 +174,13 @@ const UserProfile = () => {
         return (
           <div className="space-y-6">
             {/* Current Plan */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-bg-surface rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Current Subscription</h3>
               <div className={`border rounded-lg p-6 ${ hasPremiumAccess ? 'border-success/30 bg-success/10' : 'border-border bg-bg-surface-alt' }`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     {hasPremiumAccess ? (
-                      <Crown className="w-6 h-6 text-brand-accent mr-3" />
+                      <Crown className="w-6 h-6 text-brand-accentText dark:text-brand-accent mr-3" />
                     ) : (
                       <Lock className="w-6 h-6 text-text-muted mr-3" />
                     )}
@@ -212,15 +212,7 @@ const UserProfile = () => {
                       <XCircle className="w-5 h-5 text-text-muted" />
                     )}
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-border">
-                    <span className="text-text-secondary">Direct Messaging</span>
-                    {hasPremiumAccess ? (
-                      <CheckCircle className="w-5 h-5 text-success" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-text-muted" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-border">
+                                    <div className="flex items-center justify-between py-2 border-b border-border">
                     <span className="text-text-secondary">Advanced Search</span>
                     {hasPremiumAccess ? (
                       <CheckCircle className="w-5 h-5 text-success" />
@@ -260,12 +252,12 @@ const UserProfile = () => {
             </div>
 
             {/* Payment Methods */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-bg-surface rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Payment Methods</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                   <div className="flex items-center">
-                    <CreditCard className="w-5 h-5 text-brand-primaryDark mr-3" />
+                    <CreditCard className="w-5 h-5 text-brand-primaryDark dark:text-brand-primaryLight mr-3" />
                     <div>
                       <div className="font-medium">PayNow</div>
                       <div className="text-sm text-text-secondary">Primary payment method</div>
@@ -284,7 +276,7 @@ const UserProfile = () => {
         return (
           <div className="space-y-6">
             {/* Payment History */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-bg-surface rounded-xl shadow-sm p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Payment History</h3>
                 <button className="text-text-link hover:text-text-link text-sm font-medium flex items-center">
@@ -344,7 +336,7 @@ const UserProfile = () => {
         return (
           <div className="space-y-6">
             {/* Account Settings */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-bg-surface rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-3 border-b border-border">
@@ -359,7 +351,7 @@ const UserProfile = () => {
                 <div className="flex items-center justify-between py-3 border-b border-border">
                   <div>
                     <div className="font-medium">SMS Notifications</div>
-                    <div className="text-sm text-text-secondary">Get SMS alerts for new messages</div>
+                    <div className="text-sm text-text-secondary">Get SMS alerts for new listings</div>
                   </div>
                   <button className="bg-btn-secondary text-btn-secondary-text px-3 py-1 rounded-full text-sm">
                     Disabled
@@ -378,7 +370,7 @@ const UserProfile = () => {
             </div>
 
             {/* Privacy Settings */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-bg-surface rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold mb-4">Privacy Settings</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-3 border-b border-border">
@@ -406,14 +398,14 @@ const UserProfile = () => {
 
             {/* Danger Zone */}
             <div className="bg-error/10 border border-error/30 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4 text-error">Danger Zone</h3>
+              <h3 className="text-lg font-semibold mb-4 text-error dark:text-red-400">Danger Zone</h3>
               <div className="space-y-3">
                 <button className="w-full text-left bg-btn-secondary border border-btn-danger text-btn-danger py-3 px-4 rounded-lg hover:bg-btn-danger/10 transition-colors">
                   <div className="flex items-center">
                     <Download className="w-4 h-4 mr-3" />
                     <div>
                       <div className="font-medium">Download My Data</div>
-                      <div className="text-sm text-error">Get a copy of all your data</div>
+                      <div className="text-sm text-error dark:text-red-400">Get a copy of all your data</div>
                     </div>
                   </div>
                 </button>
@@ -422,7 +414,7 @@ const UserProfile = () => {
                     <XCircle className="w-4 h-4 mr-3" />
                     <div>
                       <div className="font-medium">Delete Account</div>
-                      <div className="text-sm text-error">Permanently remove your account</div>
+                      <div className="text-sm text-error dark:text-red-400">Permanently remove your account</div>
                     </div>
                   </div>
                 </button>
@@ -439,7 +431,7 @@ const UserProfile = () => {
   return (
     <div className="min-h-screen bg-bg-surface-alt">
       {/* Header */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-bg-surface shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-text-primary">My Profile</h1>
@@ -466,7 +458,7 @@ const UserProfile = () => {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-border z-50"
+                      className="absolute right-0 top-full mt-2 w-48 bg-bg-surface rounded-lg shadow-lg border border-border z-50"
                     >
                       <div className="py-2">
                         <button
@@ -476,7 +468,7 @@ const UserProfile = () => {
                           }}
                           className="w-full text-left px-4 py-2 text-text-secondary hover:bg-bg-surface-alt transition-colors flex items-center"
                         >
-                          <Crown className="w-4 h-4 mr-3 text-brand-accent" />
+                          <Crown className="w-4 h-4 mr-3 text-brand-accentText dark:text-brand-accent" />
                           Premium Features
                         </button>
                         <button
@@ -502,7 +494,7 @@ const UserProfile = () => {
                         <hr className="my-2" />
                         <button
                           onClick={handleSignOut}
-                          className="w-full text-left px-4 py-2 text-error hover:bg-error/10 transition-colors flex items-center"
+                          className="w-full text-left px-4 py-2 text-error dark:text-red-400 hover:bg-error/10 transition-colors flex items-center"
                         >
                           <LogOut className="w-4 h-4 mr-3" />
                           Sign Out
@@ -520,13 +512,13 @@ const UserProfile = () => {
       {/* Profile Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Tab Navigation */}
-        <div className="bg-white rounded-xl shadow-sm mb-6">
+        <div className="bg-bg-surface rounded-xl shadow-sm mb-6">
           <div className="flex border-b border-border">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-4 px-6 text-sm font-medium transition-colors ${ activeTab === tab.id ? 'text-brand-primaryDark border-b-2 border-brand-primaryDark' : 'text-text-secondary border-b-2 border-transparent hover:text-text-primary' }`}
+                className={`flex-1 py-4 px-6 text-sm font-medium transition-colors ${ activeTab === tab.id ? 'text-brand-primaryDark dark:text-brand-primaryLight border-b-2 border-brand-primaryDark' : 'text-text-secondary border-b-2 border-transparent hover:text-text-primary' }`}
               >
                 <div className="flex items-center justify-center">
                   {tab.icon}

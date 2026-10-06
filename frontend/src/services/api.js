@@ -189,3 +189,11 @@ export default {
   payment: paymentApi,
   host: hostApi,
 };
+
+// Viewing requests: students ask to see a paid-for property; landlords confirm or decline.
+export const viewingApi = {
+  create: (body) => request('/api/viewings', { method: 'POST', body: JSON.stringify(body) }),
+  landlord: () => request('/api/viewings/landlord'),
+  update: (id, status) =>
+    request(`/api/viewings/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+};

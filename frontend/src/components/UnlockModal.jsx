@@ -41,7 +41,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
   const settle = (result) => {
     if (result.status === 'paid') {
       setContact(result.contact);
-      onUnlocked?.(result.contact);
+      onUnlocked?.(result.contact, result.validUntil, reference);
       setPhase('done');
     } else if (result.status === 'failed') {
       setPhase('failed');
@@ -91,7 +91,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
       const res = await paymentApi.status(reference);
       if (res.status === 'paid') {
         setContact(res.contact || {});
-        onUnlocked?.(res.contact || {});
+        onUnlocked?.(res.contact || {}, res.validUntil, reference);
         setPhase('done');
       } else if (res.status === 'failed' || res.status === 'cancelled') {
         setPhase('failed');
@@ -110,7 +110,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
   const chip = (active) =>
     `transition-colors ${
       active
-        ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
+        ? 'border-brand-primary bg-brand-primary/10 text-brand-primaryDark dark:text-brand-primaryLight'
         : 'border-border bg-bg-surface text-text-secondary'
     }`;
 
@@ -138,7 +138,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-bg-surface text-text-secondary hover:text-text-primary"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-bg-surface p-0 text-text-secondary hover:text-text-primary"
           >
             <X className="h-[18px] w-[18px]" />
           </button>
@@ -148,7 +148,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
           {phase === 'form' && (
             <div className="px-6 py-5">
               {error && (
-                <div className="mb-4 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+                <div className="mb-4 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error dark:text-red-400">
                   {error}
                 </div>
               )}
@@ -158,7 +158,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
                   <div className="text-sm font-bold text-text-primary">Access fee (one-time)</div>
                   <div className="text-xs text-text-secondary">Reveals the host's phone — call or WhatsApp them directly</div>
                 </div>
-                <div className="font-display text-[22px] font-extrabold text-brand-primaryDark">{ACCESS_FEE_LABEL}</div>
+                <div className="font-display text-[22px] font-extrabold text-brand-primaryDark dark:text-brand-primaryLight">{ACCESS_FEE_LABEL}</div>
               </div>
 
               <label className={label}>Payment method</label>
@@ -215,7 +215,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
               )}
 
               <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-brand-accent bg-brand-accent/10 px-4 py-3.5">
-                <Lock className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-accent" />
+                <Lock className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-accentText dark:text-brand-accent" />
                 <p className="text-[12.5px] leading-relaxed text-text-secondary">
                   No account needed. Only the {ACCESS_FEE_LABEL} access fee is charged now — rent is arranged
                   directly with the verified host.
@@ -226,7 +226,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
 
           {phase === 'processing' && (
             <div className="px-8 py-11 text-center">
-              <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-brand-primaryDark" />
+              <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-brand-primaryDark dark:text-brand-primaryLight" />
               <h3 className="font-display mb-1.5 text-[18px] font-bold text-text-primary">
                 {payMethod === 'mobile' ? 'Check your phone' : 'Opening Pesepay'}
               </h3>
@@ -241,7 +241,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
           {phase === 'pending' && (
             <div className="px-8 py-10 text-center">
               <div className="mx-auto mb-4 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-brand-accent/15">
-                <Clock className="h-9 w-9 text-brand-accent" />
+                <Clock className="h-9 w-9 text-brand-accentText dark:text-brand-accent" />
               </div>
               <h3 className="font-display mb-2 text-[20px] font-extrabold text-text-primary">Still confirming…</h3>
               <p className="mb-4 text-[14px] leading-relaxed text-text-secondary">
@@ -256,7 +256,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
               <button
                 onClick={recheck}
                 disabled={rechecking}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-6 py-3 text-[15px] font-bold text-white disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-primaryDark px-6 py-3 text-[15px] font-bold text-white disabled:opacity-60"
               >
                 {rechecking && <Loader2 className="h-4 w-4 animate-spin" />}
                 {rechecking ? 'Checking…' : 'Check again'}
@@ -267,7 +267,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
           {phase === 'failed' && (
             <div className="px-8 py-10 text-center">
               <div className="mx-auto mb-4 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-error/10">
-                <AlertTriangle className="h-9 w-9 text-error" />
+                <AlertTriangle className="h-9 w-9 text-error dark:text-red-400" />
               </div>
               <h3 className="font-display mb-2 text-[20px] font-extrabold text-text-primary">Payment not completed</h3>
               <p className="mb-4 text-[14px] leading-relaxed text-text-secondary">
@@ -280,7 +280,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
               )}
               <button
                 onClick={() => { setError(null); setPhase('form'); }}
-                className="rounded-xl bg-brand-primary px-6 py-3 text-[15px] font-bold text-white"
+                className="rounded-xl bg-brand-primaryDark px-6 py-3 text-[15px] font-bold text-white"
               >
                 Try again
               </button>
@@ -350,7 +350,7 @@ export default function UnlockModal({ accommodation, onClose, onUnlocked }) {
             </button>
             <button
               onClick={pay}
-              className="rounded-xl bg-brand-primary px-7 py-3 text-[15px] font-bold text-white shadow-md"
+              className="rounded-xl bg-brand-primaryDark px-7 py-3 text-[15px] font-bold text-white shadow-md"
             >
               Pay {ACCESS_FEE_LABEL}
             </button>

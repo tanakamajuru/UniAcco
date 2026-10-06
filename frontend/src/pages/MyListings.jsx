@@ -29,9 +29,14 @@ const MyListings = () => {
   const fetchListings = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        // Signed out: nothing to load, so don't call the API.
+        setListings([]);
+        return;
+      }
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-      const response = await fetch(`${API_BASE_URL}/api/properties/landlord`, {
+      const response = await fetch(`${API_BASE_URL}/api/accommodations/landlord`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -82,9 +87,9 @@ const MyListings = () => {
     const statusMap = {
       active: { text: 'Active', color: 'bg-success/15 text-success' },
       pending: { text: 'Pending Review', color: 'bg-warning/15 text-warning' },
-      rejected: { text: 'Rejected', color: 'bg-error/15 text-error' },
+      rejected: { text: 'Rejected', color: 'bg-error/15 text-error dark:text-red-400' },
       draft: { text: 'Draft', color: 'bg-bg-surface-alt text-text-primary' },
-      rented: { text: 'Rented', color: 'bg-brand-primary/15 text-brand-primaryDark' }
+      rented: { text: 'Rented', color: 'bg-brand-primary/15 text-brand-primaryDark dark:text-brand-primaryLight' }
     };
 
     const statusInfo = statusMap[status] || { text: status, color: 'bg-bg-surface-alt text-text-primary' };
@@ -107,15 +112,15 @@ const MyListings = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-sm border p-6 text-center">
+        <div className="max-w-md w-full bg-bg-surface rounded-lg shadow-sm border p-6 text-center">
           <div className="w-12 h-12 bg-error/15 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-6 h-6 text-error" />
+            <AlertCircle className="w-6 h-6 text-error dark:text-red-400" />
           </div>
           <h2 className="text-xl font-semibold mb-2">Error Loading Listings</h2>
           <p className="text-text-secondary mb-6">{error}</p>
           <button
             onClick={fetchListings}
-            className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors"
+            className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors"
           >
             Retry
           </button>
@@ -136,7 +141,7 @@ const MyListings = () => {
           </div>
           <button
             onClick={() => navigate('list-your-property')}
-            className="mt-4 md:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primaryDark hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="mt-4 md:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primaryDark hover:bg-brand-primaryDark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <Plus className="-ml-1 mr-2 h-5 w-5" />
             Add New Property
@@ -144,7 +149,7 @@ const MyListings = () => {
         </div>
 
         {listings.length === 0 ? (
-          <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="bg-bg-surface overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6 text-center">
               <Home className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-lg font-medium text-text-primary">No properties listed</h3>
@@ -155,7 +160,7 @@ const MyListings = () => {
                 <button
                   type="button"
                   onClick={() => navigate('list-your-property')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-primaryDark hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-primaryDark hover:bg-brand-primaryDark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <Plus className="-ml-1 mr-2 h-5 w-5" />
                   Add Property
@@ -164,7 +169,7 @@ const MyListings = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="bg-bg-surface shadow overflow-hidden sm:rounded-md">
             <ul className="divide-y divide-gray-200">
               {listings.map((listing) => (
                 <motion.li
@@ -223,7 +228,7 @@ const MyListings = () => {
                         </button>
                         <button
                           onClick={() => navigate(`/edit-property/${listing._id}`)}
-                          className="p-2 rounded-full text-brand-primaryDark hover:text-brand-primaryDark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="p-2 rounded-full text-brand-primaryDark dark:text-brand-primaryLight hover:text-brand-primaryDark dark:text-brand-primaryLight focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                           title="Edit"
                         >
                           <Edit className="h-5 w-5" />
@@ -232,7 +237,7 @@ const MyListings = () => {
                         <button
                           onClick={() => handleDelete(listing._id)}
                           disabled={isDeleting === listing._id}
-                          className="p-2 rounded-full text-error hover:text-error focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                          className="p-2 rounded-full text-error dark:text-red-400 hover:text-error focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
                           title="Delete"
                         >
                           {isDeleting === listing._id ? (
@@ -252,7 +257,7 @@ const MyListings = () => {
                         </p>
                       </div>
                       <div className="mt-2 flex items-center text-sm text-text-muted sm:mt-0">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primaryDark">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-primary/15 text-brand-primaryDark dark:text-brand-primaryLight">
                           {listing.views || 0} views
                         </span>
                         <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/15 text-success">

@@ -21,7 +21,7 @@ export default function About() {
       <section className="relative overflow-hidden px-6 pb-14 pt-16 text-center">
         <div className="relative z-10">
           <h1 className="font-display mb-5 text-[38px] font-bold text-text-primary md:text-[48px]">
-            About <span className="text-brand-primary">UniAcco</span>
+            About <span className="text-brand-primaryDark dark:text-brand-primaryLight">UniAcco</span>
           </h1>
           <p className="mx-auto mb-6 max-w-xl text-lg text-text-secondary">
             Connecting students with safe, affordable, and convenient accommodation near their universities across Zimbabwe.
@@ -44,7 +44,7 @@ export default function About() {
           </Card>
           <Card className="p-7">
             <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-accent">
-              <Award className="h-7 w-7 text-brand-primaryDark" />
+              <Award className="h-7 w-7 text-brand-primaryDark dark:text-brand-primaryLight" />
             </div>
             <h2 className="font-display mb-2 text-xl font-bold text-text-primary">Our Vision</h2>
             <p className="text-sm leading-relaxed text-text-secondary">
@@ -63,7 +63,7 @@ export default function About() {
           {FEATURES.map((f) => (
             <Card key={f.title} className="p-5">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary/10">
-                <f.Icon className="h-5 w-5 text-brand-primary" />
+                <f.Icon className="h-5 w-5 text-brand-primaryDark dark:text-brand-primaryLight" />
               </div>
               <h3 className="mb-1 text-sm font-bold text-text-primary">{f.title}</h3>
               <p className="text-xs text-text-secondary">{f.d}</p>
@@ -74,30 +74,30 @@ export default function About() {
 
       <section className="bg-brand-primaryDark px-6 py-14 text-center">
         <h2 className="font-display mb-2 text-[26px] font-bold text-white">Our Core Values</h2>
-        <p className="mx-auto mb-8 max-w-md text-sm text-white/80">The principles that guide everything we do</p>
+        <p className="mx-auto mb-8 max-w-md text-sm text-white/90">The principles that guide everything we do</p>
         <div className="mx-auto grid max-w-4xl gap-5 sm:grid-cols-3">
           {VALUES.map((v) => (
-            <div key={v.title} className="rounded-2xl border border-white/20 bg-white/10 p-6">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/15">
+            <div key={v.title} className="rounded-2xl border border-white/20 bg-bg-surface/10 p-6">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-bg-surface/15">
                 <v.Icon className="h-6 w-6 text-white" />
               </div>
               <h3 className="mb-1 text-sm font-semibold text-white">{v.title}</h3>
-              <p className="text-xs text-white/80">{v.d}</p>
+              <p className="text-xs text-white/90">{v.d}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="bg-brand-accent px-6 py-14 text-center">
-        <h2 className="font-display mb-2 text-[26px] font-bold text-brand-primaryDark">
+        <h2 className="font-display mb-2 text-[26px] font-bold text-slate-900">
           Ready to Find Your Perfect Student Home?
         </h2>
-        <p className="mx-auto mb-6 max-w-md text-sm text-brand-primaryDark/75">
+        <p className="mx-auto mb-6 max-w-md text-sm text-slate-900">
           Join thousands of students who found their ideal accommodation.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <PrimaryBtn onClick={() => navigate('listings')}>Browse Listings</PrimaryBtn>
-          <OutlineBtn onClick={() => navigate('list-your-property')}>List Your Property</OutlineBtn>
+          <OutlineBtn onClick={() => navigate('list-your-property')} className="!border-slate-900 !text-slate-900 dark:!text-slate-900">List Your Property</OutlineBtn>
         </div>
       </section>
     </div>

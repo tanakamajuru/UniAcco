@@ -30,8 +30,8 @@ export function PrimaryBtn({ children, className = '', style, ...props }) {
   return (
     <button
       {...props}
-      style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--text-inverse)', ...style }}
-      className={`font-display inline-flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-5 py-3 text-sm font-bold tracking-[0.02em] text-white transition-opacity hover:opacity-90 ${className}`}
+      style={{ backgroundColor: 'var(--brand-primary-dark)', color: 'var(--text-inverse)', ...style }}
+      className={`font-display inline-flex items-center justify-center gap-2 rounded-xl bg-brand-primaryDark px-5 py-3 text-sm font-bold tracking-[0.02em] text-white transition-opacity hover:opacity-90 ${className}`}
     >
       {children}
     </button>
@@ -42,7 +42,7 @@ export function OutlineBtn({ children, className = '', ...props }) {
   return (
     <button
       {...props}
-      className={`font-display inline-flex items-center justify-center gap-2 rounded-xl border-2 border-brand-primaryDark bg-transparent px-5 py-3 text-sm font-bold tracking-[0.02em] text-brand-primaryDark transition-colors hover:bg-brand-primaryDark/5 ${className}`}
+      className={`font-display inline-flex items-center justify-center gap-2 rounded-xl border-2 border-brand-primaryDark bg-transparent px-5 py-3 text-sm font-bold tracking-[0.02em] text-brand-primaryDark dark:text-brand-primaryLight transition-colors hover:bg-brand-primaryDark/5 ${className}`}
     >
       {children}
     </button>
@@ -52,7 +52,7 @@ export function OutlineBtn({ children, className = '', ...props }) {
 export function StatCard({ value, label }) {
   return (
     <Card className="p-6 text-center">
-      <div className="font-display mb-1 text-3xl font-bold text-brand-primary">{value}</div>
+      <div className="font-display mb-1 text-3xl font-bold text-brand-primaryDark dark:text-brand-primaryLight">{value}</div>
       <div className="font-num text-[11px] uppercase tracking-wide text-text-secondary">{label}</div>
     </Card>
   );

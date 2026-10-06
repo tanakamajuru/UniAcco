@@ -16,15 +16,6 @@ router.get('/stats', async (req, res) => {
       [me]
     );
 
-    const enquiriesRes = await pool.query(
-      `SELECT
-         (SELECT count(*) FROM message_threads WHERE landlord_id = $1)::int AS enquiries,
-         (SELECT count(*) FROM messages m
-            JOIN message_threads t ON t.id = m.thread_id
-           WHERE t.landlord_id = $1 AND m.sender_id <> $1 AND m.read_at IS NULL)::int AS enquiries_new`,
-      [me]
-    );
-
     const appsRes = await pool.query(
       `SELECT
          count(*)::int AS applications,
@@ -49,8 +40,8 @@ router.get('/stats', async (req, res) => {
     res.json({
       totalViews: viewsRes.rows[0].total_views,
       viewsDeltaPct: 18, // weekly delta — placeholder until view history is tracked
-      enquiries: enquiriesRes.rows[0].enquiries,
-      enquiriesNew: enquiriesRes.rows[0].enquiries_new,
+      enquiries: 0, // messaging retired; kept so older clients don't break
+      enquiriesNew: 0,
       applications: appsRes.rows[0].applications,
       applicationsPending: appsRes.rows[0].applications_pending,
       occupancyPct,

@@ -30,7 +30,7 @@ export default function ListingCard({ acc, saved, onOpen, onToggleSave, onHover 
               e.stopPropagation();
               onToggleSave(acc);
             }}
-            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-md"
+            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-bg-surface/90 shadow-md"
             aria-label={saved ? 'Remove from saved' : 'Save'}
           >
             <Heart
@@ -48,10 +48,10 @@ export default function ListingCard({ acc, saved, onOpen, onToggleSave, onHover 
 
       <div className="p-4">
         <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="font-num whitespace-nowrap text-[10px] uppercase tracking-wide text-brand-primary">
+          <span className="font-num whitespace-nowrap text-[10px] uppercase tracking-wide text-brand-primaryDark dark:text-brand-primaryLight">
             {acc.type}
           </span>
-          <span className="flex items-center gap-1 text-xs font-bold text-brand-accent">
+          <span className="flex items-center gap-1 text-xs font-bold text-brand-accentText dark:text-brand-accent">
             <Star className="h-3 w-3 fill-current" />
             {acc.rating ? acc.rating.toFixed(1) : 'New'}
           </span>

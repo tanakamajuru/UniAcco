@@ -56,6 +56,11 @@ const ACC_SELECT = `
     u.lat    AS uni_lat,
     u.lng    AS uni_lng,
     l.full_name AS landlord_name,
+    EXISTS (
+      SELECT 1 FROM payments p
+       WHERE p.user_id = a.landlord_id AND p.feature = 'landlord_verification'
+         AND p.status = 'paid' AND p.valid_until > now()
+    ) AS landlord_verified,
     l.phone     AS landlord_phone,
     l.email     AS landlord_email,
     COALESCE(img.images, '{}')          AS images,
@@ -89,15 +94,19 @@ function serializeAccommodation(row, unlocked = false) {
   const uniLat = row.uni_lat != null ? Number(row.uni_lat) : null;
   const uniLng = row.uni_lng != null ? Number(row.uni_lng) : null;
 
-  // Distance from the campus, computed from coordinates (falls back to any
-  // stored walk_minutes when coords are missing). Walking ~12 min per km.
-  const distanceKm = haversineKm(lat, lng, uniLat, uniLng);
+  // Distance from the property to its campus, stored when the listing was saved
+  // (see DISTANCE_SQL in the controller). Falls back to stored walk_minutes when
+  // there is no distance yet. Walking ~12 min per km.
+  const distanceToCampusM = row.distance_to_campus_m != null ? Number(row.distance_to_campus_m) : null;
   const walkMinutes =
-    distanceKm != null ? Math.max(1, Math.round(distanceKm * 12)) : row.walk_minutes ?? null;
+    distanceToCampusM != null
+      ? Math.max(1, Math.round((distanceToCampusM / 1000) * 12))
+      : row.walk_minutes ?? null;
 
   return {
     id: row.id,
     title: row.title,
+    landlord_verified: Boolean(row.landlord_verified),
     description: row.description,
     type: row.type,
     suburb: row.suburb,
@@ -111,7 +120,8 @@ function serializeAccommodation(row, unlocked = false) {
     bathrooms: row.bathrooms,
     people_per_room: row.people_per_room,
     walk_minutes: walkMinutes,
-    distance_km: distanceKm != null ? Math.round(distanceKm * 10) / 10 : null,
+    distance_km: distanceToCampusM != null ? Math.round((distanceToCampusM / 100)) / 10 : null,
+    distance_to_campus_m: distanceToCampusM,
     lat,
     lng,
     rating: Number(row.rating) || 0,

@@ -22,11 +22,12 @@ const userRoutes = require('./routes/userRoutes');
 const accommodationRoutes = require('./routes/accommodationRoutes');
 const favouriteRoutes = require('./routes/favouriteRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
-const threadRoutes = require('./routes/threadRoutes');
 const hostRoutes = require('./routes/hostRoutes');
 const universityRoutes = require('./routes/universityRoutes');
 const amenityRoutes = require('./routes/amenityRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const viewingRoutes = require('./routes/viewingRoutes');
+const { schedulePayerPurge } = require('./utils/retention');
 
 const app = express();
 
@@ -232,11 +233,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/accommodations', accommodationRoutes);
 app.use('/api/favourites', favouriteRoutes);
 app.use('/api/applications', applicationRoutes);
-app.use('/api/threads', threadRoutes);
 app.use('/api/host', hostRoutes);
 app.use('/api/universities', universityRoutes);
 app.use('/api/amenities', amenityRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/viewings', viewingRoutes);
 
 /**
  * =====================================================
@@ -270,6 +271,7 @@ app.use((err, _req, res, _next) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
+  schedulePayerPurge(pool);
   console.log(`
 ╔══════════════════════════════════════════╗
 ║  Student Accommodation API               ║

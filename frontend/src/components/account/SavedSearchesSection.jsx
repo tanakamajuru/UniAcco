@@ -110,7 +110,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-8">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primaryDark mx-auto"></div>
       </div>
     );
@@ -119,7 +119,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
   return (
     <div className="space-y-6">
       {/* Saved Searches */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Search className="w-5 h-5" />
@@ -127,7 +127,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
           </h3>
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors flex items-center gap-2"
+            className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             New Search
@@ -184,7 +184,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
             <div className="flex gap-2 mt-4">
               <button
                 onClick={createSavedSearch}
-                className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors"
+                className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors"
               >
                 Save Search
               </button>
@@ -225,7 +225,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
                   </div>
                   <button
                     onClick={() => deleteSavedSearch(search.id)}
-                    className="text-error hover:text-error transition-colors"
+                    className="text-error dark:text-red-400 hover:text-error transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -239,7 +239,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
       </div>
 
       {/* Alerts & Notifications */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Bell className="w-5 h-5" />
           Alerts & Notifications
@@ -265,7 +265,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
       </div>
 
       {/* Availability Alerts - Premium Only */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Home className="w-5 h-5" />
           Availability Alerts
@@ -275,7 +275,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
             <p className="text-text-secondary">
               Get notified when properties matching your criteria become available.
             </p>
-            <button className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors">
+            <button className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors">
               Configure Availability Alerts
             </button>
           </div>
@@ -283,7 +283,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
           <div className="text-center py-4">
             <Lock className="w-8 h-8 text-text-muted mx-auto mb-2" />
             <p className="text-text-secondary mb-3">Premium feature</p>
-            <button className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors">
+            <button className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors">
               Upgrade to Premium
             </button>
           </div>
@@ -291,7 +291,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
       </div>
 
       {/* Price Drop Alerts - Premium Only */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-bg-surface rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <TrendingDown className="w-5 h-5" />
           Price Drop Alerts
@@ -301,7 +301,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
             <p className="text-text-secondary">
               Never miss a deal! Get notified when prices drop for your saved properties.
             </p>
-            <button className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors">
+            <button className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors">
               Configure Price Alerts
             </button>
           </div>
@@ -309,7 +309,7 @@ const SavedSearchesSection = ({ hasPremiumAccess }) => {
           <div className="text-center py-4">
             <Lock className="w-8 h-8 text-text-muted mx-auto mb-2" />
             <p className="text-text-secondary mb-3">Premium feature</p>
-            <button className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primary transition-colors">
+            <button className="bg-brand-primaryDark text-white px-4 py-2 rounded-lg hover:bg-brand-primaryDark transition-colors">
               Upgrade to Premium
             </button>
           </div>

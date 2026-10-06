@@ -167,9 +167,9 @@ export default function Portfolio() {
 
   const getColorClasses = (color) => {
     const colors = {
-      yellow: "bg-warning/15 dark:bg-yellow-900/30 text-warning dark:text-brand-accent",
-      blue: "bg-brand-primary/15  text-brand-primaryDark",
-      purple: "bg-purple-100 dark:bg-purple-900/30 text-brand-accent dark:text-purple-400"
+      yellow: "bg-warning/15 dark:bg-yellow-900/30 text-warning dark:text-brand-accentText dark:text-brand-accent",
+      blue: "bg-brand-primary/15  text-brand-primaryDark dark:text-brand-primaryLight",
+      purple: "bg-purple-100 dark:bg-purple-900/30 text-brand-accentText dark:text-brand-accent dark:text-purple-400"
     };
     return colors[color] || colors.blue;
   };
@@ -196,7 +196,7 @@ export default function Portfolio() {
           >
             <h1 className="text-5xl md:text-6xl font-bold text-text-primary mb-6">
               Empowering Innovation with
-              <span className="block text-brand-primaryDark">
+              <span className="block text-brand-primaryDark dark:text-brand-primaryLight">
                 Cutting-Edge Technology
               </span>
             </h1>
@@ -213,36 +213,36 @@ export default function Portfolio() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid md:grid-cols-4 gap-6 mb-16"
           >
-            <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="text-center bg-bg-surface/90 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="text-4xl font-bold text-brand-primaryDark">850+</CardTitle>
+                <CardTitle className="text-4xl font-bold text-brand-primaryDark dark:text-brand-primaryLight">850+</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm font-medium text-text-secondary">Projects Delivered</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="text-center bg-bg-surface/90 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="text-4xl font-bold text-brand-primaryDark">150MW+</CardTitle>
+                <CardTitle className="text-4xl font-bold text-brand-primaryDark dark:text-brand-primaryLight">150MW+</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm font-medium text-text-secondary">Solar Capacity Installed</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="text-center bg-bg-surface/90 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="text-4xl font-bold text-brand-primaryDark">300+</CardTitle>
+                <CardTitle className="text-4xl font-bold text-brand-primaryDark dark:text-brand-primaryLight">300+</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm font-medium text-text-secondary">Generators Installed</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card className="text-center bg-bg-surface/90 backdrop-blur-sm border-0 shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="text-4xl font-bold text-brand-primaryDark">1500+</CardTitle>
+                <CardTitle className="text-4xl font-bold text-brand-primaryDark dark:text-brand-primaryLight">1500+</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm font-medium text-text-secondary">Containers Fabricated</p>
@@ -276,7 +276,7 @@ export default function Portfolio() {
                   </div>
 
                   {/* Project Images Slider */}
-                  <Card className={`bg-white/90 backdrop-blur-sm border-2 ${getBorderClasses(category.color)} shadow-xl`}>
+                  <Card className={`bg-bg-surface/90 backdrop-blur-sm border-2 ${getBorderClasses(category.color)} shadow-xl`}>
                     <CardContent className="p-8">
                       <ImageSlider 
                         images={category.images} 
@@ -289,7 +289,7 @@ export default function Portfolio() {
                   {/* Category Stats */}
                   <div className="grid md:grid-cols-3 gap-6">
                     {Object.entries(category.stats).map(([key, value], statIndex) => (
-                      <Card key={key} className={`text-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border ${getBorderClasses(category.color)}`}>
+                      <Card key={key} className={`text-center bg-bg-surface/80 dark:bg-gray-800/80 backdrop-blur-sm border ${getBorderClasses(category.color)}`}>
                         <CardContent className="p-6">
                           <div className="text-2xl font-bold text-text-primary mb-2">
                             {value}
@@ -332,10 +332,10 @@ export default function Portfolio() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 1 + index * 0.1 }}
                   >
-                    <Card className="text-center bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow h-full">
+                    <Card className="text-center bg-bg-surface/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-shadow h-full">
                       <CardContent className="p-8">
                         <div className="w-16 h-16 bg-brand-primary/15 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                          <Icon className="h-8 w-8 text-brand-primaryDark" />
+                          <Icon className="h-8 w-8 text-brand-primaryDark dark:text-brand-primaryLight" />
                         </div>
                         <h3 className="text-xl font-bold text-text-primary mb-4">
                           {achievement.title}

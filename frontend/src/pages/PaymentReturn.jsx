@@ -50,7 +50,7 @@ const PaymentReturn = () => {
           // Persist the unlock locally (anonymous — no account needed) so the
           // property page reveals the Call / WhatsApp buttons.
           if (data.accommodationId && data.contact) {
-            saveUnlock(data.accommodationId, data.contact);
+            saveUnlock(data.accommodationId, data.contact, data.validUntil, reference);
           }
 
           // Trigger custom event for other components to listen
@@ -121,14 +121,14 @@ const PaymentReturn = () => {
       case 'pending':
         return (
           <div className="text-center">
-            <div className="animate-pulse text-brand-primaryDark text-6xl mb-4">⏳</div>
+            <div className="animate-pulse text-brand-primaryDark dark:text-brand-primaryLight text-6xl mb-4">⏳</div>
             <h2 className="text-xl font-semibold text-text-secondary mb-2">Payment Processing</h2>
             <p className="text-text-secondary mb-6">{message}</p>
             <div className="bg-brand-primary/10 border border-brand-primary/30 rounded-lg p-4 mb-6">
-              <p className="text-sm text-brand-primaryDark">
+              <p className="text-sm text-brand-primaryDark dark:text-brand-primaryLight">
                 <strong>Reference:</strong> {reference}
               </p>
-              <p className="text-xs text-brand-primaryDark mt-2">
+              <p className="text-xs text-brand-primaryDark dark:text-brand-primaryLight mt-2">
                 This page will automatically update when payment is confirmed.
               </p>
             </div>
@@ -152,14 +152,14 @@ const PaymentReturn = () => {
       case 'error':
         return (
           <div className="text-center">
-            <div className="text-error text-6xl mb-4">✕</div>
-            <h2 className="text-2xl font-bold text-error mb-2">Payment Failed</h2>
+            <div className="text-error dark:text-red-400 text-6xl mb-4">✕</div>
+            <h2 className="text-2xl font-bold text-error dark:text-red-400 mb-2">Payment Failed</h2>
             <p className="text-text-secondary mb-6">{message}</p>
             <div className="bg-error/10 border border-error/30 rounded-lg p-4 mb-6">
-              <p className="text-sm text-error">
+              <p className="text-sm text-error dark:text-red-400">
                 <strong>Reference:</strong> {reference}
               </p>
-              <p className="text-xs text-error mt-2">
+              <p className="text-xs text-error dark:text-red-400 mt-2">
                 If you believe this is an error, please contact support.
               </p>
             </div>
@@ -187,7 +187,7 @@ const PaymentReturn = () => {
 
   return (
     <div className="min-h-screen bg-bg-surface-alt py-12 px-4">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+      <div className="max-w-md mx-auto bg-bg-surface rounded-lg shadow-md p-6">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-text-primary">Payment Status</h1>
         </div>

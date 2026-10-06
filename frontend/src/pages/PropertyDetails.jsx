@@ -4,12 +4,13 @@ import {
   BedDouble, Bath, Users, Maximize2,
 } from 'lucide-react';
 import { useNavigation } from '../App';
-import { accommodationApi, favouriteApi, imageUrl, currentRole } from '../services/api';
+import { accommodationApi, favouriteApi, paymentApi, imageUrl, currentRole } from '../services/api';
 import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
 import { formatAvailable } from '../components/listings/ListingCard';
 import UnlockModal from '../components/UnlockModal';
+import ViewingRequestForm from '../components/ViewingRequestForm';
 import Lightbox from '../components/Lightbox';
-import { getUnlock, saveUnlock } from '../lib/unlocks';
+import { getUnlock, getUnlockReference, saveUnlock, forgetUnlock } from '../lib/unlocks';
 import { telLink, whatsappLink } from '../lib/contact';
 import { ACCESS_FEE_LABEL } from '../lib/fees';
 import { Card, PrimaryBtn } from '../components/kit';
@@ -52,6 +53,27 @@ export default function PropertyDetails() {
     if (!id) return;
     setSaved(favouriteApi.has(id));
     setLocalContact(getUnlock(id));
+    // Re-check a stored unlock with the server, so a lapsed or copied record
+    // stops revealing the contact. Network failures keep the local copy.
+    const ref = getUnlockReference(id);
+    if (!ref) return;
+    let cancelled = false;
+    paymentApi
+      .status(ref)
+      .then((res) => {
+        if (cancelled) return;
+        if (res.status === 'paid' && res.contact) {
+          saveUnlock(id, res.contact, res.validUntil, ref);
+          setLocalContact(res.contact);
+        } else if (res.status === 'expired' || res.status === 'failed' || res.status === 'cancelled') {
+          forgetUnlock(id);
+          setLocalContact(null);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const toggleSave = () => {
@@ -59,9 +81,9 @@ export default function PropertyDetails() {
     favouriteApi.has(id) ? favouriteApi.remove(id) : favouriteApi.add(id);
   };
 
-  const onUnlocked = (contact) => {
+  const onUnlocked = (contact, validUntil, reference) => {
     if (contact) {
-      saveUnlock(id, contact);
+      saveUnlock(id, contact, validUntil, reference);
       setLocalContact(contact);
     }
   };
@@ -102,7 +124,7 @@ export default function PropertyDetails() {
     <div className="ua-fade pb-24 lg:pb-8">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
         <div className="mb-4 flex items-center justify-between">
-          <button onClick={() => navigate('listings')} className="text-sm font-bold text-brand-primary">
+          <button onClick={() => navigate('listings')} className="text-sm font-bold text-brand-primaryDark dark:text-brand-primaryLight">
             ← Back to listings
           </button>
           {isStudent && (
@@ -126,7 +148,7 @@ export default function PropertyDetails() {
           >
             {photos[0] && <img src={photos[0]} alt="" className="h-full w-full object-cover" />}
             <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
-              <span className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[13px] font-bold text-slate-900">
+              <span className="flex items-center gap-1.5 rounded-full bg-bg-surface/90 px-3 py-1.5 text-[13px] font-bold text-slate-900">
                 {unlocked ? (<><Maximize2 className="h-3.5 w-3.5" /> View photos</>) : (<><Lock className="h-3.5 w-3.5" /> Unlock to view</>)}
               </span>
             </span>
@@ -158,7 +180,7 @@ export default function PropertyDetails() {
         {/* title + price */}
         <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <span className="font-num text-xs uppercase tracking-wide text-brand-primary">{acc.type} · Verified</span>
+            <span className="font-num text-xs uppercase tracking-wide text-brand-primaryDark dark:text-brand-primaryLight">{acc.type}{acc.landlord_verified ? ' · Verified' : ''}</span>
             <h1 className="font-display text-[30px] font-bold text-text-primary">{acc.title}</h1>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-text-secondary">
               <MapPin className="h-3.5 w-3.5" />
@@ -175,7 +197,7 @@ export default function PropertyDetails() {
         <div className="mb-8 flex flex-wrap gap-6 border-b border-border pb-6">
           {specs.map(([Icon, label]) => (
             <div key={label} className="flex items-center gap-2 text-text-secondary">
-              <Icon className="h-4 w-4 text-brand-primary" />
+              <Icon className="h-4 w-4 text-brand-primaryDark dark:text-brand-primaryLight" />
               <span className="text-sm font-semibold">{label}</span>
             </div>
           ))}
@@ -188,19 +210,23 @@ export default function PropertyDetails() {
 
             {/* host */}
             <div className="mb-6 flex items-center gap-3 rounded-xl bg-bg-surface-alt p-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-accent text-sm font-extrabold text-brand-primaryDark">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-accent text-sm font-extrabold text-slate-900">
                 {(contact?.name || 'Host').split(' ').map((p) => p[0]).slice(0, 2).join('')}
               </div>
               <div className="flex-1">
                 <div className="text-sm font-bold text-text-primary">
                   Hosted by {unlocked ? contact?.name : 'a verified host'}
                 </div>
-                <div className="text-xs text-text-secondary">Replies quickly · UniAcco verified</div>
+                <div className="text-xs text-text-secondary">{acc.landlord_verified ? 'UniAcco verified landlord' : 'Landlord not yet verified'}</div>
               </div>
-              <span className="flex items-center gap-1 rounded-full bg-success/15 px-3 py-1.5 text-xs font-bold text-success">
-                <Check className="h-3 w-3" /> Verified
-              </span>
+              {acc.landlord_verified && (
+                <span className="flex items-center gap-1 rounded-full bg-success/15 px-3 py-1.5 text-xs font-bold text-success">
+                  <Check className="h-3 w-3" /> Verified
+                </span>
+              )}
             </div>
+
+            {unlocked && <ViewingRequestForm accommodationId={id} />}
 
             {/* unlocked contact — shown inline for mobile (desktop uses the sticky card) */}
             {unlocked && (
@@ -229,7 +255,7 @@ export default function PropertyDetails() {
                     key={aid}
                     className={`flex items-center gap-2 text-sm ${has ? 'text-text-secondary' : 'text-text-muted line-through'}`}
                   >
-                    <AmenityIcon id={aid} className={`h-4 w-4 ${has ? 'text-brand-primary' : 'text-text-muted'}`} />
+                    <AmenityIcon id={aid} className={`h-4 w-4 ${has ? 'text-brand-primaryDark dark:text-brand-primaryLight' : 'text-text-muted'}`} />
                     {LABELS[aid]}
                   </div>
                 );
@@ -250,7 +276,7 @@ export default function PropertyDetails() {
                   {acc.reviews.map((r, i) => (
                     <Card key={i} className="p-4">
                       <div className="mb-2 flex items-center gap-2.5">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/15 text-[13px] font-bold text-brand-primary">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/15 text-[13px] font-bold text-brand-primaryDark dark:text-brand-primaryLight">
                           {r.initials}
                         </div>
                         <div>

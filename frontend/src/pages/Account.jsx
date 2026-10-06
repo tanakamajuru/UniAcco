@@ -122,7 +122,7 @@ export default function Account() {
                           e.stopPropagation();
                           unsave(acc);
                         }}
-                        className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-primaryDark"
+                        className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/90 text-brand-primaryDark dark:text-brand-primaryLight"
                         aria-label="Remove"
                       >
                         <Heart className="h-4 w-4 fill-brand-primaryDark" />
@@ -151,7 +151,7 @@ export default function Account() {
               </p>
               <button
                 onClick={() => navigate('listings')}
-                className="rounded-[11px] bg-brand-primary px-5 py-2.5 text-sm font-bold text-white"
+                className="rounded-[11px] bg-brand-primaryDark px-5 py-2.5 text-sm font-bold text-white"
               >
                 Browse homes
               </button>
