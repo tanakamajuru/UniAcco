@@ -10,7 +10,8 @@ const ACCESS_DAYS = 30;
 const SIMULATED = 'SIMULATED'; // sentinel poll_url used when Pesepay isn't configured
 
 // TEMP: access fee stubbed to 1 cent for live testing. Revert to 2.00 for launch.
-const ACCESS_FEE_AMOUNT = 2.0;
+// TEMP: access fee stubbed to 1 cent for live testing. Revert to 2.00 for launch.
+const ACCESS_FEE_AMOUNT = 0.01;
 // Landlord verification: $1 for 30 days.
 const LANDLORD_VERIFY_AMOUNT = 1.0;
 
