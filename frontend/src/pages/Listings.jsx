@@ -3,6 +3,7 @@ import { Search, GraduationCap, Loader2, RotateCw, MapPin, Users, ChevronDown, C
 import { useNavigation } from '../App';
 import { accommodationApi, universityApi, favouriteApi, currentRole } from '../services/api';
 import ListingCard from '../components/listings/ListingCard';
+import CompareModal from '../components/listings/CompareModal';
 import ListingMap from '../components/listings/ListingMap';
 import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
 import { Card, Chip } from '../components/kit';
@@ -54,6 +55,15 @@ export default function Listings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savedIds, setSavedIds] = useState(new Set());
+  // Pick up to two homes to compare, and optionally show verified landlords only.
+  const [compareIds, setCompareIds] = useState([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const shown = verifiedOnly ? results.filter((a) => a.landlord_verified) : results;
+  const toggleCompare = (acc) =>
+    setCompareIds((ids) =>
+      ids.includes(acc.id) ? ids.filter((i) => i !== acc.id) : ids.length < 2 ? [...ids, acc.id] : ids
+    );
 
   const activeUni = universities[uniIdx];
 
@@ -311,8 +321,32 @@ export default function Listings() {
             </div>
           ) : (
             <>
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-text-primary">
+                  <input type="checkbox" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} className="h-4 w-4" />
+                  Verified landlords only
+                </label>
+                {compareIds.length === 2 && (
+                  <button
+                    type="button"
+                    onClick={() => setCompareOpen(true)}
+                    className="rounded-lg bg-brand-primaryDark px-4 py-2 text-xs font-bold text-white"
+                  >
+                    Compare these 2 homes
+                  </button>
+                )}
+                {compareIds.length > 0 && compareIds.length < 2 && (
+                  <span className="text-xs text-text-secondary">Pick one more home to compare.</span>
+                )}
+              </div>
+              {compareOpen && compareIds.length === 2 && (
+                <CompareModal
+                  items={compareIds.map((id) => results.find((a) => a.id === id)).filter(Boolean)}
+                  onClose={() => setCompareOpen(false)}
+                />
+              )}
               <div className={`grid gap-5 ${gridColsClass}`}>
-                {results.map((acc) => (
+                {shown.map((acc) => (
                   <ListingCard
                     key={acc.id}
                     acc={acc}
@@ -320,6 +354,8 @@ export default function Listings() {
                     onOpen={open}
                     onHover={(a) => setSelectedId(a.id)}
                     onToggleSave={isStudent ? toggleSave : undefined}
+                    compareSelected={compareIds.includes(acc.id)}
+                    onToggleCompare={toggleCompare}
                   />
                 ))}
               </div>

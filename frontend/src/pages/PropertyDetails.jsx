@@ -10,6 +10,8 @@ import { formatAvailable } from '../components/listings/ListingCard';
 import UnlockModal from '../components/UnlockModal';
 import ViewingRequestForm from '../components/ViewingRequestForm';
 import ApplyForm from '../components/ApplyForm';
+import ReviewForm from '../components/ReviewForm';
+import { reviewApi } from '../services/api';
 import Lightbox from '../components/Lightbox';
 import { getUnlock, getUnlockReference, saveUnlock, forgetUnlock } from '../lib/unlocks';
 import { telLink, whatsappLink } from '../lib/contact';
@@ -33,6 +35,14 @@ export default function PropertyDetails() {
   const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
   const [unlockOpen, setUnlockOpen] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const loadReviews = () => {
+    if (id) reviewApi.forAccommodation(id).then((d) => setReviews(d.reviews || [])).catch(() => {});
+  };
+  useEffect(() => {
+    loadReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
   const [localContact, setLocalContact] = useState(null); // from a prior anonymous unlock
   const [lightbox, setLightbox] = useState(null); // photo index open in fullscreen, or null
 
@@ -229,6 +239,10 @@ export default function PropertyDetails() {
 
             {unlocked && <ViewingRequestForm accommodationId={id} />}
             {unlocked && <ApplyForm accommodationId={id} />}
+            {unlocked && <ReviewForm accommodationId={id} onPosted={loadReviews} />}
+            <p className="mb-4 rounded-lg border border-brand-accent/40 bg-brand-accent/10 px-3 py-2 text-xs text-text-primary">
+              Never pay anyone outside UniAcco, and never send money before you have seen the home. Payments here are only for contact access and are shown to you before you confirm.
+            </p>
 
             {/* unlocked contact — shown inline for mobile (desktop uses the sticky card) */}
             {unlocked && (
@@ -271,22 +285,22 @@ export default function PropertyDetails() {
               </p>
             </div>
 
-            {acc.reviews?.length > 0 && (
+            {reviews.length > 0 && (
               <div className="mt-8">
                 <h2 className="font-display mb-3 text-lg font-bold text-text-primary">Recent reviews</h2>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {acc.reviews.map((r, i) => (
-                    <Card key={i} className="p-4">
+                  {reviews.map((r) => (
+                    <Card key={r.id} className="p-4">
                       <div className="mb-2 flex items-center gap-2.5">
                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/15 text-[13px] font-bold text-brand-primaryDark dark:text-brand-primaryLight">
-                          {r.initials}
+                          {(r.author_name || '?').charAt(0)}
                         </div>
                         <div>
-                          <div className="text-[13px] font-bold text-text-primary">{r.author}</div>
-                          <div className="text-xs text-text-muted">{r.when}</div>
+                          <div className="text-[13px] font-bold text-text-primary">{r.author_name} · {'★'.repeat(r.rating)}</div>
+                          <div className="text-xs text-text-muted">{new Date(r.created_at).toLocaleDateString()}</div>
                         </div>
                       </div>
-                      <p className="text-[13px] leading-relaxed text-text-secondary">{r.text}</p>
+                      <p className="text-[13px] leading-relaxed text-text-secondary">{r.body}</p>
                     </Card>
                   ))}
                 </div>

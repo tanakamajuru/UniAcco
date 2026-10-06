@@ -1,137 +1,88 @@
-// controllers/reviewController.js
+// Reviews. A student can review a home only after unlocking it, once per home.
+// Only a first name is shown with a review, never the surname or the account.
 const pool = require('../config/database');
 const { validationResult } = require('express-validator');
+const { hasUnlocked } = require('../utils/accommodation');
 
-// Create review
+const firstName = (full) => String(full || 'Student').trim().split(/\s+/)[0] || 'Student';
+
+// POST /api/reviews (student)
 exports.createReview = async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { accommodationId, rating, comment } = req.body;
-
-    // Check if user has a completed booking for this accommodation
-    const bookingCheck = await pool.query(
-      `SELECT id FROM bookings 
-       WHERE student_id = $1 AND accommodation_id = $2 AND status = 'completed'`,
-      [req.user.id, accommodationId]
-    );
-
-    if (bookingCheck.rows.length === 0) {
-      return res.status(400).json({ 
-        error: 'You can only review accommodations you have stayed at.' 
-      });
+    if (!(await hasUnlocked(req.user.id, accommodationId))) {
+      return res.status(402).json({ error: 'Unlock this home before you review it.' });
     }
 
-    // Check if already reviewed
-    const existingReview = await pool.query(
-      'SELECT id FROM reviews WHERE student_id = $1 AND accommodation_id = $2',
+    const existing = await pool.query(
+      'SELECT id FROM reviews WHERE author_id = $1 AND accommodation_id = $2',
       [req.user.id, accommodationId]
     );
-
-    if (existingReview.rows.length > 0) {
-      return res.status(400).json({ error: 'You have already reviewed this accommodation.' });
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: 'You have already reviewed this home.' });
     }
 
-    const result = await pool.query(
-      `INSERT INTO reviews (accommodation_id, student_id, rating, comment)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [accommodationId, req.user.id, rating, comment]
+    const who = await pool.query('SELECT full_name FROM users WHERE id = $1', [req.user.id]);
+    const { rows } = await pool.query(
+      `INSERT INTO reviews (accommodation_id, author_id, author_name, rating, body)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, accommodation_id, author_name, rating, body, created_at`,
+      [accommodationId, req.user.id, firstName(who.rows[0]?.full_name), Number(rating), comment || null]
     );
-
-    res.status(201).json({
-      message: 'Review created successfully',
-      review: result.rows[0]
-    });
+    res.status(201).json({ review: rows[0] });
   } catch (error) {
     console.error('Create review error:', error);
-    res.status(500).json({ error: 'Error creating review.' });
+    res.status(500).json({ error: 'Could not post your review.' });
   }
 };
 
-// Get reviews for accommodation
+// GET /api/reviews/accommodation/:accommodationId — public
 exports.getAccommodationReviews = async (req, res) => {
   try {
-    const { accommodationId } = req.params;
-
-    const query = `
-      SELECT 
-        r.*,
-        u.first_name || ' ' || u.last_name as student_name,
-        p.avatar_url as student_avatar
-      FROM reviews r
-      JOIN users u ON r.student_id = u.id
-      LEFT JOIN profiles p ON u.id = p.user_id
-      WHERE r.accommodation_id = $1
-      ORDER BY r.created_at DESC
-    `;
-
-    const result = await pool.query(query, [accommodationId]);
-
-    res.json({ reviews: result.rows });
+    const { rows } = await pool.query(
+      `SELECT id, author_name, rating, body, created_at
+         FROM reviews WHERE accommodation_id = $1
+        ORDER BY created_at DESC LIMIT 100`,
+      [req.params.accommodationId]
+    );
+    res.json({ reviews: rows });
   } catch (error) {
     console.error('Get reviews error:', error);
-    res.status(500).json({ error: 'Error fetching reviews.' });
+    res.status(500).json({ error: 'Could not load reviews.' });
   }
 };
 
-// Get current student's reviews
+// GET /api/reviews/my-reviews (student)
 exports.getMyReviews = async (req, res) => {
   try {
-    const query = `
-      SELECT 
-        r.*,
-        a.title as accommodation_title,
-        a.main_image_url as accommodation_image
-      FROM reviews r
-      JOIN accommodations a ON r.accommodation_id = a.id
-      WHERE r.student_id = $1
-      ORDER BY r.created_at DESC
-    `;
-
-    const result = await pool.query(query, [req.user.id]);
-    res.json({ reviews: result.rows });
+    const { rows } = await pool.query(
+      `SELECT r.id, r.rating, r.body, r.created_at, a.title AS accommodation_title
+         FROM reviews r JOIN accommodations a ON a.id = r.accommodation_id
+        WHERE r.author_id = $1 ORDER BY r.created_at DESC`,
+      [req.user.id]
+    );
+    res.json({ reviews: rows });
   } catch (error) {
     console.error('Get my reviews error:', error);
-    res.status(500).json({ error: 'Error fetching your reviews.' });
+    res.status(500).json({ error: 'Could not load your reviews.' });
   }
 };
 
-// Delete a review
+// DELETE /api/reviews/:id — the author, or an admin
 exports.deleteReview = async (req, res) => {
   try {
-    const { id } = req.params;
-    const userId = req.user.id;
-    const userRole = req.user.role;
-
-    // First, get the review to check ownership
-    const reviewResult = await pool.query(
-      'SELECT * FROM reviews WHERE id = $1',
-      [id]
-    );
-
-    if (reviewResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Review not found.' });
+    const { rows } = await pool.query('SELECT author_id FROM reviews WHERE id = $1', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Review not found.' });
+    if (rows[0].author_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to delete this review.' });
     }
-
-    const review = reviewResult.rows[0];
-
-    // Check if the user is the owner of the review or an admin
-    if (review.student_id !== userId && userRole !== 'admin') {
-      return res.status(403).json({ 
-        error: 'Not authorized to delete this review.' 
-      });
-    }
-
-    // Delete the review
-    await pool.query('DELETE FROM reviews WHERE id = $1', [id]);
-    
-    res.json({ message: 'Review deleted successfully' });
+    await pool.query('DELETE FROM reviews WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Review deleted' });
   } catch (error) {
     console.error('Delete review error:', error);
-    res.status(500).json({ error: 'Error deleting review.' });
+    res.status(500).json({ error: 'Could not delete the review.' });
   }
 };

@@ -62,7 +62,7 @@ export default function Home() {
             <span className="text-brand-primaryDark dark:text-brand-primaryLight">Student Home</span>
           </h1>
           <p className="mx-auto mb-9 max-w-xl text-base text-text-secondary">
-            Discover comfortable, affordable accommodation near your campus — every listing verified before it goes live.
+            Discover comfortable, affordable accommodation near your campus — verified landlords, distance to campus on every listing, and only the data we need to run the service.
           </p>
         </div>
 

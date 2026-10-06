@@ -28,9 +28,13 @@ const amenityRoutes = require('./routes/amenityRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const viewingRoutes = require('./routes/viewingRoutes');
 const roommateRoutes = require('./routes/roommateRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 const { schedulePayerPurge } = require('./utils/retention');
 
 const app = express();
+
+// Behind Railway's proxy, take the client IP from X-Forwarded-For (rate limits need it).
+app.set('trust proxy', 1);
 
 /**
  * =====================================================
@@ -240,6 +244,7 @@ app.use('/api/amenities', amenityRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/viewings', viewingRoutes);
 app.use('/api/roommates', roommateRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 /**
  * =====================================================

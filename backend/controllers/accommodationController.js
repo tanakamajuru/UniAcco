@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+const fs = require('fs');
 const pool = require('../config/database');
 const {
   ACC_SELECT,
@@ -225,6 +227,16 @@ exports.create = async (req, res) => {
     );
     const accId = accRes.rows[0].id;
     await client.query(DISTANCE_SQL, [accId]);
+    // Price check: flag a listing far below the average for its university (needs at least 3 comparables).
+    await client.query(
+      `UPDATE accommodations a SET needs_review = a.price_per_month < 0.6 * c.avg_price
+         FROM (SELECT avg(x.price_per_month) AS avg_price, count(*) AS n
+                 FROM accommodations x
+                WHERE x.university_id = (SELECT university_id FROM accommodations WHERE id = $1)
+                  AND x.id <> $1 AND x.status = 'active') c
+        WHERE a.id = $1 AND c.n >= 3`,
+      [accId]
+    );
 
     // amenities
     let amenityIds = b.amenities;
@@ -272,14 +284,25 @@ exports.create = async (req, res) => {
 
     if (files.length) {
       let pos = 0;
+      const hashes = [];
       for (const f of files) {
+        const hash = crypto.createHash('sha256').update(fs.readFileSync(f.path)).digest('hex');
+        hashes.push(hash);
         await client.query(
-          `INSERT INTO accommodation_images (accommodation_id, image_url, position, kind)
-           VALUES ($1,$2,$3,$4)`,
-          [accId, `/uploads/user/${f.filename}`, pos, imageKinds[pos] || null]
+          `INSERT INTO accommodation_images (accommodation_id, image_url, position, kind, image_hash)
+           VALUES ($1,$2,$3,$4,$5)`,
+          [accId, `/uploads/user/${f.filename}`, pos, imageKinds[pos] || null, hash]
         );
         pos++;
       }
+      // A photo already used on another listing suggests a copied listing: flag it for review.
+      await client.query(
+        `UPDATE accommodations SET needs_review = true
+          WHERE id = $1 AND EXISTS (
+            SELECT 1 FROM accommodation_images
+             WHERE image_hash = ANY($2::text[]) AND accommodation_id <> $1)`,
+        [accId, hashes]
+      );
     } else if (Array.isArray(b.images)) {
       let pos = 0;
       for (const url of b.images) {

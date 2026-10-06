@@ -6,14 +6,20 @@ const { authenticateToken, optionalAuth } = require('../middleware/auth');
 
 const pesepay = new PesepayService();
 
-const ACCESS_DAYS = 30;
+const { rateLimit } = require('../utils/rateLimit');
+const paymentLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: 'Too many payment attempts. Try again later.' });
+
+// Students get 14 days per unlock; landlord verification lasts 30 days.
+const STUDENT_ACCESS_DAYS = 14;
+const VERIFICATION_DAYS = 30;
 const SIMULATED = 'SIMULATED'; // sentinel poll_url used when Pesepay isn't configured
 
 // TEMP: access fee stubbed to 1 cent for live testing. Revert to 2.00 for launch.
 // TEMP: access fee stubbed to 1 cent for live testing. Revert to 2.00 for launch.
 const ACCESS_FEE_AMOUNT = 0.01;
 // Landlord verification: $1 for 30 days.
-const LANDLORD_VERIFY_AMOUNT = 1.0;
+// TEMP: stubbed to 1 cent for testing. Launch price is $1.00 for 30 days.
+const LANDLORD_VERIFY_AMOUNT = 0.01;
 
 // Mobile-money / card provider -> Pesepay payment method code (USD).
 const METHOD_CODES = {
@@ -22,9 +28,9 @@ const METHOD_CODES = {
   card: 'PZW204',
 };
 
-const validUntil = () => {
+const validUntil = (feature) => {
   const d = new Date();
-  d.setDate(d.getDate() + ACCESS_DAYS);
+  d.setDate(d.getDate() + (feature === 'landlord_verification' ? VERIFICATION_DAYS : STUDENT_ACCESS_DAYS));
   return d;
 };
 
@@ -42,7 +48,7 @@ const isFailed = (tx) =>
 
 // POST /api/payments/initiate
 // optionalAuth: anonymous visitors can pay to unlock a contact without an account.
-router.post('/initiate', optionalAuth, async (req, res) => {
+router.post('/initiate', paymentLimit, optionalAuth, async (req, res) => {
   const client = await pool.connect();
   try {
     const {
@@ -222,7 +228,7 @@ router.get('/status/:reference', optionalAuth, async (req, res) => {
       await client.query(
         // Payer email/phone are no longer needed once paid, so clear them.
         'UPDATE payments SET status = $1, paid_at = now(), valid_until = $2, email = NULL, phone = NULL WHERE id = $3',
-        ['paid', validUntil(), payment.id]
+        ['paid', validUntil(payment.feature), payment.id]
       );
     } else if (outcome === 'failed') {
       // Don't clobber a payment that was already reconciled as paid elsewhere.
@@ -238,7 +244,7 @@ router.get('/status/:reference', optionalAuth, async (req, res) => {
       accommodationId: payment.accommodation_id,
       // A payment that settles on this call has no valid_until on the row we loaded,
       // so use the same 30-day date the UPDATE just stored.
-      validUntil: outcome === 'paid' ? payment.valid_until || validUntil() : null,
+      validUntil: outcome === 'paid' ? payment.valid_until || validUntil(payment.feature) : null,
       contact: outcome === 'paid' ? await contactFor(client, payment.accommodation_id) : null,
     });
   } catch (error) {
@@ -272,9 +278,9 @@ router.post('/webhook', async (req, res) => {
 
     if (paid) {
       await client.query(
-        `UPDATE payments SET status='paid', paid_at=now(), valid_until=$1, email=NULL, phone=NULL
-          WHERE gateway_reference=$2 AND status<>'paid'`,
-        [validUntil(), reference]
+        `UPDATE payments SET status='paid', paid_at=now(), email=NULL, phone=NULL, valid_until=now() + (CASE WHEN feature = 'landlord_verification' THEN interval '30 days' ELSE interval '14 days' END)
+          WHERE gateway_reference=$1 AND status<>'paid'`,
+        [reference]
       );
     }
 
@@ -313,4 +319,41 @@ router.get('/history', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/payments/restore { reference } — recover a paid unlock on a new device,
+// or after signing up. The reference is the receipt's key. If the caller is signed in
+// and the payment isn't linked yet, it is attached to their account, so the unlock
+// shows on their account from then on.
+router.post('/restore', paymentLimit, optionalAuth, async (req, res) => {
+  try {
+    const reference = String(req.body.reference || '').trim();
+    if (!reference) return res.status(400).json({ error: 'Enter the payment reference from your receipt' });
+    const { rows } = await pool.query(
+      "SELECT * FROM payments WHERE gateway_reference = $1 AND feature = 'accommodation_details'",
+      [reference]
+    );
+    const payment = rows[0];
+    if (!payment || payment.status !== 'paid') {
+      return res.status(404).json({ error: 'No paid unlock matches that reference' });
+    }
+    if (payment.valid_until && new Date(payment.valid_until) <= new Date()) {
+      return res.status(410).json({ error: 'That unlock has expired' });
+    }
+    if (req.user && !payment.user_id) {
+      await pool.query('UPDATE payments SET user_id = $1 WHERE id = $2', [req.user.id, payment.id]);
+    }
+    res.json({
+      success: true,
+      status: 'paid',
+      accommodationId: payment.accommodation_id,
+      validUntil: payment.valid_until,
+      reference,
+      contact: await contactFor(pool, payment.accommodation_id),
+    });
+  } catch (error) {
+    console.error('Restore unlock error:', error);
+    res.status(500).json({ error: 'Could not restore the unlock' });
+  }
+});
+
 module.exports = router;
+

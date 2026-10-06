@@ -205,3 +205,17 @@ export const roommateApi = {
   save: (body) => request('/api/roommates/mine', { method: 'PUT', body: JSON.stringify(body) }),
   remove: () => request('/api/roommates/mine', { method: 'DELETE' }),
 };
+
+// Restore a paid unlock from its receipt reference, on a new device or after signing up.
+export const restoreApi = {
+  restore: (reference) =>
+    request('/api/payments/restore', { method: 'POST', body: JSON.stringify({ reference }) }),
+};
+
+// Reviews: a signed-in student reviews a property they have unlocked.
+export const reviewApi = {
+  create: (body) => request('/api/reviews', { method: 'POST', body: JSON.stringify(body) }),
+};
+
+reviewApi.forAccommodation = (accommodationId) =>
+  request(`/api/reviews/accommodation/${accommodationId}`);

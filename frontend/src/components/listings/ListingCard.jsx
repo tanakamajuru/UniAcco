@@ -12,7 +12,7 @@ export const formatAvailable = (date) => {
   return `Avail. ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
 };
 
-export default function ListingCard({ acc, saved, onOpen, onToggleSave, onHover }) {
+export default function ListingCard({ acc, saved, onOpen, onToggleSave, onHover, compareSelected, onToggleCompare }) {
   const unlocked = acc.access?.unlocked;
   const photo = acc.images?.[0] ? imageUrl(acc.images[0]) : null;
 
@@ -39,10 +39,19 @@ export default function ListingCard({ acc, saved, onOpen, onToggleSave, onHover 
             />
           </button>
         )}
-        {acc.walk_minutes != null && (
+        {acc.distance_km != null ? (
           <span className="font-num absolute bottom-2 left-2 rounded-md bg-black/55 px-2 py-0.5 text-[10px] text-white">
-            {acc.walk_minutes} min walk to campus
+            {acc.distance_km} km to campus
           </span>
+        ) : null}
+        {onToggleCompare && (
+          <label
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-2 right-2 flex cursor-pointer items-center gap-1.5 rounded-md bg-bg-surface/95 px-2 py-1 text-[11px] font-bold text-text-primary shadow"
+          >
+            <input type="checkbox" checked={Boolean(compareSelected)} onChange={() => onToggleCompare(acc)} className="h-3.5 w-3.5" />
+            Compare
+          </label>
         )}
       </div>
 

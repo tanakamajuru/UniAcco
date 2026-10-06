@@ -176,7 +176,7 @@ export default function ListPropertyPage() {
         List your property
       </h1>
       <p className="mb-[22px] text-[15px] text-text-secondary">
-        Reach thousands of verified students near campus. Free to list — you only pay when you find a tenant.
+        Reach students near campus. Never send money before a viewing, and keep all payments on UniAcco. Free to list — you only pay when you find a tenant.
       </p>
 
       {/* step indicator */}
