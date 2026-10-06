@@ -44,7 +44,7 @@ const PaymentReturn = () => {
       if (data.success) {
         if (data.status === 'paid') {
           setStatus('success');
-          setMessage('Payment successful — the host contact is now unlocked.');
+          setMessage(data.accommodationId ? 'Payment successful — the host contact is now unlocked.' : 'Payment successful — your landlord verification is active.');
           setAccId(data.accommodationId || '');
 
           // Persist the unlock locally (anonymous — no account needed) so the

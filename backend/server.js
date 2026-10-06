@@ -27,6 +27,7 @@ const universityRoutes = require('./routes/universityRoutes');
 const amenityRoutes = require('./routes/amenityRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const viewingRoutes = require('./routes/viewingRoutes');
+const roommateRoutes = require('./routes/roommateRoutes');
 const { schedulePayerPurge } = require('./utils/retention');
 
 const app = express();
@@ -238,6 +239,7 @@ app.use('/api/universities', universityRoutes);
 app.use('/api/amenities', amenityRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/viewings', viewingRoutes);
+app.use('/api/roommates', roommateRoutes);
 
 /**
  * =====================================================

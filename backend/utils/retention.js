@@ -42,11 +42,17 @@ async function purgeViewingDetails(pool) {
   return rowCount;
 }
 
+// Removes roommate profiles past their 30-day expiry. Idempotent.
+async function purgeRoommateProfiles(pool) {
+  const { rowCount } = await pool.query('DELETE FROM roommate_profiles WHERE expires_at <= now()');
+  return rowCount;
+}
+
 // Runs the purge at boot and then once a day. Errors are logged, never thrown,
 // so a failed cleanup can't take the API down.
 function schedulePayerPurge(pool, intervalMs = 24 * 60 * 60 * 1000) {
   const run = () =>
-    Promise.all([purgePayerDetails(pool), purgeApplicationDetails(pool), purgeViewingDetails(pool)])
+    Promise.all([purgePayerDetails(pool), purgeApplicationDetails(pool), purgeViewingDetails(pool), purgeRoommateProfiles(pool)])
       .then(([p, a]) => (p || a) && console.log(`Retention: cleared payer details on ${p} payment(s), application details on ${a} application(s)`))
       .catch((err) => console.error('Retention purge failed:', err.message));
 
@@ -56,4 +62,4 @@ function schedulePayerPurge(pool, intervalMs = 24 * 60 * 60 * 1000) {
   return timer;
 }
 
-module.exports = { purgePayerDetails, purgeApplicationDetails, purgeViewingDetails, schedulePayerPurge };
+module.exports = { purgePayerDetails, purgeApplicationDetails, purgeViewingDetails, purgeRoommateProfiles, schedulePayerPurge };

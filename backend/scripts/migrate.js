@@ -23,6 +23,7 @@ const MIGRATIONS = [
   '010_campus_corrections.sql',
   '011_campus_distance.sql',
   '012_viewing_requests.sql',
+  '013_roommate_profiles.sql',
 ];
 
 const useUrl = Boolean(process.env.DATABASE_URL);

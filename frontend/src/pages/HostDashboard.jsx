@@ -14,6 +14,7 @@ import { useNavigation } from '../App';
 import { hostApi, accommodationApi, applicationApi, authApi, imageUrl } from '../services/api';
 import { gradientFor } from '../components/listings/ListingCard';
 import ViewingRequests from '../components/ViewingRequests';
+import VerifyLandlordButton from '../components/VerifyLandlordButton';
 
 const STATUS_BADGE = {
   active: 'bg-[#E8F7EE] text-[#15803D]',
@@ -214,6 +215,8 @@ export default function HostDashboard() {
             })
           )}
         </div>
+
+        <VerifyLandlordButton />
 
         {/* viewing requests */}
         <ViewingRequests />

@@ -3,6 +3,7 @@ import { Heart, Check, Loader2 } from 'lucide-react';
 import { useNavigation } from '../App';
 import { authApi, favouriteApi, applicationApi, imageUrl } from '../services/api';
 import { gradientFor } from '../components/listings/ListingCard';
+import RoommatesSection from '../components/RoommatesSection';
 
 const initialsOf = (name) =>
   (name || '?')
@@ -159,6 +160,7 @@ export default function Account() {
           )}
         </div>
       </div>
+      <RoommatesSection />
     </div>
   );
 }

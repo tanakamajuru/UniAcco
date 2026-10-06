@@ -197,3 +197,11 @@ export const viewingApi = {
   update: (id, status) =>
     request(`/api/viewings/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 };
+
+// Roommate profiles: students looking for a flatmate. Profiles expire after 30 days.
+export const roommateApi = {
+  list: () => request('/api/roommates'),
+  mine: () => request('/api/roommates/mine'),
+  save: (body) => request('/api/roommates/mine', { method: 'PUT', body: JSON.stringify(body) }),
+  remove: () => request('/api/roommates/mine', { method: 'DELETE' }),
+};

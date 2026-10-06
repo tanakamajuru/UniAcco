@@ -9,6 +9,7 @@ import { AmenityIcon, ALL_AMENITIES, LABELS } from '../lib/amenityIcons';
 import { formatAvailable } from '../components/listings/ListingCard';
 import UnlockModal from '../components/UnlockModal';
 import ViewingRequestForm from '../components/ViewingRequestForm';
+import ApplyForm from '../components/ApplyForm';
 import Lightbox from '../components/Lightbox';
 import { getUnlock, getUnlockReference, saveUnlock, forgetUnlock } from '../lib/unlocks';
 import { telLink, whatsappLink } from '../lib/contact';
@@ -227,6 +228,7 @@ export default function PropertyDetails() {
             </div>
 
             {unlocked && <ViewingRequestForm accommodationId={id} />}
+            {unlocked && <ApplyForm accommodationId={id} />}
 
             {/* unlocked contact — shown inline for mobile (desktop uses the sticky card) */}
             {unlocked && (
