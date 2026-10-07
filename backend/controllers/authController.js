@@ -98,11 +98,15 @@ exports.forgotPassword = async (req, res) => {
       { expiresIn: '15m' }
     );
 
-    // Email delivery is not configured in this project yet. The token is returned for local development.
-    res.json({
-      message: 'Reset instructions created. Use the reset token to choose a new password.',
-      resetToken,
-    });
+    // Email delivery is not configured yet. The token is returned only outside production,
+    // so nobody can reset another person's password by asking for it.
+    if (process.env.NODE_ENV !== 'production') {
+      return res.json({
+        message: 'Reset instructions created. Use the reset token to choose a new password.',
+        resetToken,
+      });
+    }
+    res.json({ message: 'If an account exists, reset instructions were created.' });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: 'Unable to create password reset instructions' });

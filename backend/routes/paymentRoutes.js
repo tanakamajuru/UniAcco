@@ -14,12 +14,9 @@ const STUDENT_ACCESS_DAYS = 14;
 const VERIFICATION_DAYS = 30;
 const SIMULATED = 'SIMULATED'; // sentinel poll_url used when Pesepay isn't configured
 
-// TEMP: access fee stubbed to 1 cent for live testing. Revert to 2.00 for launch.
-// TEMP: access fee stubbed to 1 cent for live testing. Revert to 2.00 for launch.
-const ACCESS_FEE_AMOUNT = 0.01;
+const ACCESS_FEE_AMOUNT = 1.0;
 // Landlord verification: $1 for 30 days.
-// TEMP: stubbed to 1 cent for testing. Launch price is $1.00 for 30 days.
-const LANDLORD_VERIFY_AMOUNT = 0.01;
+const LANDLORD_VERIFY_AMOUNT = 1.0;
 
 // Mobile-money / card provider -> Pesepay payment method code (USD).
 const METHOD_CODES = {

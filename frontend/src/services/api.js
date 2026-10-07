@@ -219,3 +219,20 @@ export const reviewApi = {
 
 reviewApi.forAccommodation = (accommodationId) =>
   request(`/api/reviews/accommodation/${accommodationId}`);
+
+// Admin panel (admin role only) and the public help chat.
+export const adminApi = {
+  users: (q = '') => request(`/api/admin/users?q=${encodeURIComponent(q)}`),
+  updateUser: (id, body) => request(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteUser: (id) => request(`/api/admin/users/${id}`, { method: 'DELETE' }),
+  listings: () => request('/api/admin/listings'),
+  updateListing: (id, body) => request(`/api/admin/listings/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteListing: (id) => request(`/api/admin/listings/${id}`, { method: 'DELETE' }),
+  support: () => request('/api/admin/support'),
+  reply: (id, reply) => request(`/api/admin/support/${id}/reply`, { method: 'POST', body: JSON.stringify({ reply }) }),
+  audit: () => request('/api/admin/audit'),
+};
+
+export const supportApi = {
+  send: (body, contact) => request('/api/support', { method: 'POST', body: JSON.stringify({ body, contact }) }),
+};

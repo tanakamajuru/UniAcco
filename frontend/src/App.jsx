@@ -12,6 +12,8 @@ import Account from './pages/Account.jsx';
 import MyListings from './pages/MyListings.jsx';
 import HostDashboard from './pages/HostDashboard.jsx';
 import MorphBg from './components/MorphBg.jsx';
+import AdminPanel from './pages/AdminPanel.jsx';
+import HelpChat from './components/HelpChat.jsx';
 import { currentRole } from './services/api';
 
 // URL <-> page mapping
@@ -28,6 +30,7 @@ const urlToPageMap = {
   '/saved': 'profile',
   '/host-dashboard': 'host-dashboard',
   '/my-listings': 'my-listings',
+  '/admin': 'admin',
 };
 
 const pageToUrlMap = {
@@ -42,6 +45,7 @@ const pageToUrlMap = {
   profile: '/profile',
   'host-dashboard': '/host-dashboard',
   'my-listings': '/my-listings',
+  admin: '/admin',
 };
 
 const NavigationContext = createContext();
@@ -115,6 +119,8 @@ function App() {
         return <HostDashboard />;
       case 'my-listings':
         return <MyListings />;
+      case 'admin':
+        return <AdminPanel />;
       default:
         return <Home />;
     }
@@ -129,6 +135,7 @@ function App() {
         >
           <Navbar />
           <main className="w-full">{renderPage()}</main>
+          {currentPage !== 'admin' && <HelpChat />}
         </NavigationContext.Provider>
       </div>
     </div>

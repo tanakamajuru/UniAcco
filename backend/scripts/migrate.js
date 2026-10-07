@@ -27,6 +27,7 @@ const MIGRATIONS = [
   '014_campus_coordinates_2.sql',
   '015_listing_review_flag.sql',
   '016_photo_hash.sql',
+  '017_admin_and_support.sql',
 ];
 
 const useUrl = Boolean(process.env.DATABASE_URL);

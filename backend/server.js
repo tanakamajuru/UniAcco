@@ -29,6 +29,8 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const viewingRoutes = require('./routes/viewingRoutes');
 const roommateRoutes = require('./routes/roommateRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const supportRoutes = require('./routes/supportRoutes');
 const { schedulePayerPurge } = require('./utils/retention');
 
 const app = express();
@@ -245,6 +247,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/viewings', viewingRoutes);
 app.use('/api/roommates', roommateRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/support', supportRoutes);
 
 /**
  * =====================================================
