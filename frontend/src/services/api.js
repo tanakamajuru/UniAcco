@@ -233,6 +233,13 @@ export const adminApi = {
   support: () => request('/api/admin/support'),
   reply: (id, reply) => request(`/api/admin/support/${id}/reply`, { method: 'POST', body: JSON.stringify({ reply }) }),
   audit: () => request('/api/admin/audit'),
+  universities: () => request('/api/admin/universities'),
+  createUniversity: (body) => request('/api/admin/universities', { method: 'POST', body: JSON.stringify(body) }),
+  updateUniversity: (id, body) => request(`/api/admin/universities/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteUniversity: (id) => request(`/api/admin/universities/${id}`, { method: 'DELETE' }),
+  createCampus: (uniId, body) => request(`/api/admin/universities/${uniId}/campuses`, { method: 'POST', body: JSON.stringify(body) }),
+  updateCampus: (id, body) => request(`/api/admin/campuses/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteCampus: (id) => request(`/api/admin/campuses/${id}`, { method: 'DELETE' }),
 };
 
 export const supportApi = {

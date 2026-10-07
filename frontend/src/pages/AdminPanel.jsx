@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { adminApi, authApi } from '../services/api';
 import { useNavigation } from '../App';
+import UniversitiesTab from '../components/admin/UniversitiesTab';
 
-const TABS = ['Students', 'Landlords', 'Listings', 'Support', 'Audit log'];
+const TABS = ['Students', 'Landlords', 'Listings', 'Universities', 'Support', 'Audit log'];
 
 // Admin panel at /admin. Sign in with an admin account; every change is audited.
 export default function AdminPanel() {
@@ -49,6 +50,7 @@ export default function AdminPanel() {
       {tab === 'Students' && <UsersTab key="student" role="student" setError={setError} />}
       {tab === 'Landlords' && <UsersTab key="landlord" role="landlord" setError={setError} />}
       {tab === 'Listings' && <ListingsTab setError={setError} />}
+      {tab === 'Universities' && <UniversitiesTab setError={setError} />}
       {tab === 'Support' && <SupportTab setError={setError} />}
       {tab === 'Audit log' && <AuditTab />}
     </div>
