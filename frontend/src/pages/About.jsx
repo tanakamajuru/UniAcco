@@ -54,6 +54,18 @@ export default function About() {
         </div>
       </section>
 
+      <section id="safety" className="px-6 py-14">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="font-display mb-4 text-center text-2xl font-extrabold text-text-primary">Safety and verification</h2>
+          <ul className="grid gap-3 text-sm text-text-secondary">
+            <li><strong className="text-text-primary">Never send money before you have seen the home.</strong> Keep every payment on UniAcco.</li>
+            <li><strong className="text-text-primary">Verified landlords</strong> show a badge on their listings. Only landlords who have paid for verification get it.</li>
+            <li><strong className="text-text-primary">Ask for a viewing first.</strong> Use the viewing request on a home page to agree a time with the landlord.</li>
+            <li><strong className="text-text-primary">Report a problem</strong> with the Help button on any page. Include the listing name so we can find it.</li>
+          </ul>
+        </div>
+      </section>
+
       <section className="px-6 py-14 text-center">
         <h2 className="font-display mb-2 text-[26px] font-bold text-text-primary">Why Choose UniAcco?</h2>
         <p className="mx-auto mb-8 max-w-md text-sm text-text-secondary">

@@ -6,6 +6,7 @@ const ctrl = require('../controllers/adminController');
 const admin = [authenticateToken, authorizeRoles('admin')];
 
 router.get('/users', ...admin, ctrl.listUsers);
+router.post('/users', ...admin, ctrl.createUser);
 router.patch('/users/:id', ...admin, ctrl.updateUser);
 router.delete('/users/:id', ...admin, ctrl.deleteUser);
 router.get('/listings', ...admin, ctrl.listListings);

@@ -1,6 +1,7 @@
 // Admin panel API. Every route here requires the admin role. Every change is written
 // to admin_audit with the admin, the action and the target.
 const pool = require('../config/database');
+const bcrypt = require('bcryptjs');
 
 const audit = (adminId, action, target, detail) =>
   pool.query('INSERT INTO admin_audit (admin_id, action, target, detail) VALUES ($1,$2,$3,$4)', [
@@ -8,15 +9,43 @@ const audit = (adminId, action, target, detail) =>
   ]);
 
 // ---- Users ----
+// GET /api/admin/users?role=student|landlord|admin&q=search
 exports.listUsers = async (req, res) => {
   const q = `%${String(req.query.q || '').trim()}%`;
+  const role = ['student', 'landlord', 'admin'].includes(req.query.role) ? req.query.role : null;
   const { rows } = await pool.query(
     `SELECT id, full_name, email, phone, role, is_verified, created_at
-       FROM users WHERE full_name ILIKE $1 OR email ILIKE $1
+       FROM users
+      WHERE (full_name ILIKE $1 OR email ILIKE $1) AND ($2::text IS NULL OR role = $2)
       ORDER BY created_at DESC LIMIT 200`,
-    [q]
+    [q, role]
   );
   res.json({ users: rows });
+};
+
+// POST /api/admin/users — create a student, landlord or admin account.
+exports.createUser = async (req, res) => {
+  const fullName = String(req.body.fullName || '').trim();
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+  const role = req.body.role || 'student';
+  if (!fullName || !email || password.length < 8) {
+    return res.status(400).json({ error: 'Name, email and a password of at least 8 characters are required' });
+  }
+  if (!['student', 'landlord', 'admin'].includes(role)) {
+    return res.status(400).json({ error: 'Role must be student, landlord or admin' });
+  }
+  const exists = await pool.query('SELECT 1 FROM users WHERE lower(email) = $1', [email]);
+  if (exists.rows.length) return res.status(409).json({ error: 'An account with that email already exists' });
+  const hash = await bcrypt.hash(password, 10);
+  const { rows } = await pool.query(
+    `INSERT INTO users (full_name, email, phone, password_hash, role, is_verified)
+     VALUES ($1, $2, $3, $4, $5, true)
+     RETURNING id, full_name, email, phone, role, is_verified`,
+    [fullName, email, req.body.phone || null, hash, role]
+  );
+  await audit(req.user.id, 'user.create', rows[0].id, `${email} (${role})`);
+  res.status(201).json({ user: rows[0] });
 };
 
 exports.updateUser = async (req, res) => {

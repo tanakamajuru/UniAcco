@@ -92,6 +92,21 @@ export default function Navbar() {
     navigate(page);
   };
 
+  // Safety opens the About page and scrolls to its safety section.
+  const goSafety = () => {
+    setMenuOpen(false);
+    setDrawerOpen(false);
+    go('about');
+    setTimeout(() => document.getElementById('safety')?.scrollIntoView({ behavior: 'smooth' }), 300);
+  };
+
+  // Help centre opens the help chat button.
+  const openHelp = () => {
+    setMenuOpen(false);
+    setDrawerOpen(false);
+    window.dispatchEvent(new Event('uniacco:open-help'));
+  };
+
   const switchRole = (next) => {
     setRole(next);
     go(
@@ -278,19 +293,9 @@ export default function Navbar() {
 
                       <div className="my-1.5 h-px bg-border" />
 
-                      <MenuLink
-                        onClick={() =>
-                          go('about')
-                        }
-                        label="Safety & verification"
-                      />
+                      <MenuLink onClick={goSafety} label="Safety & verification" />
 
-                      <MenuLink
-                        onClick={() =>
-                          go('about')
-                        }
-                        label="Help centre"
-                      />
+                      <MenuLink onClick={openHelp} label="Help centre" />
 
                       <div className="my-1.5 h-px bg-border" />
 
@@ -417,21 +422,9 @@ export default function Navbar() {
               }
             />
 
-            <DrawerLink
-              Icon={ShieldCheck}
-              label="Safety & verification"
-              onClick={() =>
-                go('about')
-              }
-            />
+            <DrawerLink Icon={ShieldCheck} label="Safety & verification" onClick={goSafety} />
 
-            <DrawerLink
-              Icon={HelpCircle}
-              label="Help centre"
-              onClick={() =>
-                go('about')
-              }
-            />
+            <DrawerLink Icon={HelpCircle} label="Help centre" onClick={openHelp} />
 
             {/* Appearance */}
             <div className="flex items-center justify-between border-b border-border py-3.5">

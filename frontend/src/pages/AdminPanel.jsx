@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { adminApi, authApi } from '../services/api';
 import { useNavigation } from '../App';
 
-const TABS = ['Users', 'Listings', 'Support', 'Audit log'];
+const TABS = ['Students', 'Landlords', 'Listings', 'Support', 'Audit log'];
 
 // Admin panel at /admin. Sign in with an admin account; every change is audited.
 export default function AdminPanel() {
   const { navigate } = useNavigation();
   const [me, setMe] = useState(undefined); // undefined = still checking
-  const [tab, setTab] = useState('Users');
+  const [tab, setTab] = useState('Students');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -46,7 +46,8 @@ export default function AdminPanel() {
         ))}
       </div>
       {error && <p className="mb-3 text-sm text-error dark:text-red-400">{error}</p>}
-      {tab === 'Users' && <UsersTab setError={setError} />}
+      {tab === 'Students' && <UsersTab key="student" role="student" setError={setError} />}
+      {tab === 'Landlords' && <UsersTab key="landlord" role="landlord" setError={setError} />}
       {tab === 'Listings' && <ListingsTab setError={setError} />}
       {tab === 'Support' && <SupportTab setError={setError} />}
       {tab === 'Audit log' && <AuditTab />}
@@ -58,13 +59,27 @@ const cell = 'border-b border-border px-3 py-2 text-sm text-text-primary align-t
 const btn = 'rounded-lg border border-border px-2.5 py-1 text-xs font-bold text-text-secondary';
 const danger = 'rounded-lg border border-error/40 px-2.5 py-1 text-xs font-bold text-error';
 
-function UsersTab({ setError }) {
+// One table for students or landlords: search, create, edit, delete.
+function UsersTab({ role, setError }) {
   const [q, setQ] = useState('');
   const [users, setUsers] = useState([]);
-  const load = () => adminApi.users(q).then((d) => setUsers(d.users)).catch((e) => setError(e.message));
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', phone: '' });
+  const label = role === 'landlord' ? 'landlord' : 'student';
+  const load = () => adminApi.users(q, role).then((d) => setUsers(d.users)).catch((e) => setError(e.message));
   useEffect(() => {
     load();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const create = async (e) => {
+    e.preventDefault();
+    await adminApi
+      .createUser({ ...form, role })
+      .then(() => {
+        setForm({ fullName: '', email: '', password: '', phone: '' });
+        load();
+      })
+      .catch((err) => setError(err.message));
+  };
 
   const edit = async (u) => {
     const name = window.prompt('Full name', u.full_name);
@@ -80,6 +95,14 @@ function UsersTab({ setError }) {
 
   return (
     <div>
+      <form onSubmit={create} className="mb-4 grid gap-2 rounded-xl border border-border bg-bg-surface p-4 sm:grid-cols-2">
+        <div className="sm:col-span-2 text-sm font-bold text-text-primary">Add a {label}</div>
+        <input required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} placeholder="Full name" className="rounded-lg border border-input-border bg-bg-surface px-3 py-2 text-sm text-text-primary" />
+        <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email" className="rounded-lg border border-input-border bg-bg-surface px-3 py-2 text-sm text-text-primary" />
+        <input required minLength={8} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Temporary password (8+ characters)" className="rounded-lg border border-input-border bg-bg-surface px-3 py-2 text-sm text-text-primary" />
+        <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone (optional)" className="rounded-lg border border-input-border bg-bg-surface px-3 py-2 text-sm text-text-primary" />
+        <button type="submit" className="sm:col-span-2 rounded-lg bg-brand-primaryDark py-2 text-sm font-bold text-white">Create {label}</button>
+      </form>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -129,6 +152,7 @@ function UsersTab({ setError }) {
 }
 
 function ListingsTab({ setError }) {
+  const { navigate } = useNavigation();
   const [items, setItems] = useState([]);
   const load = () => adminApi.listings().then((d) => setItems(d.listings)).catch((e) => setError(e.message));
   useEffect(() => {
@@ -175,6 +199,7 @@ function ListingsTab({ setError }) {
               <td className={cell}>{a.needs_review ? 'Yes' : 'No'}</td>
               <td className={cell}>
                 <div className="flex flex-wrap gap-2">
+                  <button className={btn} onClick={() => navigate('property-details', { id: a.id })}>View</button>
                   <button className={btn} onClick={() => edit(a)}>Edit</button>
                   {a.needs_review && <button className={btn} onClick={() => clearFlag(a)}>Clear flag</button>}
                   <button className={danger} onClick={() => remove(a)}>Delete</button>

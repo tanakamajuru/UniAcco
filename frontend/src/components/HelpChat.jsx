@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supportApi } from '../services/api';
 
 // Floating help button. Messages go to the admin panel's Support tab.
 export default function HelpChat() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener('uniacco:open-help', show);
+    return () => window.removeEventListener('uniacco:open-help', show);
+  }, []);
   const [body, setBody] = useState('');
   const [contact, setContact] = useState('');
   const [status, setStatus] = useState(null);

@@ -222,7 +222,9 @@ reviewApi.forAccommodation = (accommodationId) =>
 
 // Admin panel (admin role only) and the public help chat.
 export const adminApi = {
-  users: (q = '') => request(`/api/admin/users?q=${encodeURIComponent(q)}`),
+  users: (q = '', role = '') =>
+    request(`/api/admin/users?q=${encodeURIComponent(q)}&role=${encodeURIComponent(role)}`),
+  createUser: (body) => request('/api/admin/users', { method: 'POST', body: JSON.stringify(body) }),
   updateUser: (id, body) => request(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   deleteUser: (id) => request(`/api/admin/users/${id}`, { method: 'DELETE' }),
   listings: () => request('/api/admin/listings'),

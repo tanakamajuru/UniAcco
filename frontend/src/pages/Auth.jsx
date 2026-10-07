@@ -108,7 +108,8 @@ const Auth = () => {
 
       // Full reload so the navbar + nav context pick up the new role/session,
       // landing on the right home screen for the user's role.
-      const landing = res?.user?.role === 'landlord' ? '/host-dashboard' : '/listings';
+      const role = res?.user?.role;
+      const landing = role === 'admin' ? '/admin' : role === 'landlord' ? '/host-dashboard' : '/listings';
       window.location.assign(landing);
     } catch (err) {
       setError(err?.message || (typeof err === 'string' ? err : 'Failed to authenticate'));
